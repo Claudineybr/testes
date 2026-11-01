@@ -118,7 +118,6 @@
       <div class="no-results"><p>Carregando catálogo...</p></div>
     </div>
 
-    <!-- Container da Paginação -->
     <div class="pagination" id="paginationContainer"></div>
   </section>
 
@@ -142,6 +141,11 @@
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
 
+    // Chaves para o localStorage (memória do navegador)
+    const STORAGE_KEY_LINKS = 'clauFlix_destaques_links';
+    const STORAGE_KEY_TIMESTAMP = 'clauFlix_destaques_timestamp';
+    const TRINTA_MINUTOS_MS = 30 * 60 * 1000;
+
     function isSerie(item) {
       const regexLink = /_t\d+e\d+/i;
       const regexTitulo = /T\d+E\d+/i;
@@ -157,7 +161,6 @@
       return copia;
     }
 
-    // Função para ordenar em ordem alfabética e numérica (ex: Filme 2 antes de Filme 10)
     function ordenarLista(lista) {
       return [...lista].sort((a, b) => 
         a.titulo.localeCompare(b.titulo, 'pt-BR', { numeric: true, sensitivity: 'base' })
@@ -173,10 +176,32 @@
       };
     }
 
-    // Gera os 20 destaques aleatórios
-    function gerarDestaques() {
+    // Lógica para gerenciar os destaques usando o localStorage
+    function gerenciarDestaques(forcarNovos = false) {
+      const agora = Date.now();
+      const linksSalvos = localStorage.getItem(STORAGE_KEY_LINKS);
+      const timestampSalvo = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
+
+      // Se NÃO for pra forçar novos, verifica se os antigos ainda são válidos
+      if (!forcarNovos && linksSalvos && timestampSalvo) {
+        const tempoPassado = agora - parseInt(timestampSalvo);
+        
+        // Se passou menos de 30 minutos, usa os salvos
+        if (tempoPassado < TRINTA_MINUTOS_MS) {
+          const linksArray = JSON.parse(linksSalvos);
+          destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link));
+          return; // Sai da função e mantém os destaques
+        }
+      }
+
+      // Se chegou aqui, ou passou 30 min ou é a primeira vez. Sorteia novos.
       const catalogoEmbaralhado = embaralhar(catalogo);
       destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
+
+      // Salva na memória do navegador
+      const novosLinks = destaquesIniciais.map(item => item.link);
+      localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(novosLinks));
+      localStorage.setItem(STORAGE_KEY_TIMESTAMP, agora.toString());
     }
 
     async function carregarCatalogo() {
@@ -186,27 +211,27 @@
         
         catalogo = await resposta.json();
         
-        // Separa e ORDENA as listas de filmes e séries
+        // Separa e ORDENA as listas
         listaFilmes = ordenarLista(catalogo.filter(item => !isSerie(item)));
         listaSeries = ordenarLista(catalogo.filter(item => isSerie(item)));
         
-        // Gera a primeira leva de destaques
-        gerarDestaques();
+        // Carrega os destaques (verificando o tempo)
+        gerenciarDestaques();
         
         mudarView('home');
 
-        // Configura a troca automática dos destaques a cada 30 minutos
-        // (30 minutos * 60 segundos * 1000 milissegundos)
+        // O Timer de 30 minutos caso o usuário deixe a página aberta
+        // Ele espera 30 min e então FORÇA a troca, salvando no localStorage
         setInterval(() => {
-          gerarDestaques();
-          // Se o usuário estiver na home e não estiver digitando nada, atualiza a tela
+          gerenciarDestaques(true); // true = Forçar novos
+          
           if (viewAtual === 'home' && searchInput.value.trim() === '') {
             itensFiltradosAtuais = destaquesIniciais;
             paginaAtual = 1;
             renderizar();
-            console.log("🔄 Destaques atualizados automaticamente (30 min).");
+            console.log("🔄 Destaques trocados automaticamente (passaram 30 min com a tela aberta).");
           }
-        }, 30 * 60 * 1000);
+        }, TRINTA_MINUTOS_MS);
 
       } catch (erro) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3><p>Verifique se o catalogo.json existe.</p></div>`;
@@ -322,7 +347,6 @@
 
       tituloSecao.innerText = `Resultados para: "${termo}"`;
       
-      // Filtra e depois ORDENA os resultados da busca
       const resultados = catalogo.filter(item => 
         item.titulo.toLowerCase().includes(termo) || 
         item.serie.toLowerCase().includes(termo)
