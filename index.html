@@ -64,8 +64,8 @@
     .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.6); }
     .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
     
-    /* AVISO LARANJA DE QUANTIDADE */
-    .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 20px; color: #ff8c42; font-weight: bold; background: rgba(255, 140, 66, 0.1); border-radius: 8px; margin-top: 10px; font-size: 0.95rem; line-height: 1.4; }
+    /* AVISO DINÂMICO DE QUANTIDADE */
+    .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 15px; color: #ff8c42; font-weight: 600; background: rgba(255, 140, 66, 0.1); border-radius: 8px; margin-top: 10px; font-size: 1rem; border: 1px solid rgba(255, 140, 66, 0.2); }
     
     footer { background: rgba(0, 0, 0, 0.4); padding: 30px 60px; text-align: center; color: rgba(255, 255, 255, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: 40px; }
 
@@ -139,7 +139,6 @@
     let itensFiltradosAtuais = []; 
     let paginaAtual = 1;
     
-    // VOLTAMOS PARA 50 ITENS POR PÁGINA
     const ITENS_POR_PAGINA = 50; 
 
     const gridContainer = document.getElementById('catalogGrid');
@@ -283,13 +282,15 @@
         </a>
       `).join('');
 
-      // AQUI ESTÁ O AVISO LARANJA COM A QUANTIDADE
-      // Se a lista filtrada for maior que 50, ele mostra o aviso
+      // Lógica para o Aviso Dinâmico de Quantidade
       if (itensFiltradosAtuais.length > ITENS_POR_PAGINA) {
+        // Calcula em qual item a página atual começa e termina
+        const itemInicial = inicio + 1;
+        const itemFinal = Math.min(fim, itensFiltradosAtuais.length);
+        
         htmlCards += `
           <div class="aviso-mais">
-            Mostrando os primeiros ${ITENS_POR_PAGINA} de ${itensFiltradosAtuais.length} resultados.<br>
-            Refine sua busca ou use as páginas abaixo para ver mais.
+            Mostrando os itens <strong>${itemInicial} a ${itemFinal}</strong> de <strong>${itensFiltradosAtuais.length}</strong> resultados.
           </div>
         `;
       }
