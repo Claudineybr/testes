@@ -282,15 +282,14 @@
         </a>
       `).join('');
 
-      // Lógica para o Aviso Dinâmico de Quantidade
+      // Lógica do Aviso Dinâmico
       if (itensFiltradosAtuais.length > ITENS_POR_PAGINA) {
-        // Calcula em qual item a página atual começa e termina
-        const itemInicial = inicio + 1;
+        // Aqui usamos o itemFinal para mostrar a contagem acumulada (ex: 150 de 374)
         const itemFinal = Math.min(fim, itensFiltradosAtuais.length);
         
         htmlCards += `
           <div class="aviso-mais">
-            Mostrando os itens <strong>${itemInicial} a ${itemFinal}</strong> de <strong>${itensFiltradosAtuais.length}</strong> resultados.
+            Mostrando <strong>${itemFinal}</strong> de <strong>${itensFiltradosAtuais.length}</strong> resultados.
           </div>
         `;
       }
