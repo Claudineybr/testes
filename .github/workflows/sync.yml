@@ -2,6 +2,7 @@ name: Sincronizar e Limpar
 
 on:
   # schedule:
+  #   - cron: '0 */6 * * *'   # descomente e ajuste se quiser agendamento
   workflow_dispatch:
 
 permissions:
@@ -23,65 +24,108 @@ jobs:
         run: |
           set -e
           T=$(mktemp -d)
-         
+
+          echo "== Clonando API =="
           git clone --depth 1 https://github.com/Claudineybr/api_pobreflix_filmes.git "$T/novos"
-          
+
+          echo "== Arquivos no clone (amostra) =="
+          find "$T/novos" -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | head -30
+          echo "Total no clone: $(find "$T/novos" -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)"
+
+          echo "== Arquivos no workspace (amostra) =="
+          find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | head -30
+          echo "Total no workspace: $(find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)"
+
+          # Copia os arquivos atuais do repo para servirem de "origem"
+          mkdir -p "$T/origem"
+          find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) -exec cp -f {} "$T/origem/" \; 2>/dev/null || true
+
           cat > "$T/filtrar.py" << 'PYEOF'
           import json
           import re
-          from pathlib import Path
           import shutil
+          from pathlib import Path
 
           dir_origem = Path("ORIGEM_PATH") if Path("ORIGEM_PATH").exists() else None
-          dir_novos = Path("NOVOS_PATH")
-          dir_saida = Path("SAIDA_PATH")
+          dir_novos  = Path("NOVOS_PATH")
+          dir_saida  = Path("SAIDA_PATH")
           dir_saida.mkdir(parents=True, exist_ok=True)
 
+          EXTS = ("*.html", "*.htm", "*.json")
           links_vistos = set()
           copiados = 0
           arquivos = []
 
-          if dir_origem: arquivos.extend(list(dir_origem.glob("*.json")))
-          arquivos.extend(list(dir_novos.glob("*.json")))
+          if dir_origem:
+              for ext in EXTS:
+                  arquivos.extend(dir_origem.rglob(ext))
+          for ext in EXTS:
+              arquivos.extend(dir_novos.rglob(ext))
 
           def prioridade(arq):
-              is_novo = 1 if dir_novos in arq.parents else 0
+              try:
+                  is_novo = 1 if dir_novos in arq.parents else 0
+              except Exception:
+                  is_novo = 0
               return (is_novo, len(arq.name))
 
           arquivos.sort(key=prioridade, reverse=True)
 
+          # regex tolerante: aceita atributos extras e aspas simples/duplas
+          RE_LD = re.compile(
+              r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+              re.S | re.I
+          )
+
           for arq in arquivos:
-              if any(x in arq.name for x in ['pendentes', 'fila', 'feitas', 'descartados']): continue
+              if any(x in arq.name for x in ['pendentes', 'fila', 'feitas', 'descartados']):
+                  continue
               try:
                   texto = arq.read_text(encoding='utf-8-sig')
-                  match = re.search(r'<script type="application/ld\+json">(.*?)</script>', texto, re.S)
-                  dados = json.loads(match.group(1)) if match else json.loads(texto)
-                  url = dados.get("contentUrl", "").strip().lower()
-                  if not url or url.endswith(".ts") or ".m3u8" in url: continue
-                  if url in links_vistos: continue
+                  m = RE_LD.search(texto)
+                  dados = json.loads(m.group(1)) if m else json.loads(texto)
+                  url = (dados.get("contentUrl") or "").strip().lower()
+                  if not url or url.endswith(".ts") or ".m3u8" in url:
+                      print(f"[skip url] {arq.name}: URL invalida -> {url[:80]}")
+                      continue
+                  if url in links_vistos:
+                      continue
                   links_vistos.add(url)
-                  shutil.copy2(arq, dir_saida / arq.name)
+
+                  destino = dir_saida / arq.name
+                  if destino.exists():
+                      destino = dir_saida / f"{arq.stem}__{abs(hash(url))}{arq.suffix}"
+                  shutil.copy2(arq, destino)
                   copiados += 1
-              except Exception: pass
-          print(f"Arquivos limpos e únicos copiados: {copiados}")
+              except Exception as e:
+                  print(f"[erro] {arq.name}: {e}")
+
+          print(f"Arquivos limpos e unicos copiados: {copiados}")
           PYEOF
 
           sed -i "s|ORIGEM_PATH|$T/origem|g; s|NOVOS_PATH|$T/novos|g; s|SAIDA_PATH|$T/saida|g" "$T/filtrar.py"
           python3 -I "$T/filtrar.py"
-          
-          N_OUT=$(ls "$T"/saida/*.json | wc -l)
-          if [ "$N_OUT" -eq 0 ]; then exit 1; fi
-          
-          sed -i 's#https://redetoons\.cards#https://redetoons.my#g' "$T"/saida/*.json
-          sed -i 's#🕸️ PK#🍿Clau#g' "$T"/saida/*.json
-          
-          rm -f ./*.json
-          cp -f "$T"/saida/*.json .
-          
+
+          N_OUT=$(find "$T/saida" -maxdepth 1 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)
+          if [ "$N_OUT" -eq 0 ]; then
+            echo "ERRO: nenhum arquivo valido encontrado na saida."
+            exit 1
+          fi
+          echo "Arquivos na saida: $N_OUT"
+
+          sed -i 's#https://redetoons\.cards#https://redetoons.my#g' "$T"/saida/* 2>/dev/null || true
+          sed -i 's#🕸️ PK#🍿Clau#g'                               "$T"/saida/* 2>/dev/null || true
+
+          rm -f ./*.html ./*.htm ./*.json
+          cp -f "$T"/saida/* ./
+
           git config user.name "Claudineybr"
           git config user.email "Claudineybr@users.noreply.github.com"
           git add -A
-          if git diff --cached --quiet; then exit 0; fi
+          if git diff --cached --quiet; then
+            echo "Sem mudancas para commitar."
+            exit 0
+          fi
           git commit -m "sync: atualizacao limpa"
           git pull origin main --no-rebase -X ours --no-edit || true
           git push origin HEAD:main
