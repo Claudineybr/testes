@@ -2,7 +2,7 @@ name: Sincronizar e Limpar
 
 on:
   # schedule:
-  #   - cron: '0 */6 * * *'   # descomente e ajuste se quiser agendamento
+  #   - cron: '0 */6 * * *'
   workflow_dispatch:
 
 permissions:
@@ -28,15 +28,6 @@ jobs:
           echo "== Clonando API =="
           git clone --depth 1 https://github.com/Claudineybr/api_pobreflix_filmes.git "$T/novos"
 
-          echo "== Arquivos no clone (amostra) =="
-          find "$T/novos" -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | head -30
-          echo "Total no clone: $(find "$T/novos" -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)"
-
-          echo "== Arquivos no workspace (amostra) =="
-          find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | head -30
-          echo "Total no workspace: $(find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)"
-
-          # Copia os arquivos atuais do repo para servirem de "origem"
           mkdir -p "$T/origem"
           find . -maxdepth 2 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) -exec cp -f {} "$T/origem/" \; 2>/dev/null || true
 
@@ -52,13 +43,18 @@ jobs:
           dir_saida.mkdir(parents=True, exist_ok=True)
 
           EXTS = ("*.html", "*.htm", "*.json")
+          RE_LD = re.compile(
+              r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+              re.S | re.I
+          )
+
           links_vistos = set()
           copiados = 0
+          stats = {"lista": 0, "sem_ld": 0, "sem_contenturl": 0, "ts": 0, "duplicado": 0, "erro": 0}
           arquivos = []
 
           if dir_origem:
-              for ext in EXTS:
-                  arquivos.extend(dir_origem.rglob(ext))
+              for ext in EXTS: arquivos.extend(dir_origem.rglob(ext))
           for ext in EXTS:
               arquivos.extend(dir_novos.rglob(ext))
 
@@ -68,39 +64,61 @@ jobs:
               except Exception:
                   is_novo = 0
               return (is_novo, len(arq.name))
-
           arquivos.sort(key=prioridade, reverse=True)
-
-          # regex tolerante: aceita atributos extras e aspas simples/duplas
-          RE_LD = re.compile(
-              r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
-              re.S | re.I
-          )
 
           for arq in arquivos:
               if any(x in arq.name for x in ['pendentes', 'fila', 'feitas', 'descartados']):
                   continue
+
               try:
                   texto = arq.read_text(encoding='utf-8-sig')
                   m = RE_LD.search(texto)
                   dados = json.loads(m.group(1)) if m else json.loads(texto)
-                  url = (dados.get("contentUrl") or "").strip().lower()
-                  if not url or url.endswith(".ts") or ".m3u8" in url:
-                      print(f"[skip url] {arq.name}: URL invalida -> {url[:80]}")
+
+                  if isinstance(dados, list):
+                      print(f"[skip-lista] {arq.name}: JSON e uma lista")
+                      stats["lista"] += 1
                       continue
-                  if url in links_vistos:
+
+                  if not isinstance(dados, dict):
+                      print(f"[skip-tipo] {arq.name}: JSON nao e dict")
+                      stats["sem_contenturl"] += 1
                       continue
-                  links_vistos.add(url)
+
+                  url = (dados.get("contentUrl") or "").strip()
+                  if not url:
+                      print(f"[skip-vazio] {arq.name}: sem contentUrl")
+                      stats["sem_contenturl"] += 1
+                      continue
+
+                  url_l = url.lower()
+
+                  # ⬇️⬇️ SO .ts e rejeitado. m3u8 passa normal.
+                  if url_l.endswith(".ts") or "_media.ts" in url_l:
+                      print(f"[skip-ts] {arq.name}: URL termina em .ts (nao suportado)")
+                      stats["ts"] += 1
+                      continue
+
+                  if url_l in links_vistos:
+                      stats["duplicado"] += 1
+                      continue
+                  links_vistos.add(url_l)
 
                   destino = dir_saida / arq.name
                   if destino.exists():
-                      destino = dir_saida / f"{arq.stem}__{abs(hash(url))}{arq.suffix}"
+                      destino = dir_saida / f"{arq.stem}__{abs(hash(url_l))}{arq.suffix}"
                   shutil.copy2(arq, destino)
                   copiados += 1
+                  print(f"[ok] {arq.name} -> {url[:200]}")
+
+              except json.JSONDecodeError:
+                  print(f"[skip-semld] {arq.name}: sem JSON valido")
+                  stats["sem_ld"] += 1
               except Exception as e:
                   print(f"[erro] {arq.name}: {e}")
+                  stats["erro"] += 1
 
-          print(f"Arquivos limpos e unicos copiados: {copiados}")
+          print(f"\nResumo: copiados={copiados} | {stats}")
           PYEOF
 
           sed -i "s|ORIGEM_PATH|$T/origem|g; s|NOVOS_PATH|$T/novos|g; s|SAIDA_PATH|$T/saida|g" "$T/filtrar.py"
@@ -108,7 +126,7 @@ jobs:
 
           N_OUT=$(find "$T/saida" -maxdepth 1 -type f \( -name '*.html' -o -name '*.htm' -o -name '*.json' \) | wc -l)
           if [ "$N_OUT" -eq 0 ]; then
-            echo "ERRO: nenhum arquivo valido encontrado na saida."
+            echo "ERRO: nada na saida. Veja o resumo acima."
             exit 1
           fi
           echo "Arquivos na saida: $N_OUT"
@@ -123,7 +141,7 @@ jobs:
           git config user.email "Claudineybr@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "Sem mudancas para commitar."
+            echo "Sem mudancas."
             exit 0
           fi
           git commit -m "sync: atualizacao limpa"
