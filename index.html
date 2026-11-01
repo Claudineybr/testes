@@ -86,7 +86,6 @@
 <body>
 
   <header>
-    <!-- NOME ALTERADO AQUI -->
     <div class="logo" onclick="mudarView('home')">Clau <span>Flix</span></div>
     
     <div class="search-container">
@@ -133,8 +132,7 @@
     let listaFilmes = [];
     let listaSeries = [];
     
-    // Controle de Estado
-    let viewAtual = 'home'; // Pode ser 'home', 'filmes' ou 'series'
+    let viewAtual = 'home'; 
     let itensFiltradosAtuais = []; 
     let paginaAtual = 1;
     const ITENS_POR_PAGINA = 50; 
@@ -144,9 +142,7 @@
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
 
-    // Função que identifica se é série ou filme
     function isSerie(item) {
-      // Verifica se tem o padrão T1E01 no título ou _t1e01 no link
       const regexLink = /_t\d+e\d+/i;
       const regexTitulo = /T\d+E\d+/i;
       return regexLink.test(item.link) || regexTitulo.test(item.titulo);
@@ -161,6 +157,13 @@
       return copia;
     }
 
+    // Função para ordenar em ordem alfabética e numérica (ex: Filme 2 antes de Filme 10)
+    function ordenarLista(lista) {
+      return [...lista].sort((a, b) => 
+        a.titulo.localeCompare(b.titulo, 'pt-BR', { numeric: true, sensitivity: 'base' })
+      );
+    }
+
     function debounce(func, wait) {
       let timeout;
       return function executedFunction(...args) {
@@ -170,6 +173,12 @@
       };
     }
 
+    // Gera os 20 destaques aleatórios
+    function gerarDestaques() {
+      const catalogoEmbaralhado = embaralhar(catalogo);
+      destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
+    }
+
     async function carregarCatalogo() {
       try {
         const resposta = await fetch('catalogo.json');
@@ -177,33 +186,42 @@
         
         catalogo = await resposta.json();
         
-        // Separa os itens nas listas
-        listaFilmes = catalogo.filter(item => !isSerie(item));
-        listaSeries = catalogo.filter(item => isSerie(item));
+        // Separa e ORDENA as listas de filmes e séries
+        listaFilmes = ordenarLista(catalogo.filter(item => !isSerie(item)));
+        listaSeries = ordenarLista(catalogo.filter(item => isSerie(item)));
         
-        // Pega 20 aleatórios para a tela inicial (misturando os dois)
-        const catalogoEmbaralhado = embaralhar(catalogo);
-        destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
+        // Gera a primeira leva de destaques
+        gerarDestaques();
         
-        // Inicia na Home
         mudarView('home');
+
+        // Configura a troca automática dos destaques a cada 30 minutos
+        // (30 minutos * 60 segundos * 1000 milissegundos)
+        setInterval(() => {
+          gerarDestaques();
+          // Se o usuário estiver na home e não estiver digitando nada, atualiza a tela
+          if (viewAtual === 'home' && searchInput.value.trim() === '') {
+            itensFiltradosAtuais = destaquesIniciais;
+            paginaAtual = 1;
+            renderizar();
+            console.log("🔄 Destaques atualizados automaticamente (30 min).");
+          }
+        }, 30 * 60 * 1000);
+
       } catch (erro) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3><p>Verifique se o catalogo.json existe.</p></div>`;
         console.error(erro);
       }
     }
 
-    // Função para trocar entre as abas (Início, Filmes, Séries)
     window.mudarView = function(novaView) {
       viewAtual = novaView;
-      searchInput.value = ''; // Limpa a busca ao trocar de aba
+      searchInput.value = ''; 
       paginaAtual = 1;
 
-      // Atualiza a cor do link no menu
       document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
       document.getElementById(`nav-${novaView}`).classList.add('active');
 
-      // Define qual lista será exibida
       if (novaView === 'home') {
         tituloSecao.innerText = "Destaques";
         itensFiltradosAtuais = destaquesIniciais;
@@ -297,7 +315,6 @@
     function buscar() {
       const termo = searchInput.value.trim().toLowerCase();
 
-      // Se apagar a busca, volta para a aba que estava
       if (termo.length === 0) {
         mudarView(viewAtual);
         return;
@@ -305,11 +322,13 @@
 
       tituloSecao.innerText = `Resultados para: "${termo}"`;
       
-      // A busca ignora a aba e procura em TODO o catálogo
-      itensFiltradosAtuais = catalogo.filter(item => 
+      // Filtra e depois ORDENA os resultados da busca
+      const resultados = catalogo.filter(item => 
         item.titulo.toLowerCase().includes(termo) || 
         item.serie.toLowerCase().includes(termo)
       );
+      
+      itensFiltradosAtuais = ordenarLista(resultados);
 
       paginaAtual = 1; 
       renderizar();
