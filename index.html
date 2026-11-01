@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎬 CineFlix - Filmes & Séries</title>
+  <title>🍿 Clau Flix - Filmes & Séries</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%); color: #fff; min-height: 100vh; }
@@ -22,8 +22,8 @@
 
     /* NAV */
     nav ul { display: flex; gap: 25px; list-style: none; }
-    nav ul li a { color: rgba(255, 255, 255, 0.75); text-decoration: none; font-weight: 500; transition: color 0.3s; cursor: pointer; }
-    nav ul li a:hover, nav ul li a.active { color: #ff2e63; }
+    nav ul li a { color: rgba(255, 255, 255, 0.75); text-decoration: none; font-weight: 500; transition: color 0.3s; cursor: pointer; padding-bottom: 5px; border-bottom: 2px solid transparent; }
+    nav ul li a:hover, nav ul li a.active { color: #ff2e63; border-bottom: 2px solid #ff2e63; }
 
     /* HERO */
     .hero { height: 450px; background: linear-gradient(to right, rgba(15, 15, 30, 0.95), rgba(15, 15, 30, 0.4)), url('https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1600') center/cover; display: flex; align-items: center; padding: 0 60px; position: relative; }
@@ -86,17 +86,19 @@
 <body>
 
   <header>
-    <div class="logo">Cine<span>Flix</span></div>
+    <!-- NOME ALTERADO AQUI -->
+    <div class="logo" onclick="mudarView('home')">Clau <span>Flix</span></div>
+    
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Pesquisar séries ou filmes...">
       <span class="search-icon">🔍</span>
     </div>
+    
     <nav>
       <ul>
-        <li><a class="active" href="#">Início</a></li>
-        <li><a href="#">Filmes</a></li>
-        <li><a href="#">Séries</a></li>
-        <li><a href="#">Minha Lista</a></li>
+        <li><a href="#" id="nav-home" class="active" onclick="mudarView('home'); return false;">Início</a></li>
+        <li><a href="#" id="nav-filmes" onclick="mudarView('filmes'); return false;">Filmes</a></li>
+        <li><a href="#" id="nav-series" onclick="mudarView('series'); return false;">Séries</a></li>
       </ul>
     </nav>
   </header>
@@ -122,22 +124,33 @@
   </section>
 
   <footer>
-    <p>© 2025 CineFlix — Todos os direitos reservados. Feito com 🎬 e ❤️</p>
+    <p>© 2025 Clau Flix — Todos os direitos reservados. Feito com 🎬 e ❤️</p>
   </footer>
 
   <script>
     let catalogo = [];
     let destaquesIniciais = []; 
+    let listaFilmes = [];
+    let listaSeries = [];
     
-    // Variáveis de Paginação
+    // Controle de Estado
+    let viewAtual = 'home'; // Pode ser 'home', 'filmes' ou 'series'
+    let itensFiltradosAtuais = []; 
     let paginaAtual = 1;
-    const ITENS_POR_PAGINA = 50; // 50 por página
-    let itensFiltradosAtuais = []; // Guarda o resultado da busca atual
+    const ITENS_POR_PAGINA = 50; 
 
     const gridContainer = document.getElementById('catalogGrid');
     const paginationContainer = document.getElementById('paginationContainer');
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
+
+    // Função que identifica se é série ou filme
+    function isSerie(item) {
+      // Verifica se tem o padrão T1E01 no título ou _t1e01 no link
+      const regexLink = /_t\d+e\d+/i;
+      const regexTitulo = /T\d+E\d+/i;
+      return regexLink.test(item.link) || regexTitulo.test(item.titulo);
+    }
 
     function embaralhar(array) {
       const copia = [...array];
@@ -164,30 +177,55 @@
         
         catalogo = await resposta.json();
         
-        // Pega 20 aleatórios para a tela inicial
+        // Separa os itens nas listas
+        listaFilmes = catalogo.filter(item => !isSerie(item));
+        listaSeries = catalogo.filter(item => isSerie(item));
+        
+        // Pega 20 aleatórios para a tela inicial (misturando os dois)
         const catalogoEmbaralhado = embaralhar(catalogo);
         destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
         
-        itensFiltradosAtuais = destaquesIniciais;
-
-        renderizar();
+        // Inicia na Home
+        mudarView('home');
       } catch (erro) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3><p>Verifique se o catalogo.json existe.</p></div>`;
         console.error(erro);
       }
     }
 
-    // Função que desenha os cards e a paginação
+    // Função para trocar entre as abas (Início, Filmes, Séries)
+    window.mudarView = function(novaView) {
+      viewAtual = novaView;
+      searchInput.value = ''; // Limpa a busca ao trocar de aba
+      paginaAtual = 1;
+
+      // Atualiza a cor do link no menu
+      document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+      document.getElementById(`nav-${novaView}`).classList.add('active');
+
+      // Define qual lista será exibida
+      if (novaView === 'home') {
+        tituloSecao.innerText = "Destaques";
+        itensFiltradosAtuais = destaquesIniciais;
+      } else if (novaView === 'filmes') {
+        tituloSecao.innerText = "Filmes";
+        itensFiltradosAtuais = listaFilmes;
+      } else if (novaView === 'series') {
+        tituloSecao.innerText = "Séries";
+        itensFiltradosAtuais = listaSeries;
+      }
+
+      renderizar();
+    }
+
     function renderizar() {
-      // 1. Calcula quais itens mostrar nesta página
       const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
       const fim = inicio + ITENS_POR_PAGINA;
       const itensDaPagina = itensFiltradosAtuais.slice(inicio, fim);
 
-      // 2. Desenha os cards
       if (itensFiltradosAtuais.length === 0) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Nenhum resultado encontrado 😕</h3><p>Tente pesquisar por outro nome.</p></div>`;
-        paginationContainer.innerHTML = ''; // Esconde paginação
+        paginationContainer.innerHTML = ''; 
         return;
       }
 
@@ -209,14 +247,12 @@
         </a>
       `).join('');
 
-      // 3. Desenha os botões de paginação (só se tiver mais de 1 página)
       renderizarPaginacao();
     }
 
     function renderizarPaginacao() {
       const totalPaginas = Math.ceil(itensFiltradosAtuais.length / ITENS_POR_PAGINA);
       
-      // Se só tem 1 página ou menos (ex: a tela inicial de 20 itens), não mostra botões
       if (totalPaginas <= 1) {
         paginationContainer.innerHTML = '';
         return;
@@ -224,12 +260,10 @@
 
       let html = '';
 
-      // Botão Anterior
       if (paginaAtual > 1) {
         html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual - 1})">« Anterior</button>`;
       }
 
-      // Lógica para não mostrar 100 botões de página na tela
       let startPage = Math.max(1, paginaAtual - 2);
       let endPage = Math.min(totalPaginas, paginaAtual + 2);
 
@@ -247,7 +281,6 @@
         html += `<button class="page-btn" onclick="mudarPagina(${totalPaginas})">${totalPaginas}</button>`;
       }
 
-      // Botão Próxima
       if (paginaAtual < totalPaginas) {
         html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual + 1})">Próxima »</button>`;
       }
@@ -255,34 +288,30 @@
       paginationContainer.innerHTML = html;
     }
 
-    // Função chamada ao clicar num botão de página
     window.mudarPagina = function(novaPagina) {
       paginaAtual = novaPagina;
       renderizar();
-      // Rola a tela suavemente para o topo da grade
       document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
     }
 
     function buscar() {
       const termo = searchInput.value.trim().toLowerCase();
 
+      // Se apagar a busca, volta para a aba que estava
       if (termo.length === 0) {
-        tituloSecao.innerText = "Destaques";
-        itensFiltradosAtuais = destaquesIniciais;
-        paginaAtual = 1; // Reseta a página
-        renderizar();
+        mudarView(viewAtual);
         return;
       }
 
-      tituloSecao.innerText = "Resultados da busca";
+      tituloSecao.innerText = `Resultados para: "${termo}"`;
       
-      // Filtra tudo
+      // A busca ignora a aba e procura em TODO o catálogo
       itensFiltradosAtuais = catalogo.filter(item => 
         item.titulo.toLowerCase().includes(termo) || 
         item.serie.toLowerCase().includes(termo)
       );
 
-      paginaAtual = 1; // Sempre volta para a página 1 ao digitar
+      paginaAtual = 1; 
       renderizar();
     }
 
