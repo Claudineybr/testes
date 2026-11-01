@@ -40,14 +40,6 @@
     "thumbnailUrl": "https://image.tmdb.org/t/p/w500/dD3ylKniLRTcJLTSkefz3rMR1DT.jpg"
   },
   {
-    "titulo": "100 Ou Nada T5E4 - T5E04",
-    "serie": "100 Ou Nada T5E4",
-    "temporada": 5,
-    "episodio": 4,
-    "link": "100_ou_nada_t5e4_t5e4.html",
-    "thumbnailUrl": "https://via.placeholder.com/500x750?text=Sem+Capa"
-  },
-  {
     "titulo": "101 Dalmatas",
     "serie": "101 Dalmatas",
     "temporada": 1,
@@ -1078,6 +1070,14 @@
     "episodio": 1,
     "link": "9_a_salvacao.html",
     "thumbnailUrl": "https://image.tmdb.org/t/p/w500/lbHTsN5x7h6aCt7DqPQN4kYHfky.jpg"
+  },
+  {
+    "titulo": "Station 19 - T5E04",
+    "serie": "Station 19",
+    "temporada": 5,
+    "episodio": 4,
+    "link": "Station_19_t5e4.html",
+    "thumbnailUrl": "https://m.media-amazon.com/images/M/MV5BM2I0NGI2NmYtMWJiZC00NzFkLWI2ZTItMzJhMTM1NTFhY2YzXkEyXkFqcGc@._V1_QL75_UX800_.jpg"
   },
   {
     "titulo": "A 5A Onda",
