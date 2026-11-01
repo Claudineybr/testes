@@ -63,6 +63,10 @@
     /* UTILS */
     .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.6); }
     .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
+    
+    /* AVISO LARANJA DE QUANTIDADE */
+    .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 20px; color: #ff8c42; font-weight: bold; background: rgba(255, 140, 66, 0.1); border-radius: 8px; margin-top: 10px; font-size: 0.95rem; line-height: 1.4; }
+    
     footer { background: rgba(0, 0, 0, 0.4); padding: 30px 60px; text-align: center; color: rgba(255, 255, 255, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: 40px; }
 
     @media (max-width: 900px) {
@@ -134,6 +138,8 @@
     let viewAtual = 'home'; 
     let itensFiltradosAtuais = []; 
     let paginaAtual = 1;
+    
+    // VOLTAMOS PARA 50 ITENS POR PÁGINA
     const ITENS_POR_PAGINA = 50; 
 
     const gridContainer = document.getElementById('catalogGrid');
@@ -141,7 +147,6 @@
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
 
-    // Chaves para o localStorage (memória do navegador)
     const STORAGE_KEY_LINKS = 'clauFlix_destaques_links';
     const STORAGE_KEY_TIMESTAMP = 'clauFlix_destaques_timestamp';
     const TRINTA_MINUTOS_MS = 30 * 60 * 1000;
@@ -176,29 +181,23 @@
       };
     }
 
-    // Lógica para gerenciar os destaques usando o localStorage
     function gerenciarDestaques(forcarNovos = false) {
       const agora = Date.now();
       const linksSalvos = localStorage.getItem(STORAGE_KEY_LINKS);
       const timestampSalvo = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
 
-      // Se NÃO for pra forçar novos, verifica se os antigos ainda são válidos
       if (!forcarNovos && linksSalvos && timestampSalvo) {
         const tempoPassado = agora - parseInt(timestampSalvo);
-        
-        // Se passou menos de 30 minutos, usa os salvos
         if (tempoPassado < TRINTA_MINUTOS_MS) {
           const linksArray = JSON.parse(linksSalvos);
           destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link));
-          return; // Sai da função e mantém os destaques
+          return; 
         }
       }
 
-      // Se chegou aqui, ou passou 30 min ou é a primeira vez. Sorteia novos.
       const catalogoEmbaralhado = embaralhar(catalogo);
       destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
 
-      // Salva na memória do navegador
       const novosLinks = destaquesIniciais.map(item => item.link);
       localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(novosLinks));
       localStorage.setItem(STORAGE_KEY_TIMESTAMP, agora.toString());
@@ -211,25 +210,19 @@
         
         catalogo = await resposta.json();
         
-        // Separa e ORDENA as listas
         listaFilmes = ordenarLista(catalogo.filter(item => !isSerie(item)));
         listaSeries = ordenarLista(catalogo.filter(item => isSerie(item)));
         
-        // Carrega os destaques (verificando o tempo)
         gerenciarDestaques();
         
         mudarView('home');
 
-        // O Timer de 30 minutos caso o usuário deixe a página aberta
-        // Ele espera 30 min e então FORÇA a troca, salvando no localStorage
         setInterval(() => {
-          gerenciarDestaques(true); // true = Forçar novos
-          
+          gerenciarDestaques(true); 
           if (viewAtual === 'home' && searchInput.value.trim() === '') {
             itensFiltradosAtuais = destaquesIniciais;
             paginaAtual = 1;
             renderizar();
-            console.log("🔄 Destaques trocados automaticamente (passaram 30 min com a tela aberta).");
           }
         }, TRINTA_MINUTOS_MS);
 
@@ -272,7 +265,7 @@
         return;
       }
 
-      gridContainer.innerHTML = itensDaPagina.map(item => `
+      let htmlCards = itensDaPagina.map(item => `
         <a class="card" href="${item.link}">
           ${item.thumbnailUrl ? 
             `<img src="${item.thumbnailUrl}" alt="${item.titulo}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
@@ -290,6 +283,18 @@
         </a>
       `).join('');
 
+      // AQUI ESTÁ O AVISO LARANJA COM A QUANTIDADE
+      // Se a lista filtrada for maior que 50, ele mostra o aviso
+      if (itensFiltradosAtuais.length > ITENS_POR_PAGINA) {
+        htmlCards += `
+          <div class="aviso-mais">
+            Mostrando os primeiros ${ITENS_POR_PAGINA} de ${itensFiltradosAtuais.length} resultados.<br>
+            Refine sua busca ou use as páginas abaixo para ver mais.
+          </div>
+        `;
+      }
+
+      gridContainer.innerHTML = htmlCards;
       renderizarPaginacao();
     }
 
