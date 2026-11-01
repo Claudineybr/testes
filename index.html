@@ -42,7 +42,7 @@
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
 
     /* CARDS */
-    .card { background: #1a1a2e; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.05); position: relative; text-decoration: none; color: #fff; display: block; content-visibility: auto; /* Otimização de renderização */ contain-intrinsic-size: 200px 350px; }
+    .card { background: #1a1a2e; border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.05); position: relative; text-decoration: none; color: #fff; display: block; content-visibility: auto; contain-intrinsic-size: 200px 350px; }
     .card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(255, 46, 99, 0.25); border-color: rgba(255, 46, 99, 0.5); }
     .card img { width: 100%; height: 300px; object-fit: cover; display: block; }
     
@@ -52,10 +52,17 @@
     .card-info .meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); }
     .rating { color: #ff2e63; font-weight: 600; }
 
+    /* PAGINAÇÃO */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; flex-wrap: wrap; }
+    .page-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+    .page-btn:hover { background: rgba(255, 46, 99, 0.2); border-color: #ff2e63; }
+    .page-btn.active { background: linear-gradient(45deg, #ff2e63, #ff8c42); border-color: transparent; color: #fff; cursor: default; box-shadow: 0 4px 15px rgba(255, 46, 99, 0.4); }
+    .page-btn:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; border-color: rgba(255, 255, 255, 0.1); }
+    .page-dots { color: rgba(255, 255, 255, 0.5); padding: 0 5px; }
+
     /* UTILS */
     .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.6); }
     .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
-    .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 20px; color: #ff8c42; font-weight: bold; background: rgba(255, 140, 66, 0.1); border-radius: 8px; margin-top: 10px; }
     footer { background: rgba(0, 0, 0, 0.4); padding: 30px 60px; text-align: center; color: rgba(255, 255, 255, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: 40px; }
 
     @media (max-width: 900px) {
@@ -67,6 +74,7 @@
       .section { padding: 35px 20px; }
       .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; }
       .card img, .card-header-fallback { height: 240px; }
+      .page-btn { padding: 8px 12px; font-size: 0.9rem; }
     }
     @media (max-width: 500px) {
       nav ul { display: none; }
@@ -104,9 +112,13 @@
 
   <section class="section">
     <h2 id="tituloSecao">Destaques</h2>
+    
     <div class="grid" id="catalogGrid">
       <div class="no-results"><p>Carregando catálogo...</p></div>
     </div>
+
+    <!-- Container da Paginação -->
+    <div class="pagination" id="paginationContainer"></div>
   </section>
 
   <footer>
@@ -116,14 +128,17 @@
   <script>
     let catalogo = [];
     let destaquesIniciais = []; 
+    
+    // Variáveis de Paginação
+    let paginaAtual = 1;
+    const ITENS_POR_PAGINA = 50; // 50 por página
+    let itensFiltradosAtuais = []; // Guarda o resultado da busca atual
+
     const gridContainer = document.getElementById('catalogGrid');
+    const paginationContainer = document.getElementById('paginationContainer');
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
 
-    // Limite máximo de cards na tela para não travar o navegador
-    const LIMITE_RENDERIZACAO = 50; 
-
-    // Função para embaralhar a lista
     function embaralhar(array) {
       const copia = [...array];
       for (let i = copia.length - 1; i > 0; i--) {
@@ -133,14 +148,10 @@
       return copia;
     }
 
-    // Função Debounce: Atrasa a execução para não travar ao digitar rápido
     function debounce(func, wait) {
       let timeout;
       return function executedFunction(...args) {
-        const later = () => {
-          clearTimeout(timeout);
-          func(...args);
-        };
+        const later = () => { clearTimeout(timeout); func(...args); };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
       };
@@ -156,39 +167,37 @@
         // Pega 20 aleatórios para a tela inicial
         const catalogoEmbaralhado = embaralhar(catalogo);
         destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
+        
+        itensFiltradosAtuais = destaquesIniciais;
 
-        renderizar(destaquesIniciais);
+        renderizar();
       } catch (erro) {
-        gridContainer.innerHTML = `
-          <div class="no-results">
-            <h3>Erro ao carregar 😕</h3>
-            <p>Verifique se o GitHub Action já gerou o catalogo.json na raiz do projeto.</p>
-          </div>`;
+        gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3><p>Verifique se o catalogo.json existe.</p></div>`;
         console.error(erro);
       }
     }
 
-    function renderizar(itens, totalFiltrado = 0) {
-      if (itens.length === 0) {
+    // Função que desenha os cards e a paginação
+    function renderizar() {
+      // 1. Calcula quais itens mostrar nesta página
+      const inicio = (paginaAtual - 1) * ITENS_POR_PAGINA;
+      const fim = inicio + ITENS_POR_PAGINA;
+      const itensDaPagina = itensFiltradosAtuais.slice(inicio, fim);
+
+      // 2. Desenha os cards
+      if (itensFiltradosAtuais.length === 0) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Nenhum resultado encontrado 😕</h3><p>Tente pesquisar por outro nome.</p></div>`;
+        paginationContainer.innerHTML = ''; // Esconde paginação
         return;
       }
 
-      // Constrói os cards
-      let htmlCards = itens.map(item => `
+      gridContainer.innerHTML = itensDaPagina.map(item => `
         <a class="card" href="${item.link}">
           ${item.thumbnailUrl ? 
-            `<img src="${item.thumbnailUrl}" alt="${item.titulo}" loading="lazy"
-                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-             <div class="card-header-fallback" style="display:none;">
-               <span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span>
-               <span style="font-size:0.9rem; color:#aaa; margin-top:10px;">Capa com erro</span>
-             </div>` 
+            `<img src="${item.thumbnailUrl}" alt="${item.titulo}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="card-header-fallback" style="display:none;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span></div>` 
             : 
-            `<div class="card-header-fallback" style="display:flex;">
-               <span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span>
-               <span style="font-size:0.9rem; color:#aaa; margin-top:10px;">Sem Capa</span>
-             </div>`
+            `<div class="card-header-fallback" style="display:flex;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span></div>`
           }
           <div class="card-info">
             <h3>${item.titulo}</h3>
@@ -200,18 +209,58 @@
         </a>
       `).join('');
 
-      // Se houver mais resultados do que o limite, avisa o usuário
-      if (totalFiltrado > LIMITE_RENDERIZACAO) {
-        htmlCards += `
-          <div class="aviso-mais">
-            Mostrando os primeiros ${LIMITE_RENDERIZACAO} de ${totalFiltrado} resultados.<br>
-            Refine sua busca para encontrar o que procura!
-          </div>
-        `;
+      // 3. Desenha os botões de paginação (só se tiver mais de 1 página)
+      renderizarPaginacao();
+    }
+
+    function renderizarPaginacao() {
+      const totalPaginas = Math.ceil(itensFiltradosAtuais.length / ITENS_POR_PAGINA);
+      
+      // Se só tem 1 página ou menos (ex: a tela inicial de 20 itens), não mostra botões
+      if (totalPaginas <= 1) {
+        paginationContainer.innerHTML = '';
+        return;
       }
 
-      // Atualiza o DOM de uma vez só (muito mais rápido)
-      gridContainer.innerHTML = htmlCards;
+      let html = '';
+
+      // Botão Anterior
+      if (paginaAtual > 1) {
+        html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual - 1})">« Anterior</button>`;
+      }
+
+      // Lógica para não mostrar 100 botões de página na tela
+      let startPage = Math.max(1, paginaAtual - 2);
+      let endPage = Math.min(totalPaginas, paginaAtual + 2);
+
+      if (startPage > 1) {
+        html += `<button class="page-btn" onclick="mudarPagina(1)">1</button>`;
+        if (startPage > 2) html += `<span class="page-dots">...</span>`;
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button class="page-btn ${i === paginaAtual ? 'active' : ''}" onclick="mudarPagina(${i})">${i}</button>`;
+      }
+
+      if (endPage < totalPaginas) {
+        if (endPage < totalPaginas - 1) html += `<span class="page-dots">...</span>`;
+        html += `<button class="page-btn" onclick="mudarPagina(${totalPaginas})">${totalPaginas}</button>`;
+      }
+
+      // Botão Próxima
+      if (paginaAtual < totalPaginas) {
+        html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual + 1})">Próxima »</button>`;
+      }
+
+      paginationContainer.innerHTML = html;
+    }
+
+    // Função chamada ao clicar num botão de página
+    window.mudarPagina = function(novaPagina) {
+      paginaAtual = novaPagina;
+      renderizar();
+      // Rola a tela suavemente para o topo da grade
+      document.querySelector('.section').scrollIntoView({ behavior: 'smooth' });
     }
 
     function buscar() {
@@ -219,25 +268,24 @@
 
       if (termo.length === 0) {
         tituloSecao.innerText = "Destaques";
-        renderizar(destaquesIniciais);
+        itensFiltradosAtuais = destaquesIniciais;
+        paginaAtual = 1; // Reseta a página
+        renderizar();
         return;
       }
 
       tituloSecao.innerText = "Resultados da busca";
       
       // Filtra tudo
-      const filtrados = catalogo.filter(item => 
+      itensFiltradosAtuais = catalogo.filter(item => 
         item.titulo.toLowerCase().includes(termo) || 
         item.serie.toLowerCase().includes(termo)
       );
 
-      // Corta para os primeiros 50 (para não travar o navegador)
-      const itensParaRenderizar = filtrados.slice(0, LIMITE_RENDERIZACAO);
-
-      renderizar(itensParaRenderizar, filtrados.length);
+      paginaAtual = 1; // Sempre volta para a página 1 ao digitar
+      renderizar();
     }
 
-    // AQUI ESTÁ A MÁGICA: O debounce espera 300ms (0.3s) para rodar a busca
     searchInput.addEventListener('input', debounce(buscar, 300));
     
     carregarCatalogo();
