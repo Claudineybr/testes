@@ -1,0 +1,101 @@
+name: Detectar Capas Placeholder
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - '**.html'
+
+permissions:
+  contents: write
+
+jobs:
+  detectar:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o codigo do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Varrer HTMLs e gerar lista
+        run: |
+          python << 'EOF'
+          import os
+          from pathlib import Path
+
+          PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
+
+          com_placeholder = []
+          sem_placeholder = []
+          total = 0
+
+          for root, dirs, files in os.walk('.'):
+              # ignora .git, .github e outras pastas ocultas
+              dirs[:] = [d for d in dirs if not d.startswith('.')]
+
+              for file in sorted(files):
+                  if not file.endswith('.html'):
+                      continue
+                  total += 1
+                  caminho = Path(root) / file
+                  try:
+                      texto = caminho.read_text(encoding='utf-8', errors='ignore')
+                  except Exception as e:
+                      print(f"[erro] {caminho}: {e}")
+                      continue
+
+                  # caminho relativo limpo (sem "./")
+                  rel = str(caminho).replace('\\', '/')
+                  if rel.startswith('./'):
+                      rel = rel[2:]
+
+                  if PLACEHOLDER in texto:
+                      com_placeholder.append(rel)
+                      print(f"[SEM CAPA] {rel}")
+                  else:
+                      sem_placeholder.append(rel)
+
+          print(f"\nTotal de HTMLs analisados: {total}")
+          print(f"Com placeholder (sem capa): {len(com_placeholder)}")
+          print(f"Com capa real:              {len(sem_placeholder)}")
+
+          # escreve o relatorio
+          with open('sem_capa.txt', 'w', encoding='utf-8') as f:
+              if com_placeholder:
+                  for nome in com_placeholder:
+                      f.write(nome + "\n")
+              else:
+                  f.write("")
+
+          print("\nArquivo sem_capa.txt gerado.")
+          EOF
+
+      - name: Mostrar resultado
+        run: |
+          echo "===== Conteudo de sem_capa.txt ====="
+          if [ -s sem_capa.txt ]; then
+            cat sem_capa.txt
+            echo "Total de linhas: $(wc -l < sem_capa.txt)"
+          else
+            echo "(vazio - nenhum arquivo com placeholder)"
+          fi
+
+      - name: Commitar e enviar
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sem_capa.txt
+          if git diff --cached --quiet; then
+            echo "sem_capa.txt sem mudancas, nada a commitar."
+            exit 0
+          fi
+          git commit -m "Auto: lista de arquivos sem capa [skip ci]"
+          git push
