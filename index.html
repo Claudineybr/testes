@@ -79,7 +79,7 @@
   <header>
     <div class="logo">Cine<span>Flix</span></div>
     <div class="search-container">
-      <input type="text" id="searchInput" placeholder="Pesquisar séries ou episódios...">
+      <input type="text" id="searchInput" placeholder="Pesquisar séries ou filmes...">
       <span class="search-icon">🔍</span>
     </div>
     <nav>
@@ -102,7 +102,7 @@
   </section>
 
   <section class="section">
-    <h2>Meus Conteúdos</h2>
+    <h2 id="tituloSecao">Destaques</h2>
     <div class="grid" id="catalogGrid">
       <div class="no-results"><p>Carregando catálogo...</p></div>
     </div>
@@ -114,16 +114,35 @@
 
   <script>
     let catalogo = [];
+    let destaquesIniciais = []; // Vai guardar os 20 aleatórios
     const gridContainer = document.getElementById('catalogGrid');
     const searchInput = document.getElementById('searchInput');
+    const tituloSecao = document.getElementById('tituloSecao');
 
+    // Função para embaralhar a lista (Algoritmo Fisher-Yates)
+    function embaralhar(array) {
+      const copia = [...array];
+      for (let i = copia.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copia[i], copia[j]] = [copia[j], copia[i]];
+      }
+      return copia;
+    }
+
+    // 1. Carrega o catálogo e seleciona 20 aleatórios
     async function carregarCatalogo() {
       try {
         const resposta = await fetch('catalogo.json');
         if (!resposta.ok) throw new Error('Arquivo catalogo.json não encontrado');
         
         catalogo = await resposta.json();
-        renderizar(catalogo);
+        
+        // Embaralha todo o catálogo e pega apenas os primeiros 20
+        const catalogoEmbaralhado = embaralhar(catalogo);
+        destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
+
+        // Mostra na tela inicial
+        renderizar(destaquesIniciais);
       } catch (erro) {
         gridContainer.innerHTML = `
           <div class="no-results">
@@ -134,6 +153,7 @@
       }
     }
 
+    // 2. Desenha os cards
     function renderizar(itens) {
       if (itens.length === 0) {
         gridContainer.innerHTML = `<div class="no-results"><h3>Nenhum resultado encontrado 😕</h3><p>Tente pesquisar por outro nome.</p></div>`;
@@ -166,16 +186,32 @@
       `).join('');
     }
 
+    // 3. Lógica da Busca
     function buscar() {
-      const termo = searchInput.value.toLowerCase();
+      const termo = searchInput.value.trim().toLowerCase();
+
+      // Se a barra estiver vazia, volta para os 20 destaques
+      if (termo.length === 0) {
+        tituloSecao.innerText = "Destaques";
+        renderizar(destaquesIniciais);
+        return;
+      }
+
+      // Se tiver 1 letra ou mais, faz a busca
+      tituloSecao.innerText = "Resultados da busca";
+      
       const filtrados = catalogo.filter(item => 
         item.titulo.toLowerCase().includes(termo) || 
         item.serie.toLowerCase().includes(termo)
       );
+
       renderizar(filtrados);
     }
 
+    // Evento ao digitar na barra
     searchInput.addEventListener('input', buscar);
+    
+    // Inicia o site
     carregarCatalogo();
   </script>
 </body>
