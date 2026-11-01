@@ -42,26 +42,33 @@ jobs:
           episodios = []
           padrao_nome = re.compile(r'(.+)_t(\d+)e(\d+)\.html', re.IGNORECASE)
           
-          # Regex 1: Acha o JSON-LD. Pula colchetes, espaços e quebras de linha.
-          padrao_img_json = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.IGNORECASE)
-          # Regex 2 (Fallback): Acha a primeira tag <img src="...">
-          padrao_img_html = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
+          # Regex para a capa (thumbnail)
+          padrao_img = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.IGNORECASE)
+          # Regex para o vídeo (contentUrl)
+          padrao_video = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.IGNORECASE)
 
           for caminho, arquivo in sorted(arquivos):
               img_url = ""
+              video_url = ""
               try:
                   with open(caminho, 'r', encoding='utf-8', errors='ignore') as f:
                       conteudo = f.read()
                       
-                      # Tenta achar no JSON-LD primeiro
-                      match_img = padrao_img_json.search(conteudo)
-                      
-                      # Se não achar, tenta achar na tag <img>
+                      match_img = padrao_img.search(conteudo)
                       if not match_img:
-                          match_img = padrao_img_html.search(conteudo)
-
+                          match_img = re.search(r'<img[^>]+src=["\']([^"\']+)["\']', conteudo, re.IGNORECASE)
                       if match_img:
                           img_url = match_img.group(1)
+
+                      match_video = padrao_video.search(conteudo)
+                      if match_video:
+                          video_url = match_video.group(1)
+                      else:
+                          # Fallback para a div com data-src
+                          match_video = re.search(r'data-src=["\']([^"\']+)["\']', conteudo, re.IGNORECASE)
+                          if match_video:
+                              video_url = match_video.group(1)
+
               except Exception as e:
                   print(f"Erro ao ler {caminho}: {e}")
 
@@ -77,7 +84,8 @@ jobs:
                       "temporada": temporada,
                       "episodio": episodio,
                       "link": caminho,
-                      "thumbnailUrl": img_url
+                      "thumbnailUrl": img_url,
+                      "videoUrl": video_url
                   })
               else:
                   nome = arquivo.replace('.html', '').replace('_', ' ').replace('-', ' ').title()
@@ -87,15 +95,14 @@ jobs:
                       "temporada": 1,
                       "episodio": 1,
                       "link": caminho,
-                      "thumbnailUrl": img_url
+                      "thumbnailUrl": img_url,
+                      "videoUrl": video_url
                   })
                   
-              print(f"Arquivo: {arquivo} | Imagem: {img_url if img_url else 'NÃO ENCONTRADA'}")
+              print(f"Arquivo: {arquivo} | Video: {video_url if video_url else 'NÃO ENCONTRADO'}")
 
           with open('catalogo.json', 'w', encoding='utf-8') as f:
               json.dump(episodios, f, indent=2, ensure_ascii=False)
-          
-          print(f"\nCatalogo gerado com {len(episodios)} itens!")
           EOF
 
       - name: Configurar Git, commitar e enviar
@@ -103,4 +110,4 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add catalogo.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: Atualizando catalogo.json e capas" && git push)
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto: Atualizando catalogo.json com links de vídeo" && git push)
