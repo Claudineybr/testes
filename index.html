@@ -60,13 +60,25 @@
     .page-btn:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; border-color: rgba(255, 255, 255, 0.1); }
     .page-dots { color: rgba(255, 255, 255, 0.5); padding: 0 5px; }
 
+    /* MODAL DO PLAYER */
+    .modal-player { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+    .modal-content { width: 100%; max-width: 900px; background: #000; border-radius: 12px; overflow: hidden; position: relative; box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+    .close-btn { position: absolute; top: 15px; right: 15px; background: rgba(255, 46, 99, 0.8); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 20px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+    .close-btn:hover { background: #ff2e63; transform: scale(1.1); }
+    #playerContainer { width: 100%; aspect-ratio: 16 / 9; background: #000; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+    #playerContainer video, #playerContainer iframe { width: 100%; height: 100%; border: none; display: block; }
+    
+    .modal-footer { padding: 15px 20px; background: #1a1a2e; border-top: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .modal-title { font-size: 1.2rem; margin: 0; }
+    .btn-original { background: #ff2e63; color: #fff; text-decoration: none; padding: 8px 15px; border-radius: 6px; font-size: 0.9rem; font-weight: bold; transition: 0.2s; display: inline-block; }
+    .btn-original:hover { background: #e01e50; }
+    
+    .aviso-erro { color: #ff8c42; font-size: 1.1rem; text-align: center; padding: 20px; }
+
     /* UTILS */
     .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.6); }
     .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
-    
-    /* AVISO DINÂMICO DE QUANTIDADE */
     .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 15px; color: #ff8c42; font-weight: 600; background: rgba(255, 140, 66, 0.1); border-radius: 8px; margin-top: 10px; font-size: 1rem; border: 1px solid rgba(255, 140, 66, 0.2); }
-    
     footer { background: rgba(0, 0, 0, 0.4); padding: 30px 60px; text-align: center; color: rgba(255, 255, 255, 0.5); border-top: 1px solid rgba(255, 255, 255, 0.05); margin-top: 40px; }
 
     @media (max-width: 900px) {
@@ -84,6 +96,7 @@
       nav ul { display: none; }
       .hero-content h1 { font-size: 1.6rem; }
       .grid { grid-template-columns: repeat(2, 1fr); }
+      .modal-footer { flex-direction: column; align-items: flex-start; }
     }
   </style>
 </head>
@@ -129,7 +142,26 @@
     <p>© 2025 Clau Flix — Todos os direitos reservados. Feito com 🎬 e ❤️</p>
   </footer>
 
+  <!-- MODAL DE VÍDEO -->
+  <div class="modal-player" id="videoModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="fecharModal()">✕</button>
+      <div id="playerContainer">
+        <!-- O player entra aqui -->
+      </div>
+      <div class="modal-footer">
+        <h3 class="modal-title" id="modalTitulo"></h3>
+        <a href="#" id="linkOriginal" target="_blank" class="btn-original">Não está rodando? Abrir Original</a>
+      </div>
+    </div>
+  </div>
+
   <script>
+    // =========================================================
+    // SEU CLOUDFLARE WORKER INTEGRADO AQUI
+    const CLOUDFLARE_WORKER_URL = "https://proxy-videos.claudineibu12.workers.dev/"; 
+    // =========================================================
+
     let catalogo = [];
     let destaquesIniciais = []; 
     let listaFilmes = [];
@@ -138,7 +170,6 @@
     let viewAtual = 'home'; 
     let itensFiltradosAtuais = []; 
     let paginaAtual = 1;
-    
     const ITENS_POR_PAGINA = 50; 
 
     const gridContainer = document.getElementById('catalogGrid');
@@ -146,14 +177,17 @@
     const searchInput = document.getElementById('searchInput');
     const tituloSecao = document.getElementById('tituloSecao');
 
+    const videoModal = document.getElementById('videoModal');
+    const playerContainer = document.getElementById('playerContainer');
+    const modalTitulo = document.getElementById('modalTitulo');
+    const linkOriginal = document.getElementById('linkOriginal');
+
     const STORAGE_KEY_LINKS = 'clauFlix_destaques_links';
     const STORAGE_KEY_TIMESTAMP = 'clauFlix_destaques_timestamp';
     const TRINTA_MINUTOS_MS = 30 * 60 * 1000;
 
     function isSerie(item) {
-      const regexLink = /_t\d+e\d+/i;
-      const regexTitulo = /T\d+E\d+/i;
-      return regexLink.test(item.link) || regexTitulo.test(item.titulo);
+      return /_t\d+e\d+/i.test(item.link) || /T\d+E\d+/i.test(item.titulo);
     }
 
     function embaralhar(array) {
@@ -166,9 +200,7 @@
     }
 
     function ordenarLista(lista) {
-      return [...lista].sort((a, b) => 
-        a.titulo.localeCompare(b.titulo, 'pt-BR', { numeric: true, sensitivity: 'base' })
-      );
+      return [...lista].sort((a, b) => a.titulo.localeCompare(b.titulo, 'pt-BR', { numeric: true, sensitivity: 'base' }));
     }
 
     function debounce(func, wait) {
@@ -185,35 +217,26 @@
       const linksSalvos = localStorage.getItem(STORAGE_KEY_LINKS);
       const timestampSalvo = localStorage.getItem(STORAGE_KEY_TIMESTAMP);
 
-      if (!forcarNovos && linksSalvos && timestampSalvo) {
-        const tempoPassado = agora - parseInt(timestampSalvo);
-        if (tempoPassado < TRINTA_MINUTOS_MS) {
-          const linksArray = JSON.parse(linksSalvos);
-          destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link));
-          return; 
-        }
+      if (!forcarNovos && linksSalvos && timestampSalvo && (agora - parseInt(timestampSalvo)) < TRINTA_MINUTOS_MS) {
+        const linksArray = JSON.parse(linksSalvos);
+        destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link));
+        return; 
       }
 
-      const catalogoEmbaralhado = embaralhar(catalogo);
-      destaquesIniciais = catalogoEmbaralhado.slice(0, 20);
-
-      const novosLinks = destaquesIniciais.map(item => item.link);
-      localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(novosLinks));
+      destaquesIniciais = embaralhar(catalogo).slice(0, 20);
+      localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(destaquesIniciais.map(i => i.link)));
       localStorage.setItem(STORAGE_KEY_TIMESTAMP, agora.toString());
     }
 
     async function carregarCatalogo() {
       try {
         const resposta = await fetch('catalogo.json');
-        if (!resposta.ok) throw new Error('Arquivo catalogo.json não encontrado');
-        
         catalogo = await resposta.json();
         
         listaFilmes = ordenarLista(catalogo.filter(item => !isSerie(item)));
         listaSeries = ordenarLista(catalogo.filter(item => isSerie(item)));
         
         gerenciarDestaques();
-        
         mudarView('home');
 
         setInterval(() => {
@@ -226,8 +249,7 @@
         }, TRINTA_MINUTOS_MS);
 
       } catch (erro) {
-        gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3><p>Verifique se o catalogo.json existe.</p></div>`;
-        console.error(erro);
+        gridContainer.innerHTML = `<div class="no-results"><h3>Erro ao carregar 😕</h3></div>`;
       }
     }
 
@@ -239,16 +261,9 @@
       document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
       document.getElementById(`nav-${novaView}`).classList.add('active');
 
-      if (novaView === 'home') {
-        tituloSecao.innerText = "Destaques";
-        itensFiltradosAtuais = destaquesIniciais;
-      } else if (novaView === 'filmes') {
-        tituloSecao.innerText = "Filmes";
-        itensFiltradosAtuais = listaFilmes;
-      } else if (novaView === 'series') {
-        tituloSecao.innerText = "Séries";
-        itensFiltradosAtuais = listaSeries;
-      }
+      if (novaView === 'home') { tituloSecao.innerText = "Destaques"; itensFiltradosAtuais = destaquesIniciais; }
+      else if (novaView === 'filmes') { tituloSecao.innerText = "Filmes"; itensFiltradosAtuais = listaFilmes; }
+      else if (novaView === 'series') { tituloSecao.innerText = "Séries"; itensFiltradosAtuais = listaSeries; }
 
       renderizar();
     }
@@ -259,13 +274,13 @@
       const itensDaPagina = itensFiltradosAtuais.slice(inicio, fim);
 
       if (itensFiltradosAtuais.length === 0) {
-        gridContainer.innerHTML = `<div class="no-results"><h3>Nenhum resultado encontrado 😕</h3><p>Tente pesquisar por outro nome.</p></div>`;
+        gridContainer.innerHTML = `<div class="no-results"><h3>Nenhum resultado encontrado 😕</h3></div>`;
         paginationContainer.innerHTML = ''; 
         return;
       }
 
-      let htmlCards = itensDaPagina.map(item => `
-        <a class="card" href="${item.link}">
+      gridContainer.innerHTML = itensDaPagina.map(item => `
+        <a href="${item.link}" class="card" onclick="abrirPlayer(event, '${item.videoUrl}', '${item.titulo}', '${item.link}')">
           ${item.thumbnailUrl ? 
             `<img src="${item.thumbnailUrl}" alt="${item.titulo}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
              <div class="card-header-fallback" style="display:none;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span></div>` 
@@ -274,43 +289,25 @@
           }
           <div class="card-info">
             <h3>${item.titulo}</h3>
-            <div class="meta">
-              <span>${item.serie}</span>
-              <span class="rating">▶ Play</span>
-            </div>
+            <div class="meta"><span>${item.serie}</span><span class="rating">▶ Play</span></div>
           </div>
         </a>
       `).join('');
 
-      // Lógica do Aviso Dinâmico
       if (itensFiltradosAtuais.length > ITENS_POR_PAGINA) {
-        // Aqui usamos o itemFinal para mostrar a contagem acumulada (ex: 150 de 374)
         const itemFinal = Math.min(fim, itensFiltradosAtuais.length);
-        
-        htmlCards += `
-          <div class="aviso-mais">
-            Mostrando <strong>${itemFinal}</strong> de <strong>${itensFiltradosAtuais.length}</strong> resultados.
-          </div>
-        `;
+        gridContainer.innerHTML += `<div class="aviso-mais">Mostrando <strong>${itemFinal}</strong> de <strong>${itensFiltradosAtuais.length}</strong> resultados.</div>`;
       }
 
-      gridContainer.innerHTML = htmlCards;
       renderizarPaginacao();
     }
 
     function renderizarPaginacao() {
       const totalPaginas = Math.ceil(itensFiltradosAtuais.length / ITENS_POR_PAGINA);
-      
-      if (totalPaginas <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-      }
+      if (totalPaginas <= 1) { paginationContainer.innerHTML = ''; return; }
 
       let html = '';
-
-      if (paginaAtual > 1) {
-        html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual - 1})">« Anterior</button>`;
-      }
+      if (paginaAtual > 1) html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual - 1})">« Anterior</button>`;
 
       let startPage = Math.max(1, paginaAtual - 2);
       let endPage = Math.min(totalPaginas, paginaAtual + 2);
@@ -329,10 +326,7 @@
         html += `<button class="page-btn" onclick="mudarPagina(${totalPaginas})">${totalPaginas}</button>`;
       }
 
-      if (paginaAtual < totalPaginas) {
-        html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual + 1})">Próxima »</button>`;
-      }
-
+      if (paginaAtual < totalPaginas) html += `<button class="page-btn" onclick="mudarPagina(${paginaAtual + 1})">Próxima »</button>`;
       paginationContainer.innerHTML = html;
     }
 
@@ -344,27 +338,72 @@
 
     function buscar() {
       const termo = searchInput.value.trim().toLowerCase();
-
-      if (termo.length === 0) {
-        mudarView(viewAtual);
-        return;
-      }
+      if (termo.length === 0) { mudarView(viewAtual); return; }
 
       tituloSecao.innerText = `Resultados para: "${termo}"`;
-      
-      const resultados = catalogo.filter(item => 
-        item.titulo.toLowerCase().includes(termo) || 
-        item.serie.toLowerCase().includes(termo)
-      );
-      
-      itensFiltradosAtuais = ordenarLista(resultados);
-
+      itensFiltradosAtuais = ordenarLista(catalogo.filter(item => 
+        item.titulo.toLowerCase().includes(termo) || item.serie.toLowerCase().includes(termo)
+      ));
       paginaAtual = 1; 
       renderizar();
     }
 
+    // --- LÓGICA DO PLAYER ---
+    window.abrirPlayer = function(event, videoUrl, titulo, linkHtml) {
+      if (!videoUrl || videoUrl.trim() === '') return; 
+      
+      event.preventDefault(); 
+      
+      modalTitulo.innerText = titulo;
+      linkOriginal.href = linkHtml;
+      
+      playerContainer.innerHTML = '<p style="color:#aaa;">Carregando vídeo...</p>';
+
+      if (videoUrl.includes('youtube.com') || videoUrl.includes('youtu.be') || videoUrl.includes('embed') || videoUrl.includes('player')) {
+        playerContainer.innerHTML = `<iframe src="${videoUrl}" allowfullscreen allow="autoplay; encrypted-media"></iframe>`;
+        videoModal.style.display = 'flex';
+      } else {
+        
+        let urlParaTocar = videoUrl;
+        
+        // Passa os links HTTP pelo túnel do seu Cloudflare Worker
+        if (videoUrl.startsWith('http://') && CLOUDFLARE_WORKER_URL !== "") {
+           urlParaTocar = `${CLOUDFLARE_WORKER_URL}?url=${encodeURIComponent(videoUrl)}`;
+        } else if (videoUrl.startsWith('http://')) {
+           urlParaTocar = videoUrl.replace('http://', 'https://');
+        }
+
+        playerContainer.innerHTML = `
+          <video id="meuPlayer" controls playsinline autoplay>
+            <source src="${urlParaTocar}" type="video/mp4">
+          </video>
+        `;
+        videoModal.style.display = 'flex';
+
+        const videoElement = document.getElementById('meuPlayer');
+        
+        // Caso ainda dê algum erro raro
+        videoElement.addEventListener('error', function() {
+          playerContainer.innerHTML = `
+            <div class="aviso-erro">
+              ⚠️ O servidor original do vídeo está fora do ar ou recusou a conexão.<br>
+              Clique no botão vermelho abaixo para tentar abrir a página original.
+            </div>
+          `;
+        });
+      }
+    }
+
+    window.fecharModal = function() {
+      videoModal.style.display = 'none';
+      playerContainer.innerHTML = ''; 
+    }
+
+    videoModal.addEventListener('click', function(e) {
+      if (e.target === videoModal) fecharModal();
+    });
+
     searchInput.addEventListener('input', debounce(buscar, 300));
-    
     carregarCatalogo();
   </script>
 </body>
