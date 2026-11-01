@@ -1,8 +1,7 @@
 name: Sincronizar e Limpar
 
 on:
-  schedule:
-  
+  # schedule:
   workflow_dispatch:
 
 permissions:
