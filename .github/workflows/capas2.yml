@@ -1,57 +1,68 @@
-name: Aplicar Capas do Site
+name: Aplicar Capas do Site (Playwright)
 
 on:
   workflow_dispatch:
+    inputs:
+      apply_changes:
+        description: 'Aplicar as capas aos HTMLs locais (desmarque p/ só raspar)'
+        type: boolean
+        default: true
+      max_links:
+        description: 'Máx. de links de detalhe p/ visitar (0 = só homepage)'
+        type: string
+        default: '300'
 
 permissions:
   contents: write
 
 jobs:
-  aplicar:
+  scrape:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
-      - name: Baixar o codigo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Instalar requests
-        run: pip install requests
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
 
-      - name: Raspar site + aplicar capas
+      - name: Raspar site e aplicar capas
+        env:
+          APPLY: ${{ inputs.apply_changes }}
+          MAX_LINKS: ${{ inputs.max_links }}
         run: |
           python3 << 'PYEOF'
-          import re, json, time
+          import os, re, json, hashlib, urllib.parse
           from pathlib import Path
-          import requests
+          from playwright.sync_api import sync_playwright
 
-          SITE = "https://www.vini7xgrave.site"
-          PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
-          HEADERS = {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-              "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
-          }
+          SITE         = "https://www.vini7xgrave.site/"
+          PLACEHOLDER  = "https://via.placeholder.com/500x750?text=Sem+Capa"
+          USER_AGENT   = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          MAX_LINKS    = int(os.environ.get("MAX_LINKS", "300"))
+          APPLY        = os.environ.get("APPLY", "true").lower() == "true"
 
-          session = requests.Session()
-          session.headers.update(HEADERS)
+          video_map = {}   # nome_do_video -> capa
+          title_map = {}   # titulo_normalizado -> capa
+          seen_urls = set()
+          log = []
 
-          # ---------- cache ----------
-          CACHE_FILE = Path(".site_scrape_cache.json")
-          cache = {}
-          if CACHE_FILE.exists():
-              try: cache = json.loads(CACHE_FILE.read_text(encoding='utf-8'))
-              except: cache = {}
-
-          # ---------- normalizadores ----------
+          # ---------- helpers ----------
           def norm_video(url):
               if not url: return ""
               u = url.split('?')[0].split('#')[0].rstrip('/')
-              return u.split('/')[-1].lower()
+              base = u.split('/')[-1].lower()
+              # extrai IMDB ID se existir (ex: tt36589671)
+              m = re.search(r'(tt\d{6,10})', url.lower())
+              if m: return m.group(1) + ".mp4"
+              return base
 
           def norm_title(t):
               if not t: return ""
@@ -62,20 +73,58 @@ jobs:
               t = re.sub(r'\s*[-–]\s*t\d+e\d+.*$', '', t, flags=re.I)
               t = re.sub(r'\(\d+\)', '', t)
               t = re.sub(r'\b(19|20)\d{2}\b', '', t)
-              t = re.sub(r'\b(online|dublado|legendado|hdcam|completo|filme|serie)\b', '', t, flags=re.I)
+              t = re.sub(r'\b(online|dublado|legendado|hdcam|completo|filme|serie|t\d+e\d+)\b', '', t, flags=re.I)
               t = re.sub(r'[^\w\s]', ' ', t)
               return re.sub(r'\s+', ' ', t).strip()
 
-          # ---------- extrair video/capa/titulo de um HTML ----------
-          def extract(html):
+          def add_pair(video, cover, title=None):
+              if video and cover:
+                  vk = norm_video(video)
+                  if vk and vk not in video_map:
+                      video_map[vk] = cover
+                      log.append(f"[VIDEO] {vk} <- {cover}")
+              if title and cover:
+                  tk = norm_title(title)
+                  if tk and tk not in title_map:
+                      title_map[tk] = cover
+                      log.append(f"[TITLE] {tk} <- {cover}")
+
+          def walk_json(obj, depth=0):
+              """Busca recursiva por {video, cover, title} em qualquer JSON."""
+              if depth > 8: return
+              if isinstance(obj, dict):
+                  video = cover = title = None
+                  for k in ('contentUrl','content_url','video_url','videoUrl','video','file','src','stream_url','link','url'):
+                      v = obj.get(k)
+                      if isinstance(v, str) and any(x in v.lower() for x in ('.mp4','.m3u8','.ts','/hls/','/vod/','stream')):
+                          video = v; break
+                  for k in ('thumbnailUrl','thumbnail_url','poster','poster_path','cover','image','img','thumbnail','capa','imagem'):
+                      v = obj.get(k)
+                      if isinstance(v, list) and v and isinstance(v[0], str):
+                          cover = v[0]; break
+                      if isinstance(v, str) and v.startswith(('http://','https://','//')):
+                          cover = v; break
+                  for k in ('name','title','titulo','nome'):
+                      v = obj.get(k)
+                      if isinstance(v, str) and v:
+                          title = v; break
+                  if video and cover:
+                      add_pair(video, cover, title)
+                  for v in obj.values():
+                      walk_json(v, depth+1)
+              elif isinstance(obj, list):
+                  for item in obj:
+                      walk_json(item, depth+1)
+
+          def walk_html(html, page_url=""):
               video = cover = title = None
               m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', html)
               if m: video = m.group(1)
               if not video:
-                  m = re.search(r'<meta[^>]*property=["\']og:video(?::url)?["\'][^>]*content=["\']([^"\']+)["\']', html, re.I)
+                  m = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', html, re.I)
                   if m: video = m.group(1)
               if not video:
-                  m = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', html, re.I)
+                  m = re.search(r'<iframe[^>]+src=["\']([^"\']+)["\']', html, re.I)
                   if m: video = m.group(1)
 
               m = re.search(r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"([^"]+)"', html)
@@ -89,131 +138,168 @@ jobs:
 
               m = re.search(r'<title>([^<]+)</title>', html, re.I)
               if m: title = m.group(1)
-              return video, cover, title
 
-          # ---------- fetch com cache ----------
-          def fetch(url):
-              if url in cache:
-                  return cache[url]
-              try:
-                  r = session.get(url, timeout=25)
-                  if r.status_code != 200:
-                      cache[url] = {"video": None, "cover": None, "title": None}
-                      return cache[url]
-                  v, c, t = extract(r.text)
-                  cache[url] = {"video": v, "cover": c, "title": t}
-                  return cache[url]
-              except Exception as e:
-                  print(f"  [erro] {url}: {e}")
-                  cache[url] = {"video": None, "cover": None, "title": None}
-                  return cache[url]
+              if video and cover:
+                  add_pair(video, cover, title)
 
-          # ---------- descoberta de URLs ----------
-          def get_urls_wp_api():
-              try:
-                  r = session.get(f"{SITE}/wp-json/wp/v2/posts?per_page=100&page=1&_fields=link", timeout=20)
-                  if r.status_code != 200: return None
-                  urls, page = [], 1
-                  while True:
-                      r = session.get(f"{SITE}/wp-json/wp/v2/posts?per_page=100&page={page}&_fields=link", timeout=20)
-                      if r.status_code == 400: break
-                      if r.status_code != 200: break
-                      data = r.json()
-                      if not isinstance(data, list) or not data: break
-                      urls.extend(x.get("link") for x in data if x.get("link"))
-                      page += 1
-                      if page > 200: break
-                  return urls if urls else None
-              except: return None
+          # ---------- Playwright ----------
+          with sync_playwright() as p:
+              browser = p.chromium.launch(
+                  headless=True,
+                  args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-dev-shm-usage']
+              )
+              ctx = browser.new_context(
+                  user_agent=USER_AGENT,
+                  viewport={'width': 1920, 'height': 1080},
+                  locale='pt-BR',
+              )
+              page = ctx.new_page()
 
-          def get_urls_sitemap():
-              urls = set()
-              for path in ["/sitemap.xml", "/sitemap_index.xml", "/wp-sitemap.xml"]:
+              def on_response(response):
                   try:
-                      r = session.get(SITE + path, timeout=20)
-                      if r.status_code == 200 and '<loc>' in r.text:
-                          locs = re.findall(r'<loc>(.*?)</loc>', r.text)
-                          xmls = [u for u in locs if u.endswith('.xml')]
-                          urls.update(u for u in locs if not u.endswith('.xml'))
-                          for sm in xmls[:20]:  # limita a 20 sub-sitemaps
-                              try:
-                                  r2 = session.get(sm, timeout=20)
-                                  if r2.status_code == 200:
-                                      urls.update(re.findall(r'<loc>(.*?)</loc>', r2.text))
-                              except: pass
-                          if urls: return list(urls)
-                  except: pass
-              return list(urls)
+                      ct = (response.headers.get('content-type') or '').lower()
+                      url = response.url
+                      if 'json' in ct:
+                          try: walk_json(response.json())
+                          except: pass
+                      elif 'html' in ct or '.html' in url:
+                          try: walk_html(response.text())
+                          except: pass
+                  except Exception:
+                      pass
 
-          # ---------- teste de acesso ----------
-          try:
-              r = session.get(SITE, timeout=20)
-              if r.status_code == 403:
-                  print("AVISO: site retornou 403. Pode estar bloqueando. Considere Playwright.")
-          except Exception as e:
-              print(f"AVISO: nao consegui acessar {SITE}: {e}")
+              page.on('response', on_response)
 
-          # ---------- coleta ----------
-          print("== Buscando URLs ==")
-          urls = get_urls_wp_api()
-          if urls:
-              print(f"WP API: {len(urls)} posts")
-          else:
-              print("WP API indisponivel, tentando sitemap...")
-              urls = get_urls_sitemap()
-              print(f"Sitemap: {len(urls)} URLs")
+              print(f"== Carregando {SITE} ==")
+              try:
+                  page.goto(SITE, wait_until='networkidle', timeout=90000)
+              except Exception as e:
+                  print(f"Aviso goto: {e}")
+              page.wait_for_timeout(5000)
 
-          SKIP_EXT = ('.xml', '.jpg', '.jpeg', '.png', '.gif', '.webp', '.css', '.js', '.ico', '.svg')
-          video_map = {}
-          title_map = {}
-          new_fetches = 0
+              # Screenshot da home p/ debug
+              try:
+                  page.screenshot(path='scrape_home.png', full_page=False)
+                  Path('scrape_home.html').write_text(page.content(), encoding='utf-8')
+              except: pass
 
-          for i, url in enumerate(urls):
-              if any(url.lower().split('?')[0].endswith(e) for e in SKIP_EXT):
-                  continue
-              was_cached = url in cache
-              info = fetch(url)
-              if not was_cached: new_fetches += 1
+              print(f"Após homepage: video={len(video_map)} title={len(title_map)}")
 
-              if info["video"] and info["cover"]:
-                  vk = norm_video(info["video"])
-                  if vk and vk not in video_map:
-                      video_map[vk] = info["cover"]
-              if info["title"] and info["cover"]:
-                  tk = norm_title(info["title"])
-                  if tk and tk not in title_map:
-                      title_map[tk] = info["cover"]
+              # ---- extrai cards do DOM ----
+              try:
+                  cards = page.evaluate('''() => {
+                      const out = [];
+                      const seen = new WeakSet();
+                      const sel = ['article','.card','.item','.post','.movie','.film','.serie',
+                                   '[class*="card"]','[class*="movie"]','[class*="serie"]',
+                                   '[class*="film"]','[class*="post"]','[class*="item"]'];
+                      for (const s of sel) {
+                          document.querySelectorAll(s).forEach(el => {
+                              if (seen.has(el)) return;
+                              seen.add(el);
+                              const img = el.querySelector('img[src],img[data-src],img[data-lazy-src],img[data-original]');
+                              const a = el.querySelector('a[href]');
+                              const tEl = el.querySelector('h1,h2,h3,.title,[class*="title"],[class*="name"]');
+                              let poster = img ? (img.src || img.dataset.src || img.dataset.lazySrc || img.dataset.original) : null;
+                              if (!poster) {
+                                  const bg = el.querySelector('[style*="background-image"]');
+                                  if (bg) {
+                                      const m = bg.style.backgroundImage.match(/url\\(["']?(.+?)["']?\\)/);
+                                      if (m) poster = m[1];
+                                  }
+                              }
+                              let title = tEl ? tEl.textContent.trim() : (img ? img.alt : null);
+                              if (!title && a) title = a.title;
+                              if (poster && title) {
+                                  out.push({poster, title, href: a ? a.href : null});
+                              }
+                          });
+                      }
+                      return out;
+                  }''')
+                  print(f"Cards DOM encontrados: {len(cards)}")
+                  for c in cards:
+                      add_pair(None, c.get('poster'), c.get('title'))
+              except Exception as e:
+                  print(f"Erro cards DOM: {e}")
 
-              if (i + 1) % 50 == 0:
-                  print(f"[{i+1}/{len(urls)}] video_map={len(video_map)} title_map={len(title_map)}")
-                  CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
+              print(f"Após DOM: video={len(video_map)} title={len(title_map)}")
 
-              if not was_cached:
-                  time.sleep(0.2)
+              # ---- explora links de detalhe ----
+              detail_links = []
+              try:
+                  all_links = page.eval_on_selector_all('a[href]', 'els => els.map(e => e.href)')
+                  for l in all_links:
+                      if SITE.rstrip('/') not in l: continue
+                      if l.rstrip('/') == SITE.rstrip('/'): continue
+                      if any(x in l.lower() for x in ['#','javascript:','mailto:','.css','.js','.png','.jpg','.jpeg','.ico','/dmca','/contato','/privacidade','/sobre','/termos','/login','/cadastro','?s=']):
+                          continue
+                      if l not in seen_urls:
+                          seen_urls.add(l)
+                          detail_links.append(l)
+              except Exception as e:
+                  print(f"Erro links: {e}")
 
-          CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
-          print(f"\nVideo map: {len(video_map)} | Title map: {len(title_map)}")
+              print(f"Links únicos encontrados: {len(detail_links)}")
+              sample = detail_links[:MAX_LINKS] if MAX_LINKS > 0 else []
+
+              for i, link in enumerate(sample):
+                  try:
+                      page.goto(link, wait_until='domcontentloaded', timeout=25000)
+                      page.wait_for_timeout(800)
+                      # tenta também extrair cards da página de listagem
+                      try:
+                          more = page.evaluate('''() => {
+                              const out = [];
+                              document.querySelectorAll('article,.card,.item,a[href*="/filme"],a[href*="/serie"]').forEach(el => {
+                                  const img = el.querySelector('img[src],img[data-src]');
+                                  const a = el.tagName === 'A' ? el : el.querySelector('a[href]');
+                                  const t = el.querySelector('h1,h2,h3,.title,[class*="title"]');
+                                  if (img && t) out.push({poster: img.src || img.dataset.src, title: t.textContent.trim(), href: a ? a.href : null});
+                              });
+                              return out;
+                          }''')
+                          for c in more:
+                              add_pair(None, c.get('poster'), c.get('title'))
+                      except: pass
+                  except Exception:
+                      pass
+
+                  if (i+1) % 25 == 0:
+                      print(f"[{i+1}/{len(sample)}] video={len(video_map)} title={len(title_map)}")
+                      Path('scrape_debug.log').write_text('\n'.join(log), encoding='utf-8')
+
+              browser.close()
+
+          print(f"\nFinal: video_map={len(video_map)}, title_map={len(title_map)}")
+
+          # ---- salva artefatos ----
+          Path('scrape_debug.log').write_text('\n'.join(log), encoding='utf-8')
+          Path('scrape_data.json').write_text(json.dumps({
+              'video_map': video_map,
+              'title_map': title_map,
+          }, ensure_ascii=False, indent=2), encoding='utf-8')
 
           if not video_map and not title_map:
-              print("ERRO: nenhuma capa coletada. O site pode precisar de JS.")
+              print("ERRO: nada coletado. Veja scrape_home.png / scrape_debug.log nos artifacts.")
               raise SystemExit(1)
 
-          # ---------- aplica nos HTMLs locais ----------
-          total = alterados = via_video = via_title = sem_match = sem_cu = 0
+          if not APPLY:
+              print("APPLY=false — não aplicando aos HTMLs. Rode de novo com apply_changes=true.")
+              raise SystemExit(0)
 
+          # ---- aplica nos HTMLs locais ----
+          total = alterados = via_video = via_title = sem_match = sem_cu = 0
           for arq in sorted(Path('.').rglob('*.html')):
               if '.git' in arq.parts: continue
               total += 1
-              try:
-                  texto = arq.read_text(encoding='utf-8', errors='ignore')
+              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
               except: continue
               if PLACEHOLDER not in texto: continue
 
               cu = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
               if not cu:
-                  sem_cu += 1
-                  print(f"[sem contentUrl] {arq.name}")
-                  continue
+                  sem_cu += 1; continue
 
               cover = video_map.get(norm_video(cu.group(1)))
               source = "video"
@@ -222,6 +308,10 @@ jobs:
                   if nm:
                       cover = title_map.get(norm_title(nm.group(1)))
                       source = "title"
+              if not cover:
+                  # último recurso: pelo nome do arquivo
+                  cover = title_map.get(norm_title(arq.stem))
+                  source = "filename"
               if not cover:
                   sem_match += 1
                   continue
@@ -235,18 +325,31 @@ jobs:
                   print(f"[ok/{source}] {arq.name}")
 
           print(f"\nTotal HTMLs: {total}")
-          print(f"Alterados:   {alterados} (por video={via_video}, por titulo={via_title})")
+          print(f"Alterados:   {alterados} (via_video={via_video}, via_title/filename={via_title})")
           print(f"Sem match:   {sem_match}")
           print(f"Sem contentUrl: {sem_cu}")
           PYEOF
 
+      - name: Upload artifacts (debug)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-debug
+          path: |
+            scrape_data.json
+            scrape_debug.log
+            scrape_home.png
+            scrape_home.html
+          retention-days: 14
+
       - name: Commitar e enviar
+        if: inputs.apply_changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
           if git diff --cached --quiet; then
-            echo "Sem mudancas."
+            echo "Sem mudanças."
             exit 0
           fi
           git commit -m "Auto: capas reais do site aplicadas [skip ci]"
