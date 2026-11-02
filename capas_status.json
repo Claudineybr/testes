@@ -1,15 +1,15 @@
 {
-  "total_sem_capa_urls": 220,
+  "total_sem_capa_urls": 195,
   "sem_url_video": 0,
   "mapa_size": 0,
   "novos_feed": 0,
   "novos_visitados": 0,
-  "faltam_video": 220,
+  "faltam_video": 195,
   "faltam_visitar": 0,
   "feed_all_keys": 4067,
   "intersecao": 0,
   "alterados": 0,
-  "sem_match": 220,
+  "sem_match": 195,
   "done": true,
   "motivo": "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
 }
