@@ -1,14 +1,14 @@
-name: Extrair URL do Vídeo e Capa
+name: Extrair URL do Vídeo e Capa (JSON)
 
 on:
   workflow_dispatch:
     inputs:
       outro_repo:
-        description: 'URL do repo com os HTMLs que têm capa'
+        description: 'URL do repo com os JSONs'
         required: true
         default: 'https://github.com/Claudineybr/catalogocompleto2.git'
       branch:
-        description: 'Branch do outro repo'
+        description: 'Branch'
         default: 'main'
 
 permissions:
@@ -26,7 +26,7 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Clonar repo
+      - name: Clonar e diagnosticar estrutura
         env:
           REPO_URL: ${{ inputs.outro_repo }}
           BRANCH: ${{ inputs.branch }}
@@ -36,22 +36,45 @@ jobs:
           echo "Clonando $REPO_URL..."
           if git clone --depth 1 --branch "$BRANCH" "$REPO_URL" "$TMP/outro" 2>/dev/null; then
             echo "OK branch $BRANCH"
-          elif git clone --depth 1 "$REPO_URL" "$TMP/outro"; then
-            echo "OK branch default"
           else
-            echo "::error::Falha ao clonar"
-            exit 1
+            git clone --depth 1 "$REPO_URL" "$TMP/outro"
+            echo "OK branch default"
           fi
           echo "OUTRO_DIR=$TMP/outro" >> $GITHUB_ENV
-          echo "HTMLs: $(find "$TMP/outro" -name '*.html' | wc -l)"
 
-      - name: Extrair pares video+capa
+          echo ""
+          echo "=== Estrutura raiz ==="
+          ls -la "$TMP/outro" | head -30
+
+          echo ""
+          echo "=== Contagem por extensão ==="
+          find "$TMP/outro" -type f -not -path '*/.git/*' | \
+            sed 's/.*\.//' | sort | uniq -c | sort -rn | head -15
+
+          echo ""
+          echo "=== Total de JSONs ==="
+          echo "*.json: $(find "$TMP/outro" -name '*.json' -not -path '*/.git/*' | wc -l)"
+
+          echo ""
+          echo "=== Primeiros 10 JSONs ==="
+          find "$TMP/outro" -name '*.json' -not -path '*/.git/*' | head -10
+
+          echo ""
+          echo "=== Amostra do 1º JSON (primeiras 40 linhas) ==="
+          SAMPLE=$(find "$TMP/outro" -name '*.json' -not -path '*/.git/*' | head -1)
+          if [ -n "$SAMPLE" ]; then
+            echo "Arquivo: $SAMPLE"
+            head -40 "$SAMPLE"
+          fi
+
+      - name: Extrair pares de TODOS os JSONs
         env:
           PYTHONUNBUFFERED: '1'
         run: |
           python3 -u - << 'PYEOF'
           import os
           import re
+          import json
           from pathlib import Path
 
           TAB = chr(9)
@@ -78,98 +101,153 @@ jobs:
               m = re.search(r"(tt\d{6,10})", url.lower())
               if m:
                   return m.group(1) + ".mp4"
-              m = re.search(r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})", url.lower())
+              m = re.search(
+                  r"([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})",
+                  url.lower(),
+              )
               if m:
                   return m.group(1)
               u = url.split("?")[0].split("#")[0].rstrip("/")
               return u.split("/")[-1].lower()
 
-          def extract(html):
-              video = None
-              capa = None
-              for pat in [r'"contentUrl"\s*:\s*"([^"]+)"', r'<video[^>]+src=["\']([^"\']+)["\']']:
-                  m = re.search(pat, html, re.I)
-                  if m:
-                      video = m.group(1).strip()
-                      break
-              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
-                          r'<video[^>]+poster=["\'](https?://[^"\']+)["\']',
-                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']']:
-                  m = re.search(pat, html, re.I)
-                  if m and is_valid_cover(m.group(1)):
-                      capa = m.group(1).strip()
-                      break
-              return video, capa
+          def extract_pairs(obj, path="", depth=0):
+              """
+              Varre recursivamente um objeto JSON procurando pares
+              (video_url, capa_url). Retorna lista de tuplas (video, capa).
+              """
+              if depth > 15:
+                  return []
+              results = []
 
-          print("Varrendo: " + str(OUTRO_DIR))
+              if isinstance(obj, dict):
+                  # 1) Objeto com contentUrl + thumbnailUrl (JSON-LD clássico)
+                  video = None
+                  capa = None
+
+                  for k in (
+                      "contentUrl",
+                      "content_url",
+                      "video_url",
+                      "videoUrl",
+                      "video",
+                      "file",
+                      "src",
+                      "stream_url",
+                      "stream",
+                      "link_play",
+                      "play_url",
+                      "mp4",
+                  ):
+                      v = obj.get(k)
+                      if isinstance(v, str) and v.strip():
+                          video = v.strip()
+                          break
+
+                  for k in (
+                      "thumbnailUrl",
+                      "thumbnail_url",
+                      "poster",
+                      "poster_path",
+                      "cover",
+                      "image",
+                      "img",
+                      "thumbnail",
+                      "capa",
+                      "imagem",
+                      "thumb",
+                  ):
+                      v = obj.get(k)
+                      if isinstance(v, list) and v and isinstance(v[0], str):
+                          if is_valid_cover(v[0]):
+                              capa = v[0].strip()
+                              break
+                      if isinstance(v, str) and is_valid_cover(v):
+                          capa = v.strip()
+                          break
+
+                  if video and capa:
+                      results.append((video, capa, path))
+
+                  # 2) Recursão em todos os valores
+                  for k, v in obj.items():
+                      results.extend(extract_pairs(v, path + "/" + str(k), depth + 1))
+
+              elif isinstance(obj, list):
+                  for i, item in enumerate(obj):
+                      results.extend(
+                          extract_pairs(item, path + "[" + str(i) + "]", depth + 1)
+                      )
+
+              return results
+
+          print("Varrendo JSONs em: " + str(OUTRO_DIR))
 
           mapa_key = {}
           mapa_url = {}
           origem = {}
-          total = 0
-          com_video = 0
-          com_capa = 0
-          sem_video = 0
-          sem_capa = 0
+          total_arquivos = 0
+          total_pares = 0
+          arquivos_sem_par = 0
+          arquivos_erro_json = 0
           conflitos = 0
 
-          for arq in sorted(OUTRO_DIR.rglob("*.html")):
+          for arq in sorted(OUTRO_DIR.rglob("*.json")):
               if ".git" in arq.parts:
                   continue
-              total += 1
+              total_arquivos += 1
               try:
                   texto = arq.read_text(encoding="utf-8", errors="ignore")
               except Exception:
                   continue
 
-              video, capa = extract(texto)
-              if not video:
-                  sem_video += 1
-                  continue
-              com_video += 1
-
-              if not is_valid_cover(capa):
-                  sem_capa += 1
-                  continue
-              com_capa += 1
-
-              vk = norm_video(video)
-              if not vk:
+              try:
+                  dados = json.loads(texto)
+              except Exception as e:
+                  arquivos_erro_json += 1
+                  print("[erro JSON] " + arq.name + ": " + str(e)[:80])
                   continue
 
-              if vk in mapa_key and mapa_key[vk] != capa:
-                  conflitos += 1
+              pares = extract_pairs(dados)
+              if not pares:
+                  arquivos_sem_par += 1
                   continue
 
-              mapa_key[vk] = capa
-              mapa_url[video] = capa
-              origem[vk] = arq.name
+              total_pares += len(pares)
+              for video, capa, caminho in pares:
+                  vk = norm_video(video)
+                  if not vk:
+                      continue
+                  if vk in mapa_key and mapa_key[vk] != capa:
+                      conflitos += 1
+                      continue
+                  mapa_key[vk] = capa
+                  mapa_url[video] = capa
+                  origem[vk] = arq.name + caminho
 
-          linhas_key = ["video_key" + TAB + "capa_url" + TAB + "arquivo_origem"]
+          # Salva
+          linhas = ["video_key" + TAB + "capa_url" + TAB + "origem"]
           for k in sorted(mapa_key.keys()):
-              linhas_key.append(k + TAB + mapa_key[k] + TAB + origem.get(k, ""))
-          Path("capas_por_key.txt").write_text(NL.join(linhas_key), encoding="utf-8")
+              linhas.append(k + TAB + mapa_key[k] + TAB + origem.get(k, ""))
+          Path("capas_por_key.txt").write_text(NL.join(linhas), encoding="utf-8")
 
           linhas_url = ["video_url" + TAB + "capa_url"]
           for k in sorted(mapa_url.keys()):
               linhas_url.append(k + TAB + mapa_url[k])
           Path("capas_por_url.txt").write_text(NL.join(linhas_url), encoding="utf-8")
 
-          resumo_linhas = [
-              "Resumo da extracao",
-              "==================",
-              "Repo: " + str(OUTRO_DIR),
-              "HTMLs varridos: " + str(total),
-              "Com video URL:  " + str(com_video),
-              "Com capa:       " + str(com_capa),
-              "Sem capa:       " + str(sem_capa),
-              "Sem video URL:  " + str(sem_video),
-              "Conflitos:      " + str(conflitos),
-              "",
-              "capas_por_key.txt: " + str(len(mapa_key)) + " entradas",
-              "capas_por_url.txt: " + str(len(mapa_url)) + " entradas",
-          ]
-          resumo = NL.join(resumo_linhas) + NL
+          resumo = NL.join(
+              [
+                  "Resumo da extracao (JSON)",
+                  "=========================",
+                  "Repo: " + str(OUTRO_DIR),
+                  "JSONs varridos: " + str(total_arquivos),
+                  "Pares (video, capa) encontrados: " + str(total_pares),
+                  "Entradas unicas (por chave): " + str(len(mapa_key)),
+                  "Arquivos sem par encontrado: " + str(arquivos_sem_par),
+                  "Arquivos com JSON invalido: " + str(arquivos_erro_json),
+                  "Conflitos: " + str(conflitos),
+              ]
+          ) + NL
           Path("capas_resumo.txt").write_text(resumo, encoding="utf-8")
           print(resumo)
 
@@ -178,13 +256,13 @@ jobs:
               print(k[:50] + "  ->  " + mapa_key[k][:70])
           PYEOF
 
-      - name: Mostrar resultado
+      - name: Mostrar resumo
         run: |
           echo "=== capas_resumo.txt ==="
           cat capas_resumo.txt
           echo ""
           echo "=== capas_por_key.txt (head) ==="
-          head -11 capas_por_key.txt
+          head -11 capas_por_key.txt 2>/dev/null || echo "(vazio)"
 
       - name: Commitar
         run: |
@@ -195,7 +273,7 @@ jobs:
             echo "Nada novo."
             exit 0
           fi
-          git commit -m "chore: capas extraidas do catalogocompleto2 [skip ci]"
+          git commit -m "chore: capas extraidas do JSON [skip ci]"
           git push
 
       - name: Upload artifact
