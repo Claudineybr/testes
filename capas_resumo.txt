@@ -1,9 +1,11 @@
-Resumo da extracao (JSON)
-=========================
-Repo: /tmp/tmp.HTlIprqVJn/outro
+Resumo da extracao
+==================
 JSONs varridos: 6338
-Pares (video, capa) encontrados: 0
-Entradas unicas (por chave): 0
-Arquivos sem par encontrado: 2
-Arquivos com JSON invalido: 6336
-Conflitos: 0
+Com video URL:  6336
+Com capa:       5252
+Sem video URL:  2
+Sem capa:       1084
+Conflitos:      2747
+
+capas_por_key.txt: 2318 entradas
+capas_por_url.txt: 2318 entradas
