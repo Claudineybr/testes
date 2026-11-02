@@ -1,57 +1,30 @@
-name: Aplicar Capas do Site (BFS profundo)
-
-on:
-  workflow_dispatch:
-    inputs:
-      apply_changes:
-        description: 'Aplicar capas aos HTMLs?'
-        type: boolean
-        default: true
-      max_pages:
-        description: 'Máx. de páginas a visitar por run'
-        type: string
-        default: '200'
-
-permissions:
-  contents: write
-
-concurrency:
-  group: scrape-chain
-  cancel-in-progress: false
-
-jobs:
-  scrape:
-    runs-on: ubuntu-latest
-    timeout-minutes: 350
-
-    env:
-      WORKFLOW_FILE: scrape.yml
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Instalar Playwright
-        run: |
-          pip install playwright
-          playwright install chromium
-          playwright install-deps chromium
-
       - name: Raspar site (BFS) e aplicar capas
         env:
           APPLY: ${{ inputs.apply_changes }}
           MAX_PAGES: ${{ inputs.max_pages }}
+          PYTHONUNBUFFERED: '1'
         run: |
-          python3 << 'PYEOF'
-          import os, re, json, time, urllib.parse
+          python3 -u << 'PYEOF'
+          import os, re, json, time, urllib.parse, sys
           from pathlib import Path
           from collections import deque
           from playwright.sync_api import sync_playwright
+
+          # ============ LOG UNIFICADO ============
+          START_TS = time.time()
+          def log(msg, level="info"):
+              elapsed = int(time.time() - START_TS)
+              ts = time.strftime("%H:%M:%S", time.gmtime())
+              prefix = f"[{ts} +{elapsed:>4}s]"
+              line = f"{prefix} {msg}"
+              print(line, flush=True)
+              sys.stdout.flush()
+
+          def gh_notice(msg): print(f"::notice::{msg}", flush=True)
+          def gh_warning(msg): print(f"::warning::{msg}", flush=True)
+          def gh_error(msg): print(f"::error::{msg}", flush=True)
+          def gh_group(name): print(f"::group::{name}", flush=True)
+          def gh_endgroup(): print("::endgroup::", flush=True)
 
           SITE         = "https://www.vini7xgrave.site"
           PLACEHOLDER  = "https://via.placeholder.com/500x750?text=Sem+Capa"
@@ -64,22 +37,24 @@ jobs:
           SKIP_FILE   = Path('.scrape_skip.json')
           STATUS_FILE = Path('.scrape_status.json')
 
+          gh_group("📦 Carregando estado anterior")
           video_map, title_map = {}, {}
           seen_urls, skip_urls = set(), set()
-
           if DATA_FILE.exists():
               try:
                   d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
                   video_map = d.get('video_map', {})
                   title_map = d.get('title_map', {})
-                  print(f"Retomando: video={len(video_map)} title={len(title_map)}")
-              except: pass
+                  log(f"Estado carregado: video={len(video_map)} title={len(title_map)}")
+              except Exception as e: log(f"Erro ao ler data: {e}", "warn")
           if SEEN_FILE.exists():
               try: seen_urls = set(json.loads(SEEN_FILE.read_text(encoding='utf-8')))
               except: pass
           if SKIP_FILE.exists():
               try: skip_urls = set(json.loads(SKIP_FILE.read_text(encoding='utf-8')))
               except: pass
+          log(f"Vistos={len(seen_urls)} | Skip={len(skip_urls)}")
+          gh_endgroup()
 
           def save_all():
               DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
@@ -122,10 +97,14 @@ jobs:
                   if cover.startswith('//'): cover = 'https:' + cover
                   if video:
                       vk = norm_video(video)
-                      if vk and vk not in video_map: video_map[vk] = cover
+                      if vk and vk not in video_map:
+                          video_map[vk] = cover
+                          log(f"  +video({len(video_map)}) {vk[:60]} ← {cover[:80]}")
                   if title:
                       tk = norm_title(title)
-                      if tk and tk not in title_map: title_map[tk] = cover
+                      if tk and tk not in title_map:
+                          title_map[tk] = cover
+                          log(f"  +title({len(title_map)}) {tk[:50]} ← {cover[:80]}")
 
           def is_internal(u):
               return 'vini7xgrave.site' in u.lower()
@@ -175,11 +154,7 @@ jobs:
               if m: title = m.group(1)
               if cover: add_pair(video, cover, title)
 
-          # ============ setup ============
-          # SÓ O HOMEPAGE — o resto é descoberto por BFS (as URLs antigas davam 404)
           start_urls = [SITE + '/']
-
-          # libera o homepage do skip, sempre
           skip_urls -= set(start_urls)
 
           visited = 0
@@ -187,6 +162,7 @@ jobs:
           queue = deque(start_urls)
           seen_urls.update(start_urls)
 
+          gh_group("🌐 Iniciando Playwright")
           with sync_playwright() as p:
               browser = p.chromium.launch(
                   headless=True,
@@ -198,6 +174,7 @@ jobs:
                   locale='pt-BR',
               )
               page = ctx.new_page()
+              log("Browser iniciado")
 
               def on_response(resp):
                   try:
@@ -210,143 +187,142 @@ jobs:
                           except: pass
                   except: pass
               page.on('response', on_response)
+          gh_endgroup()
 
-              def collect_links_and_cards():
-                  try:
-                      data = page.evaluate('''() => {
-                          const cards = [];
-                          const seen = new WeakSet();
-                          const sel = ['article','.card','.item','.post','.movie','.film','.serie',
-                                       '[class*="card"]','[class*="movie"]','[class*="serie"]',
-                                       '[class*="film"]','[class*="post"]','[class*="item"]','[class*="entry"]'];
-                          for (const s of sel) {
-                              document.querySelectorAll(s).forEach(el => {
-                                  if (seen.has(el)) return; seen.add(el);
-                                  const img = el.querySelector('img[src],img[data-src],img[data-lazy-src],img[data-original]');
-                                  const a = el.querySelector('a[href]');
-                                  const tEl = el.querySelector('h1,h2,h3,.title,[class*="title"],[class*="name"]');
-                                  let poster = img ? (img.src || img.dataset.src || img.dataset.lazySrc || img.dataset.original) : null;
-                                  if (!poster) {
-                                      const bg = el.querySelector('[style*="background-image"]');
-                                      if (bg) { const m = bg.style.backgroundImage.match(/url\\(["']?(.+?)["']?\\)/); if (m) poster = m[1]; }
-                                  }
-                                  let title = tEl ? tEl.textContent.trim() : (img ? img.alt : null);
-                                  if (poster && title) cards.push({poster, title, href: a ? a.href : null});
-                              });
-                          }
-                          const links = [...document.querySelectorAll('a[href]')].map(a => a.href);
-                          return {cards, links};
-                      }''')
-                      for c in data['cards']:
-                          add_pair(None, c.get('poster'), c.get('title'))
-                      return data['links']
-                  except Exception as e:
-                      print(f"  [extract err] {e}")
-                      return []
+          gh_group(f"🕷️ BFS — alvo: {MAX_PAGES} páginas")
+          while queue and visited < MAX_PAGES:
+              url = queue.popleft()
+              if url in skip_urls:
+                  continue
 
-              while queue and visited < MAX_PAGES:
-                  url = queue.popleft()
-                  if url in skip_urls:
-                      print(f"[skip-cache] {url}")
+              is_first = (visited == 0)
+              t0 = time.time()
+              log(f"[{visited+1}/{MAX_PAGES}] GET {url}")
+              try:
+                  if is_first:
+                      log(f"  → networkidle + 5s (SPA hydrate)")
+                      resp = page.goto(url, wait_until='networkidle', timeout=90000)
+                      page.wait_for_timeout(5000)
+                  else:
+                      try:
+                          resp = page.goto(url, wait_until='load', timeout=30000)
+                      except:
+                          resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                      page.wait_for_timeout(2000)
+
+                  if resp and resp.status in (404, 410):
+                      skip_urls.add(url)
+                      log(f"  → HTTP {resp.status}, skip permanente")
+                      continue
+                  if resp and resp.status >= 400:
+                      log(f"  → HTTP {resp.status}, soft-fail (retry próximo run)")
                       continue
 
-                  is_first = (visited == 0)
                   try:
-                      if is_first:
-                          # igual ao run que funcionou: espera SPA hidratar
-                          print(f"[load-first] {url} (networkidle + 5s)")
-                          resp = page.goto(url, wait_until='networkidle', timeout=90000)
-                          page.wait_for_timeout(5000)
-                      else:
-                          try:
-                              resp = page.goto(url, wait_until='load', timeout=30000)
-                          except:
-                              resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
-                          page.wait_for_timeout(2000)
+                      page.wait_for_selector('a[href]', timeout=8000)
+                  except:
+                      log(f"  → timeout em a[href], seguindo mesmo assim")
 
-                      if resp and resp.status in (404, 410):
-                          skip_urls.add(url)
-                          print(f"[skip-{resp.status}] {url}")
-                          continue
-                      if resp and resp.status >= 400:
-                          print(f"[soft-{resp.status}] {url} (nao skipado)")
-                          continue
+                  try:
+                      for _ in range(3):
+                          btn = page.query_selector('button:has-text("Carregar mais"), button:has-text("Ver mais"), button:has-text("Load more"), .load-more, [class*="load-more"]')
+                          if btn:
+                              btn.click(timeout=2000)
+                              page.wait_for_timeout(1200)
+                              log(f"  → clicou 'load more'")
+                          else: break
+                  except: pass
 
-                      # espera seletor indicar conteudo (home pode nao ter article)
-                      try:
-                          page.wait_for_selector('a[href]', timeout=8000)
+                  try:
+                      for _ in range(3):
+                          page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                          page.wait_for_timeout(800)
+                  except: pass
+
+                  links = page.evaluate('''() => {
+                      const cards = [];
+                      const seen = new WeakSet();
+                      const sel = ['article','.card','.item','.post','.movie','.film','.serie',
+                                   '[class*="card"]','[class*="movie"]','[class*="serie"]',
+                                   '[class*="film"]','[class*="post"]','[class*="item"]','[class*="entry"]'];
+                      for (const s of sel) {
+                          document.querySelectorAll(s).forEach(el => {
+                              if (seen.has(el)) return; seen.add(el);
+                              const img = el.querySelector('img[src],img[data-src],img[data-lazy-src],img[data-original]');
+                              const a = el.querySelector('a[href]');
+                              const tEl = el.querySelector('h1,h2,h3,.title,[class*="title"],[class*="name"]');
+                              let poster = img ? (img.src || img.dataset.src || img.dataset.lazySrc || img.dataset.original) : null;
+                              if (!poster) {
+                                  const bg = el.querySelector('[style*="background-image"]');
+                                  if (bg) { const m = bg.style.backgroundImage.match(/url\\(["']?(.+?)["']?\\)/); if (m) poster = m[1]; }
+                              }
+                              let title = tEl ? tEl.textContent.trim() : (img ? img.alt : null);
+                              if (poster && title) cards.push({poster, title, href: a ? a.href : null});
+                          });
+                      }
+                      const links = [...document.querySelectorAll('a[href]')].map(a => a.href);
+                      return {cards, links};
+                  }''')
+                  for c in links.get('cards', []):
+                      add_pair(None, c.get('poster'), c.get('title'))
+                  all_links = links.get('links', [])
+
+                  internal_new = [l for l in all_links if is_internal(l) and not should_skip(l) and l not in seen_urls and l not in skip_urls]
+                  visited += 1
+                  dt = time.time() - t0
+                  log(f"  ✓ links={len(all_links)} novos={len(internal_new)} tempo={dt:.1f}s | video={len(video_map)} title={len(title_map)}")
+
+                  if is_first:
+                      Path('homepage_debug.html').write_text(page.content(), encoding='utf-8')
+                      try: page.screenshot(path='homepage_debug.png', full_page=False)
                       except: pass
+                      log(f"  → amostra: {internal_new[:5]}")
 
-                      # tenta load-more / scroll (3 tentativas)
-                      try:
-                          for _ in range(3):
-                              btn = page.query_selector('button:has-text("Carregar mais"), button:has-text("Ver mais"), button:has-text("Load more"), .load-more, [class*="load-more"]')
-                              if btn:
-                                  btn.click(timeout=2000); page.wait_for_timeout(1200)
-                              else: break
-                      except: pass
-                      try:
-                          for _ in range(3):
-                              page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-                              page.wait_for_timeout(800)
-                      except: pass
+                  for link in internal_new:
+                      seen_urls.add(link)
+                      queue.append(link)
+                      added_urls += 1
 
-                      links = collect_links_and_cards()
-                      visited += 1
+                  if visited % 5 == 0:
+                      save_all(); save_status(len(queue), visited)
+                      log(f"  💾 checkpoint salvo (visited={visited}, queue={len(queue)})")
 
-                      internal_links = [l for l in links if is_internal(l) and not should_skip(l) and l not in seen_urls and l not in skip_urls]
-                      total_links = len(links)
-                      internal_new = len(internal_links)
+              except Exception as e:
+                  log(f"  ✗ ERRO: {str(e)[:150]}")
+                  continue
 
-                      print(f"[visit #{visited}] {url} | links={total_links} internos_novos={internal_new} | video={len(video_map)} title={len(title_map)}")
+              browser_close_ready = False
 
-                      if is_first:
-                          # debug da primeira página
-                          Path('homepage_debug.html').write_text(page.content(), encoding='utf-8')
-                          try: page.screenshot(path='homepage_debug.png', full_page=False)
-                          except: pass
-                          print(f"  → amostra de links: {internal_links[:8]}")
+          gh_endgroup()
+          browser.close()
+          queue_remaining = len(queue)
 
-                      for link in internal_links:
-                          seen_urls.add(link)
-                          queue.append(link)
-                          added_urls += 1
-
-                      if visited % 20 == 0:
-                          save_all(); save_status(len(queue), visited)
-
-                  except Exception as e:
-                      print(f"[err] {url}: {str(e)[:120]}")
-                      continue
-
-              browser.close()
-              queue_remaining = len(queue)
-
-          # --- decisão de continuar ou parar ---
           abort_reason = None
           if visited <= 1 and added_urls == 0:
               abort_reason = "homepage_loaded_but_zero_links"
-              print(f"❌ visited={visited} added_urls={added_urls} -> abortando. Veja homepage_debug.html/png.")
-              # NÃO força queue=100: melhor parar e investigar do que queimar runs
+              gh_error(f"ABORTANDO: {abort_reason}. Home não gerou links. Veja homepage_debug.png/html.")
               queue_remaining = 0
           elif visited <= 2:
-              print(f"⚠️  visited={visited} baixo, limpando skip_urls p/ próxima")
+              gh_warning(f"visited={visited} muito baixo, limpando skip p/ próxima")
               skip_urls.clear()
               queue_remaining = max(queue_remaining, 1)
 
           save_all()
           save_status(queue_remaining, visited)
 
-          print(f"\nVisited: {visited} | Novos links: {added_urls} | Queue restante: {queue_remaining}")
-          print(f"video_map={len(video_map)} | title_map={len(title_map)} | skip={len(skip_urls)}")
+          gh_group("📊 Resumo da raspagem")
+          log(f"Visited: {visited} | Novos links: {added_urls} | Queue restante: {queue_remaining}")
+          log(f"video_map={len(video_map)} | title_map={len(title_map)} | skip={len(skip_urls)}")
+          gh_endgroup()
 
           if not APPLY:
-              print("APPLY=false — apenas coleta.")
+              log("APPLY=false — pulando aplicação.")
               raise SystemExit(0)
 
-          # ============ aplica capas ============
+          gh_group("🎨 Aplicando capas nos HTMLs")
           total = alterados = via_video = via_title = via_filename = sem_match = 0
           sem_match_list = []
+          last_log = time.time()
 
           for arq in sorted(Path('.').rglob('*.html')):
               if '.git' in arq.parts: continue
@@ -384,99 +360,19 @@ jobs:
                   if source == "video": via_video += 1
                   elif source == "title": via_title += 1
                   else: via_filename += 1
-                  print(f"[ok/{source}] {arq.name}")
+
+              if time.time() - last_log > 5:
+                  log(f"  progresso: {alterados} aplicadas ({via_video}v/{via_title}t/{via_filename}f) | {sem_match} sem match | {total} arquivos")
+                  last_log = time.time()
 
           Path('.scrape_sem_match.txt').write_text('\n'.join(sem_match_list), encoding='utf-8')
 
-          print(f"\nTotal HTMLs: {total}")
-          print(f"Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename})")
-          print(f"Sem match: {sem_match}")
+          log(f"Total HTMLs: {total}")
+          log(f"Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename})")
+          log(f"Sem match: {sem_match}")
+          gh_endgroup()
+
+          if abort_reason:
+              gh_error(f"Run terminou mas abortou por: {abort_reason}")
+              raise SystemExit(1)
           PYEOF
-
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scrape-state
-          if-no-files-found: ignore
-          path: |
-            .scrape_data.json
-            .scrape_seen.json
-            .scrape_skip.json
-            .scrape_status.json
-            .scrape_sem_match.txt
-            homepage_debug.html
-            homepage_debug.png
-          retention-days: 30
-
-      - name: Commitar estado do scraper
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "chore: estado do scraper [skip ci]"
-          git push
-
-      - name: Commitar capas aplicadas
-        if: inputs.apply_changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "*.html"
-          if git diff --cached --quiet; then
-            echo "Nenhum HTML modificado."; exit 0
-          fi
-          git commit -m "Auto: capas reais do site aplicadas [skip ci]"
-          git push
-
-      - name: Disparar próxima run (se fila não vazia)
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.PAT_CHAIN }}
-          REPO: ${{ github.repository }}
-          WORKFLOW_FILE: ${{ env.WORKFLOW_FILE }}
-        run: |
-          if [ ! -f .scrape_status.json ]; then
-            echo "Sem status — chain encerrada."; exit 0
-          fi
-
-          QUEUE=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('queue_remaining', -1))")
-          VISITED=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('visited', 0))")
-          MAX_P=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('max_pages', 0))")
-
-          echo "📊 Queue: $QUEUE | Visited: $VISITED/$MAX_P"
-
-          if [ "$QUEUE" -le 0 ]; then
-            echo "✅ Fila vazia. Chain encerrada."; exit 0
-          fi
-
-          if [ -f .scrape_stop ]; then
-            echo "🛑 .scrape_stop encontrado. Chain parada."; exit 0
-          fi
-
-          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-          RECENTES=$(gh run list \
-            --workflow="$WORKFLOW_FILE" --limit 100 \
-            --json event,createdAt \
-            --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" \
-            --repo "$REPO" 2>/dev/null || echo 0)
-
-          if [ "$RECENTES" -ge 30 ]; then
-            echo "⚠️ Limite de 30 runs/hora. Chain encerrada."; exit 0
-          fi
-
-          APPLY="${{ inputs.apply_changes }}"
-          MAX_PAGES_NEXT="${{ inputs.max_pages }}"
-          echo "🔁 Disparando próxima run em 30s (apply=$APPLY, max_pages=$MAX_PAGES_NEXT)..."
-          sleep 30
-
-          for i in {1..5}; do
-            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main \
-                -f apply_changes="$APPLY" -f max_pages="$MAX_PAGES_NEXT"; then
-              echo "✅ Próxima run disparada!"; break
-            else
-              echo "⚠️ Falhou (tentativa $i/5). Retry em 15s..."; sleep 15
-            fi
-          done
