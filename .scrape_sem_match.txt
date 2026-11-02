@@ -29,8 +29,6 @@ a_branca_de_neve_e_o_cacador_20.html
 a_bruxa_20.html
 a_bruxa_do_amor_legendado.html
 a_bruxa_dos_mortos_bagheead.html
-a_bussola_de_ouro.html
-a_cacada.html
 a_caixa_azul.html
 a_casa_de_tijolos_de_barro.html
 a_casa_dos_passaros_mortos.html
@@ -39,18 +37,14 @@ a_casa_que_jack_construiu_legendado_20.html
 a_casa_sombria_20.html
 a_centopeia_humana_2_legendado_20.html
 a_chamada_20.html
-a_colega_perfeita.html
 a_colina_escarlate.html
 a_culpa_e_das_estrelas_20.html
-a_desconhecida.html
 a_escolha_perfeita_20.html
 a_espia_que_sabia_de_menos_20.html
 a_espreita_do_mal_20.html
 a_familia_addams_2.html
-a_familia_buscape.html
 a_festa_da_salsicha_20.html
 a_filha_da_noiva.html
-a_fortuna_de_escobar.html
 a_freira_20.html
 a_fronteira_20.html
 a_furia_de_dracula.html
@@ -61,12 +55,10 @@ a_historia_do_som.html
 a_historia_sem_fim.html
 a_identidade_bourne.html
 a_ilha_20.html
-a_invocacao.html
 a_irma_de_jack_t6e10_t6e10.html
 a_lenda_de_saint_joseph.html
 a_lenda_do_cavaleiro_sem_cabeca.html
 a_lenda_dos_guardioes_20.html
-a_ligacao.html
 a_longa_marcha_caminhe_ou_morra_20.html
 a_luz_do_demonio_20.html
 a_maldicao_da_casa_winchester.html
@@ -106,7 +98,6 @@ a_saga_crepusculo_amanhecer.html
 a_sociedade_da_neve_20.html
 a_sogra.html
 a_tragedia_de_moriah_wilson.html
-a_tregua.html
 a_ultima_cacada_20.html
 a_ultima_musica_20.html
 a_vida_e_bela_19.html
@@ -233,7 +224,6 @@ amor_demais.html
 amor_e_outras_drogas_20.html
 amor_sem_medida_20.html
 anemona.html
-animais_noturnos.html
 anjo_do_desejo_20.html
 anjos_do_deserto.html
 anna_e_o_apocalipse_20.html
@@ -277,9 +267,6 @@ arthur_e_a_vinganca_de_maltazard_20.html
 arthur_e_os_minimoys_20.html
 as_7_bruxas_20.html
 as_coisas_serao_diferentes.html
-as_cores_do_mal_preto.html
-as_faces_do_demonio.html
-as_freiras_exorcistas.html
 as_namoradas_do_papai.html
 as_panteras.html
 as_quatro_estacoes_amor.html
@@ -289,7 +276,6 @@ ash_vs_evil_dead_t2e1_lar_t2e1.html
 ash_vs_evil_dead_t2e2_o_necroterio_t2e2.html
 ash_vs_evil_dead_t2e6_presos_t2e6.html
 ash_vs_evil_dead_t3e5_a_prova_de_bebes_t3e5.html
-assalto_brutal.html
 assassino_de_sangue.html
 asterix_nos_jogos_olimpicos_20.html
 ataque_ao_hotel.html
@@ -340,7 +326,6 @@ barbie_a_princesa_e_a_plebeia.html
 barbie_aventura_nas_estrelas.html
 barbie_butterfly_e_a_princesa_fada.html
 barbie_e_a_magia_de_aladus.html
-barbie_e_as_sapatilhas_magicas.html
 bark_20.html
 bates_motel_t2e9_a_farsa_t2e9.html
 bates_motel_t5e4_a_partida_t5e4.html
@@ -361,10 +346,8 @@ black_clover_t1e78_o_legado_dos_cavaleiros_magicos_t1e78.html
 black_clover_t1e80_a_decisao_final_t1e80.html
 bleach_20.html
 bloodshot.html
-boa_sorte_divirta_se_nao_morra.html
 bobeou_dancou.html
 boca_de_fumo_20.html
-bola_pra_cima.html
 bom_dia_veronica_t1e1_t1e1.html
 bom_dia_veronica_t1e2_t1e2.html
 bom_dia_veronica_t1e3_t1e3.html
@@ -424,7 +407,6 @@ breaking_bad_t5e9_dinheiro_de_sangue_t5e9.html
 brick.html
 brilho_eterno_de_uma_mente_sem_lembrancas.html
 bts_o_reencontro.html
-bugonia.html
 busca_explosiva_3.html
 cabana_do_inferno.html
 cabana_do_medo_o_ultimo_fim_de_semana_do_verao.html
@@ -444,14 +426,12 @@ caminhos_do_crime.html
 cancao_de_rock_americana_t5e12_t5e12.html
 carrossel_magico.html
 casamento_sangrento_20.html
-casas_de_vidro.html
 castores_zumbis.html
 cavalo_de_guerra.html
 celular_um_grito_de_socorro_20.html
 cemiterio_maldito_19.html
 cemiterio_maldito_20.html
 centopeia_humana_3_legendado.html
-chappie.html
 chernobyl_sinta_a_radiacao_legendado.html
 chris_watts_confissoes_de_um_assassino.html
 cinquenta_tons_de_preto.html
@@ -461,7 +441,6 @@ classe_dos_herois_fracos_t2e3_t2e3.html
 click.html
 clika_sonho_e_perigo.html
 closer_perto_demais.html
-cloverfield_monstro.html
 clube_da_luta_para_meninas.html
 clube_de_compras_dallas.html
 clube_do_desejo_20.html
@@ -492,7 +471,6 @@ conselhos_de_um_serial_killer_aposentado.html
 consequencias_t6e13_t6e13.html
 construimos_e_depois_destruimos_t6e5_t6e5.html
 conta_comigo.html
-contato.html
 contato_visceral.html
 conto_do_dia_das_bruxas.html
 contos_da_babilonia.html
@@ -653,8 +631,6 @@ de_ferias_da_familia_20.html
 de_pernas_pro_ar.html
 de_pernas_pro_ar_2.html
 de_repente_e_amor.html
-de_volta_a_acao.html
-de_volta_ao_baile.html
 de_volta_aos_anos_90.html
 de_volta_para_o_futuro.html
 deadpool_2_acao_comedia_episodio.html
@@ -705,7 +681,6 @@ dexter_new_blood_t1e7_too_many_tuna_sandwiches_t1e7.html
 dexter_new_blood_t1e8_jogo_injusto_t1e8.html
 dexter_new_blood_t1e9_o_negocio_de_familia_t1e9.html
 dezembro_sem_fim_20.html
-dhurandhar_a_vinganca.html
 dia_da_mentira_20.html
 dia_dos_mortos.html
 diablo_cacada_mortal_20.html
@@ -728,9 +703,7 @@ dinheiro_sujo.html
 divertidamente_nbsp.html
 do_meu_jeito_t7e5_t7e5.html
 doa_vivo_ou_morto.html
-dogville.html
 dois_e_bom_tres_e_demais_20.html
-dolly_a_boneca_maldita.html
 dominacao_20.html
 doom_a_porta_do_inferno.html
 dracula_historia_de_amor_eterno.html
@@ -745,13 +718,9 @@ efeito_domino.html
 ela_danca_eu_danco_20.html
 ela_e_demais.html
 ele_nao_esta_tao_a_fim_de_voce.html
-ele_te_ve_enquanto_voce_dorme.html
 elio.html
-elle.html
-em_busca_da_fama.html
 em_busca_de_um_milagre_20.html
 em_busca_do_enfermeiro_da_noite.html
-emilia_perez.html
 emma.html
 encontrando_o_amor_em_yosemite.html
 ender_s_game_o_jogo_do_exterminador.html
@@ -777,7 +746,6 @@ escrito_nas_estrelas_20.html
 escuridao_profunda.html
 espartalhoes_20.html
 especial_de_natal_t6e7_t6e7.html
-espelho_espelho_meu.html
 esperando_por_voce.html
 espiao_por_acidente.html
 esqueceram_de_mim_5.html
@@ -787,8 +755,6 @@ estacao_19_t1e5_e05choque_no_sistema_t1e5.html
 estacao_19_t1e6_e06mais_fortes_juntos_t1e6.html
 estacao_19_t1e8_e08cada_segundo_conta_t1e8.html
 estomago_20.html
-estrada_maldita.html
-estrelas_alem_do_tempo.html
 eu_ainda_sei_o_que_voces_fizeram_no_verao_passado.html
 eu_ainda_sei_o_que_voces_fizeram_no_verao_passado_episodio.html
 eu_sou_a_lenda.html
@@ -816,7 +782,6 @@ five_nights_at_freddy_s_2_20.html
 flash_t3e14_a_furia_de_savitar_t3e14.html
 flash_t3e20_causa_e_efeito_t3e20.html
 flash_t3e3_os_novos_viloes_t3e3.html
-fogo_cruzado.html
 fome_de_sucesso_20.html
 fora_de_controle_t4e5_t4e5.html
 forcas_obscuras_20.html
@@ -841,7 +806,6 @@ ginny_e_georgia_t2e9_matar_o_gil_t2e9.html
 goat_20.html
 godzilla_ii_rei_dos_monstros_20.html
 godzilla_vs_kong_20.html
-golden_kamuy.html
 golpe_duplo.html
 gonjiam_manicomio_assombrado.html
 goosebumps_monstros_e_arrepios_20.html
@@ -870,15 +834,12 @@ hereditario_20.html
 historias_de_alem_tumulo.html
 hit_para_dois.html
 hokum_o_pesadelo_da_bruxa.html
-home_sweet_home_recomeco.html
 homem_com_h.html
 homem_com_problemas_t7e4_t7e4.html
 homem_duplicado.html
 homens_de_preto.html
 homens_de_preto_iii.html
 homens_do_bem_20.html
-honey_3_no_ritmo_do_amor.html
-honey_no_ritmo_dos_seus_sonhos.html
 horas_de_desespero_20.html
 host_cuidado_com_quem_chama_20.html
 https_www_grave_site_01_arc_o_caminho_para_el_dourado_html.html
@@ -934,7 +895,6 @@ https_www_grave_site_12_inix_sombra_e_escuridao_html.html
 ilha_de_cachorros_20.html
 imagine_eu_e_voce_20.html
 imperfeitamente_perfeita.html
-impetigore.html
 incendios.html
 incontrolavel.html
 infancia_sombria.html
@@ -959,13 +919,11 @@ isso_ainda_esta_de_pe.html
 jack_o_estripador_a_historia_nao_contada.html
 jack_reacher_o_ultimo_tiro_20.html
 jane_nao_esta_bem.html
-jaula.html
 jeruzalem_20.html
 joey_ella_uma_amizade_extraordinaria.html
 john_carter_entre_dois_mundos_20.html
 jornada_da_vida.html
 jose_o_rei_dos_sonhos.html
-jovens_bruxas.html
 juntos_para_sempre_20.html
 kaguya_a_princesa_espacial_20.html
 kaiju_no_8_t1e11_kaiju_no_8_preso_t1e11.html
@@ -992,7 +950,6 @@ lar_doce_inferno.html
 laranja_mecanica.html
 latency_20.html
 lee.html
-legado_nos_ossos.html
 legends_of_tomorrow_t1e10_progenie_t1e10.html
 legends_of_tomorrow_t1e11_os_oito_magnificos_t1e11.html
 legends_of_tomorrow_t1e12_ultimo_refugio_t1e12.html
@@ -1076,7 +1033,6 @@ legends_of_tomorrow_t5e9_zari_nao_zari_t5e9.html
 lenda_urbana.html
 lenda_urbana_2.html
 lendas_da_paixao.html
-letras_da_morte.html
 levante_se_fique_de_pe_t4e12_t4e12.html
 licoes_de_liberdade.html
 liga_da_justica_vs_jovens_titas.html
@@ -1087,7 +1043,6 @@ lindas_e_letais.html
 little_brother.html
 livrai_nos_do_mal_20.html
 livrando_a_cara_legendado.html
-lizzie.html
 lobisomem.html
 lost_t1e1_piloto_parte_1_de_2_t1e1.html
 loteria_fatal.html
@@ -1261,7 +1216,6 @@ mayday.html
 medo_19.html
 medo_da_verdade_20.html
 megamente_vs_o_sindicato_da_perdicao.html
-megan_is_missing.html
 megatubarao_20.html
 melancia_cintilante_legendado_t1e10_t1e10.html
 melancia_cintilante_legendado_t1e11_t1e11.html
@@ -1283,16 +1237,12 @@ mergulho_radical.html
 mergulho_radical_2_os_recifes.html
 merv_20.html
 metas_de_relacionamento.html
-meteoros.html
 meu_monstro_de_estimacao_20.html
 meu_nome_e_agneta.html
 meu_primeiro_amor_19.html
 meu_primeiro_verao_legendado.html
 meu_sonho_americano.html
-mexicali_terra_sem_lei.html
-mexico.html
 michael_jackson_the_is_it.html
-mikaela.html
 minha_mae_e_uma_peca.html
 minha_noiva_de_mentira.html
 minha_super_ex_namorada.html
@@ -1304,7 +1254,6 @@ missao_impossivel_3_nbsp_nbsp.html
 missao_impossivel_nacao_secreta_nbsp.html
 missao_impossivel_nbsp.html
 missao_pet_20.html
-missao_refugio.html
 missao_silenciosa_a_batalha_do_oceano_artico.html
 mogli_o_menino_lobo_2.html
 mona_lisa_e_a_lua_de_sangue.html
@@ -1361,11 +1310,9 @@ mushuku_tensei_t2e4_t2e4.html
 mushuku_tensei_t2e7_t2e7.html
 mushuku_tensei_t2e9_t2e9.html
 my_little_pony_equestria_girls.html
-my_little_pony_equestria_girls_jogos_da_amizade.html
 my_little_pony_equestria_girls_rainbow_rocks.html
 nada_parece_igual_t4e1_t4e1.html
 nando_entre_dois_mundos_um_filme_sintonia.html
-nanny_mcphee_a_baba_encantada.html
 nao_bata_duas_vezes.html
 nao_consigo_sentir_seu_rosto_t5e2_t5e2.html
 nao_deseje_boa_sorte.html
@@ -1414,9 +1361,7 @@ nos_somos_zumbis_20.html
 nosferatu.html
 nossa_culpa_20.html
 nunca_fui_santa_legendado.html
-nuremberg.html
 o_acampamento_do_medo_20.html
-o_agente_faixa_preta.html
 o_agente_secreto_20.html
 o_albergue_20.html
 o_albergue_2_20.html
@@ -1430,7 +1375,6 @@ o_atirador_sem_nacao.html
 o_babadook_legendado.html
 o_bairro_de_theo_t6e9_t6e9.html
 o_bar_20.html
-o_bebe_de_rosemary.html
 o_bom_filho_a_casa_torna.html
 o_cacador_de_espiritos_20.html
 o_cacador_e_a_rainha_do_gelo_20.html
@@ -1444,13 +1388,11 @@ o_confronto_dos_thundermans.html
 o_conta_da_aia_t3e4_5_numero_desconhecido_t3e4.html
 o_conto_da_princesa_kaguya_20.html
 o_corcunda_de_notre_dame_ii_o_segredo_do_sino.html
-o_corpo.html
 o_corvo_20.html
 o_dentista_20.html
 o_despertar_dos_fantasmas_20.html
 o_diario_de_frankenstein.html
 o_diario_de_uma_princesa.html
-o_ditador.html
 o_dono_da_festa_20.html
 o_elixir_20.html
 o_encanto_da_sereia_20.html
@@ -1469,7 +1411,6 @@ o_grande_desafio.html
 o_grande_dragao_branco.html
 o_grande_gatsby.html
 o_grinch_20.html
-o_guardiao_invisivel.html
 o_halloween_do_hubie_20.html
 o_homem_de_branco_20.html
 o_homem_de_toronto.html
@@ -1526,7 +1467,6 @@ o_menu.html
 o_minimo_para_viver_20.html
 o_misterio_das_duas_irmas.html
 o_momento.html
-o_monstro_que_vive_em_mim.html
 o_mundo_dos_pequeninos_20.html
 o_naufrago_20.html
 o_nevoeiro.html
@@ -1534,12 +1474,9 @@ o_odio_que_voce_semeia.html
 o_onibus_perdido_20.html
 o_pacote_20.html
 o_pai_da_noiva_19.html
-o_pai_da_noiva_ii.html
 o_palido_olho_azul.html
 o_pequeno_principe_20.html
 o_pergaminho_vermelho_20.html
-o_perigo_bate_a_porta.html
-o_plano_imperfeito.html
 o_poco_das_trevas_20.html
 o_poder_do_pecado.html
 o_preco_da_traicao_20.html
@@ -1585,7 +1522,6 @@ o_verao_que_mudou_minha_vida_t2e2_cena_de_amor_t2e2.html
 o_verao_que_mudou_minha_vida_t2e3_caida_de_amor_t2e3.html
 o_veterano_20.html
 obsessao_sanguinaria_20.html
-oferenda_a_tempestade.html
 oito_mulheres_e_um_segredo.html
 oldboy.html
 onda_de_violencia_20.html
@@ -1596,7 +1532,6 @@ os_5_fora_da_lei.html
 os_6_ridiculos.html
 os_caras_malvados_2_20.html
 os_croods_2.html
-os_escravos_de_satanas.html
 os_flintstones_19.html
 os_intrusos.html
 os_irmaos_masin.html
@@ -1604,7 +1539,6 @@ os_observadores_20.html
 os_originais_the_originals_t1e16_salve_minha_alma_t1e16.html
 os_originais_the_originals_t4e11_promessas_t4e11.html
 os_pecados_do_padre_20.html
-os_pinguins_do_papai.html
 os_seis_signos_da_luz_20.html
 os_suspeitos_20.html
 os_tres_mosqueteiros_20.html
@@ -1650,7 +1584,6 @@ poisedon_20.html
 poisedon_episodio.html
 policiais_da_mafia_20.html
 policial_em_apuros_2_20.html
-poltergeist_ii_o_outro_lado.html
 pompeia.html
 pontos_de_ruptura_t6e15_t6e15.html
 pooh_e_o_elefante.html
@@ -1664,7 +1597,6 @@ predadores_assassinos.html
 premonicao_20.html
 preparacao_para_a_proxima_vida_20.html
 presas_do_abismo_20.html
-primitivo.html
 princesa_mononoke_19.html
 priscilla.html
 prison_break_em_busca_da_verdade_t2e14_joao_ninguem_t2e14.html
@@ -1681,12 +1613,10 @@ procurando_dory_20.html
 procurando_pelo_fantasma_t5e10_t5e10.html
 programada_para_matar_20.html
 projeto_florida.html
-projeto_internato.html
 pulp_fiction_tempo_de_violencia.html
 pulse.html
 quando_a_festa_acaba_t5e15_t5e15.html
 quando_a_morte_sussurra_2.html
-quando_a_morte_sussurra_3.html
 quando_o_ceu_se_engana_hdcam.html
 quando_um_estranho_chama_20.html
 quarentena_2.html
@@ -1722,7 +1652,6 @@ reflexo_do_mal.html
 refugio_de_inverno.html
 regresso_a_halloweentown.html
 rei_dos_ladroes.html
-relay_contrato_perigoso.html
 resgate_abaixo_de_zero.html
 resgate_no_golfo.html
 resgate_polar.html
@@ -1734,7 +1663,6 @@ retrato_de_uma_jovem_em_chamas_legendado.html
 reviravolta_e_gritos_t6e1_t6e1.html
 ritual_das_trevas_20.html
 rivais.html
-rob1n_inteligencia_assassina.html
 robocop_2.html
 robot_selvagem.html
 rocky_balboa.html
@@ -1748,8 +1676,6 @@ salva_te_a_ti_mesmo_t4e10_t4e10.html
 salve_geral_irmandade.html
 salverosa_20.html
 samurai_x_o_filme.html
-sanatorium_misterios_na_noite.html
-santet_o_feitico_do_mal.html
 scooby_doo_e_a_espada.html
 scooby_doo_e_o_fantasma_da_bruxa_episodio.html
 scooby_doo_e_os_irmaos_boo.html
@@ -1774,7 +1700,6 @@ serie_desconhecida_t3e14_t3e14.html
 serie_desconhecida_t3e15_t3e15.html
 serie_desconhecida_t3e16_t3e16.html
 servindo_nazistas.html
-sete_veus.html
 sete_vidas_20.html
 setembro_5_20.html
 sexo_sem_compromisso.html
@@ -1808,7 +1733,6 @@ star_wars_o_mandaloriano_e_grogu.html
 sugar_baby.html
 sullivan_e_ross_t6e12_t6e12.html
 super_quem_herois_por_acidente.html
-superlopez.html
 supermaes_t1e12_coracoes_em_conflito_t1e12.html
 supermaes_t1e13_especial_de_transicao_t1e13.html
 supermaes_t1e6_lacos_e_desgastes_t1e6.html
@@ -1830,7 +1754,6 @@ supernatural_sobrenatural_t3e5_a_lenda_do_espantalho_t3e5.html
 supernatural_sobrenatural_t4e3_no_inicio_t4e3.html
 supernatural_sobrenatural_t5e10_abandone_a_esperanca_t5e10.html
 supernatural_sobrenatural_t5e21_dois_minutos_para_a_meia_noite_t5e21.html
-sweeney_todd_o_barbeiro_demoniaco_da_rua_fleet.html
 t3e5_hakeldama_t3e5.html
 t4e9_dnr_t4e9.html
 t5e7_acceptable_losses_t5e7.html
@@ -1840,7 +1763,6 @@ tara_maldita_20.html
 tarzan.html
 tarzan_e_jane.html
 te_pego_na_saida.html
-teen_beach_o_filme.html
 teen_wolf_t2e12_plano_mestre_t2e12.html
 teen_wolf_t2e3_buraco_no_gelo_t2e3.html
 teen_wolf_t3e1_a_tatuagem_t3e1.html
@@ -1931,9 +1853,7 @@ twister_19.html
 um_anjo_em_nossas_vidas.html
 um_cabra_bom_de_bola.html
 um_crime_perfeito.html
-um_dia.html
 um_dia_de_cao.html
-um_dia_de_sorte_em_nova_york.html
 um_drink_no_inferno_19.html
 um_heroi_de_brinquedo.html
 um_homem_de_sorte.html
@@ -1952,9 +1872,6 @@ um_parto_de_viagem.html
 um_pesadelo_maravilhoso.html
 um_pesadelo_sem_fim_20.html
 um_principe_em_nova_york.html
-um_tira_da_pesada.html
-um_tira_da_pesada_3.html
-um_tira_da_pesada_4_axel_foley.html
 um_tira_no_jardim_de_infancia_2.html
 um_verao_infernal.html
 uma_casa_nao_e_um_lar_t5e7_t5e7.html
@@ -1986,7 +1903,6 @@ verdadeiras_cores_t7e3_t7e3.html
 vicky_cristina_barcelona.html
 victor_frankenstein.html
 vida_glamurosa_final_t6e18_t6e18.html
-vidas_entrelacadas.html
 vingador_da_noite_20.html
 vinganca_no_deserto_20.html
 vinganca_solitaria_20.html
