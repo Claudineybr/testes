@@ -1,10 +1,6 @@
 name: Gerar Catalogo de Filmes e Series
 
 "on":
-  push:
-    branches:
-      - main
-      - master
   workflow_dispatch:
 
 permissions:
