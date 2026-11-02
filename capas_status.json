@@ -1,11 +1,11 @@
 {
-  "total_sem_capa_urls": 344,
+  "total_sem_capa_urls": 240,
   "sem_url_video": 0,
-  "mapa_size": 104,
+  "mapa_size": 6,
   "novos_feed": 0,
-  "novos_visitados": 104,
-  "faltam_visitar": 13,
-  "alterados": 104,
-  "sem_match": 240,
+  "novos_visitados": 6,
+  "faltam_visitar": 7,
+  "alterados": 6,
+  "sem_match": 234,
   "done": false
 }
