@@ -1,12 +1,15 @@
 {
   "total_sem_capa_urls": 227,
   "sem_url_video": 0,
-  "mapa_size": 0,
+  "mapa_size": 7,
   "novos_feed": 0,
-  "novos_visitados": 0,
-  "faltam_video": 227,
+  "novos_visitados": 7,
+  "faltam_video": 220,
   "faltam_visitar": 0,
-  "alterados": 0,
-  "sem_match": 227,
-  "done": true
+  "feed_all_keys": 4067,
+  "intersecao": 7,
+  "alterados": 7,
+  "sem_match": 220,
+  "done": false,
+  "motivo": "220 videos sem capa, 0 candidatos pendentes"
 }
