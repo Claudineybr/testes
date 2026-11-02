@@ -4,8 +4,9 @@
   "mapa_size": 0,
   "novos_feed": 0,
   "novos_visitados": 0,
+  "faltam_video": 227,
   "faltam_visitar": 0,
   "alterados": 0,
   "sem_match": 227,
-  "done": false
+  "done": true
 }
