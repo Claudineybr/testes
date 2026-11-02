@@ -1,3 +1,47 @@
+name: Aplicar Capas do Site (BFS profundo)
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply_changes:
+        description: 'Aplicar capas aos HTMLs?'
+        type: boolean
+        default: true
+      max_pages:
+        description: 'Máx. de páginas a visitar por run'
+        type: string
+        default: '200'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: scrape-chain
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+
+    env:
+      WORKFLOW_FILE: scrape.yml
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Playwright
+        run: |
+          pip install playwright
+          playwright install chromium
+          playwright install-deps chromium
+
       - name: Raspar site (BFS) e aplicar capas
         env:
           APPLY: ${{ inputs.apply_changes }}
@@ -15,9 +59,7 @@
           def log(msg, level="info"):
               elapsed = int(time.time() - START_TS)
               ts = time.strftime("%H:%M:%S", time.gmtime())
-              prefix = f"[{ts} +{elapsed:>4}s]"
-              line = f"{prefix} {msg}"
-              print(line, flush=True)
+              print(f"[{ts} +{elapsed:>4}s] {msg}", flush=True)
               sys.stdout.flush()
 
           def gh_notice(msg): print(f"::notice::{msg}", flush=True)
@@ -46,7 +88,7 @@
                   video_map = d.get('video_map', {})
                   title_map = d.get('title_map', {})
                   log(f"Estado carregado: video={len(video_map)} title={len(title_map)}")
-              except Exception as e: log(f"Erro ao ler data: {e}", "warn")
+              except Exception as e: log(f"Erro ao ler data: {e}")
           if SEEN_FILE.exists():
               try: seen_urls = set(json.loads(SEEN_FILE.read_text(encoding='utf-8')))
               except: pass
@@ -99,12 +141,12 @@
                       vk = norm_video(video)
                       if vk and vk not in video_map:
                           video_map[vk] = cover
-                          log(f"  +video({len(video_map)}) {vk[:60]} ← {cover[:80]}")
+                          log(f"  +video({len(video_map)}) {vk[:60]} <- {cover[:80]}")
                   if title:
                       tk = norm_title(title)
                       if tk and tk not in title_map:
                           title_map[tk] = cover
-                          log(f"  +title({len(title_map)}) {tk[:50]} ← {cover[:80]}")
+                          log(f"  +title({len(title_map)}) {tk[:50]} <- {cover[:80]}")
 
           def is_internal(u):
               return 'vini7xgrave.site' in u.lower()
@@ -189,7 +231,7 @@
               page.on('response', on_response)
           gh_endgroup()
 
-          gh_group(f"🕷️ BFS — alvo: {MAX_PAGES} páginas")
+          gh_group(f"🕷️ BFS - alvo: {MAX_PAGES} paginas")
           while queue and visited < MAX_PAGES:
               url = queue.popleft()
               if url in skip_urls:
@@ -200,7 +242,7 @@
               log(f"[{visited+1}/{MAX_PAGES}] GET {url}")
               try:
                   if is_first:
-                      log(f"  → networkidle + 5s (SPA hydrate)")
+                      log(f"  -> networkidle + 5s (SPA hydrate)")
                       resp = page.goto(url, wait_until='networkidle', timeout=90000)
                       page.wait_for_timeout(5000)
                   else:
@@ -212,16 +254,16 @@
 
                   if resp and resp.status in (404, 410):
                       skip_urls.add(url)
-                      log(f"  → HTTP {resp.status}, skip permanente")
+                      log(f"  -> HTTP {resp.status}, skip permanente")
                       continue
                   if resp and resp.status >= 400:
-                      log(f"  → HTTP {resp.status}, soft-fail (retry próximo run)")
+                      log(f"  -> HTTP {resp.status}, soft-fail (retry proximo run)")
                       continue
 
                   try:
                       page.wait_for_selector('a[href]', timeout=8000)
                   except:
-                      log(f"  → timeout em a[href], seguindo mesmo assim")
+                      log(f"  -> timeout em a[href], seguindo mesmo assim")
 
                   try:
                       for _ in range(3):
@@ -229,7 +271,7 @@
                           if btn:
                               btn.click(timeout=2000)
                               page.wait_for_timeout(1200)
-                              log(f"  → clicou 'load more'")
+                              log(f"  -> clicou 'load more'")
                           else: break
                   except: pass
 
@@ -270,13 +312,13 @@
                   internal_new = [l for l in all_links if is_internal(l) and not should_skip(l) and l not in seen_urls and l not in skip_urls]
                   visited += 1
                   dt = time.time() - t0
-                  log(f"  ✓ links={len(all_links)} novos={len(internal_new)} tempo={dt:.1f}s | video={len(video_map)} title={len(title_map)}")
+                  log(f"  ok links={len(all_links)} novos={len(internal_new)} tempo={dt:.1f}s | video={len(video_map)} title={len(title_map)}")
 
                   if is_first:
                       Path('homepage_debug.html').write_text(page.content(), encoding='utf-8')
                       try: page.screenshot(path='homepage_debug.png', full_page=False)
                       except: pass
-                      log(f"  → amostra: {internal_new[:5]}")
+                      log(f"  -> amostra: {internal_new[:5]}")
 
                   for link in internal_new:
                       seen_urls.add(link)
@@ -285,13 +327,11 @@
 
                   if visited % 5 == 0:
                       save_all(); save_status(len(queue), visited)
-                      log(f"  💾 checkpoint salvo (visited={visited}, queue={len(queue)})")
+                      log(f"  checkpoint salvo (visited={visited}, queue={len(queue)})")
 
               except Exception as e:
-                  log(f"  ✗ ERRO: {str(e)[:150]}")
+                  log(f"  ERRO: {str(e)[:150]}")
                   continue
-
-              browser_close_ready = False
 
           gh_endgroup()
           browser.close()
@@ -300,10 +340,10 @@
           abort_reason = None
           if visited <= 1 and added_urls == 0:
               abort_reason = "homepage_loaded_but_zero_links"
-              gh_error(f"ABORTANDO: {abort_reason}. Home não gerou links. Veja homepage_debug.png/html.")
+              gh_error(f"ABORTANDO: {abort_reason}. Home nao gerou links. Veja homepage_debug.png/html.")
               queue_remaining = 0
           elif visited <= 2:
-              gh_warning(f"visited={visited} muito baixo, limpando skip p/ próxima")
+              gh_warning(f"visited={visited} muito baixo, limpando skip p/ proxima")
               skip_urls.clear()
               queue_remaining = max(queue_remaining, 1)
 
@@ -316,7 +356,7 @@
           gh_endgroup()
 
           if not APPLY:
-              log("APPLY=false — pulando aplicação.")
+              log("APPLY=false - pulando aplicacao.")
               raise SystemExit(0)
 
           gh_group("🎨 Aplicando capas nos HTMLs")
@@ -376,3 +416,91 @@
               gh_error(f"Run terminou mas abortou por: {abort_reason}")
               raise SystemExit(1)
           PYEOF
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: scrape-state
+          if-no-files-found: ignore
+          path: |
+            .scrape_data.json
+            .scrape_seen.json
+            .scrape_skip.json
+            .scrape_status.json
+            .scrape_sem_match.txt
+            homepage_debug.html
+            homepage_debug.png
+          retention-days: 30
+
+      - name: Commitar estado do scraper
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: estado do scraper [skip ci]"
+          git push
+
+      - name: Commitar capas aplicadas
+        if: inputs.apply_changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "*.html"
+          if git diff --cached --quiet; then
+            echo "Nenhum HTML modificado."; exit 0
+          fi
+          git commit -m "Auto: capas reais do site aplicadas [skip ci]"
+          git push
+
+      - name: Disparar próxima run (se fila não vazia)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_CHAIN }}
+          REPO: ${{ github.repository }}
+          WORKFLOW_FILE: ${{ env.WORKFLOW_FILE }}
+        run: |
+          if [ ! -f .scrape_status.json ]; then
+            echo "Sem status - chain encerrada."; exit 0
+          fi
+
+          QUEUE=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('queue_remaining', -1))")
+          VISITED=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('visited', 0))")
+          MAX_P=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('max_pages', 0))")
+
+          echo "Queue: $QUEUE | Visited: $VISITED/$MAX_P"
+
+          if [ "$QUEUE" -le 0 ]; then
+            echo "Fila vazia. Chain encerrada."; exit 0
+          fi
+
+          if [ -f .scrape_stop ]; then
+            echo ".scrape_stop encontrado. Chain parada."; exit 0
+          fi
+
+          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENTES=$(gh run list \
+            --workflow="$WORKFLOW_FILE" --limit 100 \
+            --json event,createdAt \
+            --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" \
+            --repo "$REPO" 2>/dev/null || echo 0)
+
+          if [ "$RECENTES" -ge 30 ]; then
+            echo "Limite de 30 runs/hora. Chain encerrada."; exit 0
+          fi
+
+          APPLY="${{ inputs.apply_changes }}"
+          MAX_PAGES_NEXT="${{ inputs.max_pages }}"
+          echo "Disparando proxima run em 30s (apply=$APPLY, max_pages=$MAX_PAGES_NEXT)..."
+          sleep 30
+
+          for i in {1..5}; do
+            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main \
+                -f apply_changes="$APPLY" -f max_pages="$MAX_PAGES_NEXT"; then
+              echo "Proxima run disparada!"; break
+            else
+              echo "Falhou (tentativa $i/5). Retry em 15s..."; sleep 15
+            fi
+          done
