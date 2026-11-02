@@ -1,4 +1,4 @@
-name: Aplicar Capas do Site (BFS profundo)
+name: Aplicar Capas do Site (Feed Blogger)
 
 on:
   workflow_dispatch:
@@ -11,6 +11,10 @@ on:
         description: 'Máx. de páginas a visitar por run'
         type: string
         default: '200'
+      refresh_feed:
+        description: 'Rebaixar feed do Blogger? (deixe false após o 1º run)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -36,51 +40,112 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar Playwright
+      - name: Instalar dependências
         run: |
-          pip install playwright
+          pip install playwright requests
           playwright install chromium
           playwright install-deps chromium
 
-      - name: Raspar site (BFS) e aplicar capas
+      # ============================================================
+      # FASE 1: feed do Blogger → lista de TODAS as URLs do site
+      # ============================================================
+      - name: Descobrir URLs (feed do Blogger)
+        env:
+          REFRESH: ${{ inputs.refresh_feed }}
+        run: |
+          python3 -u << 'PYEOF'
+          import os, sys, time
+          from pathlib import Path
+          import requests
+
+          BASE_URL = "https://www.vini7xgrave.site"
+          HEADERS  = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+          FEED_FILE = Path(".scrape_feed_urls.txt")
+          REFRESH = os.environ.get("REFRESH", "false").lower() == "true"
+
+          if FEED_FILE.exists() and not REFRESH:
+              urls = [l for l in FEED_FILE.read_text(encoding='utf-8').splitlines() if l.strip()]
+              print(f"::notice::Feed existente: {len(urls)} URLs (use refresh_feed=true para atualizar)")
+              sys.exit(0)
+
+          print("Baixando feed do Blogger...")
+          urls, seen = [], set()
+          start, page, t0 = 1, 0, time.time()
+          while True:
+              try:
+                  url = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
+                  r = requests.get(url, headers=HEADERS, timeout=30)
+                  if r.status_code != 200:
+                      print(f"  page {page+1}: HTTP {r.status_code}, parando")
+                      break
+                  entries = r.json().get("feed", {}).get("entry", [])
+                  if not entries:
+                      print(f"  page {page+1}: vazio, parando")
+                      break
+                  for e in entries:
+                      link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
+                      if link:
+                          u = link.split("?")[0].strip()
+                          if u and u not in seen:
+                              seen.add(u); urls.append(u)
+                  page += 1
+                  elapsed = int(time.time() - t0)
+                  print(f"  page {page}: {len(entries)} entries (total {len(urls)}, +{elapsed}s)", flush=True)
+                  if len(entries) < 150: break
+                  start += 150
+              except Exception as e:
+                  print(f"  erro: {e}, parando")
+                  break
+
+          FEED_FILE.write_text("\n".join(urls), encoding='utf-8')
+          print(f"::notice::Feed salvo: {len(urls)} URLs em {page} páginas")
+          PYEOF
+
+      # ============================================================
+      # FASE 2: visita lote, extrai pares (video → capa)
+      # FASE 3: aplica capas nos HTMLs
+      # ============================================================
+      - name: Raspar páginas e aplicar capas
         env:
           APPLY: ${{ inputs.apply_changes }}
           MAX_PAGES: ${{ inputs.max_pages }}
           PYTHONUNBUFFERED: '1'
         run: |
           python3 -u << 'PYEOF'
-          import os, re, json, time, urllib.parse, sys
+          import os, re, json, time, sys
           from pathlib import Path
-          from collections import deque
           from playwright.sync_api import sync_playwright
 
           START_TS = time.time()
-          def log(msg):
-              elapsed = int(time.time() - START_TS)
-              ts = time.strftime("%H:%M:%S", time.gmtime())
-              print(f"[{ts} +{elapsed:>4}s] {msg}", flush=True); sys.stdout.flush()
+          def log(m):
+              e = int(time.time() - START_TS)
+              t = time.strftime("%H:%M:%S", time.gmtime())
+              print(f"[{t} +{e:>4}s] {m}", flush=True); sys.stdout.flush()
           def gh_error(m): print(f"::error::{m}", flush=True)
           def gh_group(m): print(f"::group::{m}", flush=True)
           def gh_endgroup(): print("::endgroup::", flush=True)
 
-          SITE        = "https://www.vini7xgrave.site"
+          BASE_URL    = "https://www.vini7xgrave.site"
           PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
-          USER_AGENT  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+          USER_AGENT  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
           MAX_PAGES   = int(os.environ.get("MAX_PAGES") or "200")
           APPLY       = os.environ.get("APPLY", "true").lower() == "true"
 
-          DATA_FILE   = Path('.scrape_data.json')
-          SEEN_FILE   = Path('.scrape_seen.json')
-          SKIP_FILE   = Path('.scrape_skip.json')
-          STATUS_FILE = Path('.scrape_status.json')
+          FEED_FILE   = Path(".scrape_feed_urls.txt")
+          DATA_FILE   = Path(".scrape_data.json")
+          SEEN_FILE   = Path(".scrape_seen.json")
+          SKIP_FILE   = Path(".scrape_skip.json")
+          STATUS_FILE = Path(".scrape_status.json")
 
+          gh_group("📦 Carregando estado")
           video_map, title_map = {}, {}
           seen_urls, skip_urls = set(), set()
           if DATA_FILE.exists():
               try:
                   d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
-                  video_map = d.get('video_map', {}); title_map = d.get('title_map', {})
-                  log(f"Estado carregado: video={len(video_map)} title={len(title_map)}")
+                  video_map = d.get('video_map', {})
+                  title_map = d.get('title_map', {})
+                  log(f"video={len(video_map)} title={len(title_map)}")
               except: pass
           if SEEN_FILE.exists():
               try: seen_urls = set(json.loads(SEEN_FILE.read_text(encoding='utf-8')))
@@ -88,17 +153,7 @@ jobs:
           if SKIP_FILE.exists():
               try: skip_urls = set(json.loads(SKIP_FILE.read_text(encoding='utf-8')))
               except: pass
-
-          def save_all():
-              DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
-              SEEN_FILE.write_text(json.dumps(list(seen_urls), ensure_ascii=False), encoding='utf-8')
-              SKIP_FILE.write_text(json.dumps(list(skip_urls), ensure_ascii=False), encoding='utf-8')
-
-          def save_status(q_rem, vis):
-              STATUS_FILE.write_text(json.dumps({
-                  'queue_remaining': q_rem, 'visited': vis, 'max_pages': MAX_PAGES,
-                  'video_map': len(video_map), 'title_map': len(title_map), 'timestamp': int(time.time()),
-              }, ensure_ascii=False, indent=2), encoding='utf-8')
+          gh_endgroup()
 
           def norm_video(url):
               if not url: return ""
@@ -114,7 +169,8 @@ jobs:
               t = re.sub(r'\s*[-–|]\s*[\w\s]*clau[\w\s]*$', '', t, flags=re.I)
               t = re.sub(r'\s*[-–|]\s*[\w\s]*vini7xgrave[\w\s]*$', '', t, flags=re.I)
               t = re.sub(r'\s*[-–]\s*t\d+e\d+.*$', '', t, flags=re.I)
-              t = re.sub(r'\(\d+\)', '', t); t = re.sub(r'\b(19|20)\d{2}\b', '', t)
+              t = re.sub(r'\(\d+\)', '', t)
+              t = re.sub(r'\b(19|20)\d{2}\b', '', t)
               t = re.sub(r'\b(online|dublado|legendado|hdcam|completo|filme|serie|t\d+e\d+)\b', '', t, flags=re.I)
               t = re.sub(r'[^\w\s]', ' ', t)
               return re.sub(r'\s+', ' ', t).strip()
@@ -126,29 +182,43 @@ jobs:
                   if video:
                       vk = norm_video(video)
                       if vk and vk not in video_map:
-                          video_map[vk] = cover; log(f"  +video({len(video_map)}) {vk[:60]} <- {cover[:80]}")
+                          video_map[vk] = cover
+                          log(f"  +video({len(video_map)}) {vk[:50]} <- {cover[:70]}")
                   if title:
                       tk = norm_title(title)
                       if tk and tk not in title_map:
-                          title_map[tk] = cover; log(f"  +title({len(title_map)}) {tk[:50]} <- {cover[:80]}")
+                          title_map[tk] = cover
+                          log(f"  +title({len(title_map)}) {tk[:40]} <- {cover[:70]}")
 
-          def is_internal(u): return 'vini7xgrave.site' in u.lower()
-          def should_skip(u):
-              u_l = u.lower()
-              return any(x in u_l for x in ('#','mailto:','javascript:','.css','.js','.png','.jpg','.jpeg','.webp','.svg','.ico','wp-login','wp-admin','/dmca','/contato','/privacidade','/sobre','/termos','facebook.com','instagram.com','twitter.com','youtube.com','t.me','whatsapp','/feed','/rss','/sitemap','/amp/'))
+          def walk_html(html):
+              video = cover = title = None
+              for pat in [r'"contentUrl"\s*:\s*"([^"]+)"',
+                          r'<video[^>]+src=["\']([^"\']+)["\']',
+                          r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']']:
+                  m = re.search(pat, html, re.I)
+                  if m: video = m.group(1); break
+              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"([^"]+)"',
+                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']',
+                          r'<video[^>]+poster=["\']([^"\']+)["\']']:
+                  m = re.search(pat, html, re.I)
+                  if m: cover = m.group(1); break
+              m = re.search(r'<title>([^<]+)</title>', html, re.I)
+              if m: title = m.group(1)
+              if cover: add_pair(video, cover, title)
 
           def walk_json(obj, depth=0):
               if depth > 8: return
               if isinstance(obj, dict):
                   video = cover = title = None
-                  for k in ('contentUrl','content_url','video_url','videoUrl','video','file','src','stream_url','stream','link_play','play_url'):
+                  for k in ('contentUrl','content_url','video_url','videoUrl','video','file','src','stream_url','stream'):
                       v = obj.get(k)
-                      if isinstance(v, str) and any(x in v.lower() for x in ('.mp4','.m3u8','.ts','/hls/','/vod/','stream','embed')): video = v; break
-                  for k in ('thumbnailUrl','thumbnail_url','poster','poster_path','cover','image','img','thumbnail','capa','imagem','thumb'):
+                      if isinstance(v, str) and any(x in v.lower() for x in ('.mp4','.m3u8','.ts','/hls/','/vod/','stream')):
+                          video = v; break
+                  for k in ('thumbnailUrl','thumbnail_url','poster','poster_path','cover','image','img','thumbnail','capa'):
                       v = obj.get(k)
                       if isinstance(v, list) and v and isinstance(v[0], str): cover = v[0]; break
                       if isinstance(v, str) and (v.startswith('http') or v.startswith('//')): cover = v; break
-                  for k in ('name','title','titulo','nome'):
+                  for k in ('name','title','titulo'):
                       v = obj.get(k)
                       if isinstance(v, str) and v: title = v; break
                   if cover: add_pair(video, cover, title)
@@ -156,166 +226,106 @@ jobs:
               elif isinstance(obj, list):
                   for x in obj: walk_json(x, depth+1)
 
-          def walk_html(html):
-              video = cover = title = None
-              for pat in [r'"contentUrl"\s*:\s*"([^"]+)"', r'<video[^>]+src=["\']([^"\']+)["\']', r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']']:
-                  m = re.search(pat, html, re.I)
-                  if m: video = m.group(1); break
-              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"([^"]+)"', r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']', r'<video[^>]+poster=["\']([^"\']+)["\']']:
-                  m = re.search(pat, html, re.I)
-                  if m: cover = m.group(1); break
-              m = re.search(r'<title>([^<]+)</title>', html, re.I)
-              if m: title = m.group(1)
-              if cover: add_pair(video, cover, title)
+          # --- fila a partir do feed ---
+          gh_group("📋 Preparando fila do feed")
+          if not FEED_FILE.exists():
+              gh_error("Sem .scrape_feed_urls.txt — fase 1 falhou.")
+              gh_endgroup()
+              raise SystemExit(1)
 
-          # ============================================================
-          # SEMENTES (SEEDS): fontes alternativas para descobrir novas URLs
-          # ============================================================
-          seed_urls = [
-              SITE + '/',
-              # Paginação comum
-              SITE + '/page/2/', SITE + '/page/3/', SITE + '/page/4/',
-              # Categorias (mesmo que algumas dêem 404, o script não quebra)
-              SITE + '/filmes/', SITE + '/series/', SITE + '/categoria/filmes/', SITE + '/categoria/series/',
-              SITE + '/genero/acao/', SITE + '/genero/terror/', SITE + '/genero/comedia/',
-              # Sitemaps (se existirem)
-              SITE + '/sitemap.xml', SITE + '/sitemap_index.xml', SITE + '/wp-sitemap.xml',
-              # API WordPress (se for WP)
-              SITE + '/wp-json/wp/v2/posts?per_page=100', SITE + '/wp-json/wp/v2/pages?per_page=100',
-              # Busca interna (termos comuns)
-              SITE + '/?s=a', SITE + '/?s=e', SITE + '/?s=o', SITE + '/?s=filme', SITE + '/?s=serie',
-          ]
+          todas = [l.strip() for l in FEED_FILE.read_text(encoding='utf-8').splitlines() if l.strip()]
+          fila = [u for u in todas if u not in seen_urls and u not in skip_urls]
+          log(f"Feed total: {len(todas)} | Vistas: {len(seen_urls)} | Skip: {len(skip_urls)} | Fila: {len(fila)}")
+          gh_endgroup()
 
-          # Remove do skip as sementes para garantir que serão visitadas
-          skip_urls -= set(seed_urls)
+          lote = fila[:MAX_PAGES]
+          log(f"Lote deste run: {len(lote)} URLs")
 
           visited = 0
-          added_urls = 0
-          queue = deque(seed_urls)
-          seen_urls.update(seed_urls)
-          queue_remaining = 0
+          queue_remaining = len(fila) - len(lote)
 
-          with sync_playwright() as p:
-              browser = p.chromium.launch(headless=True, args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-dev-shm-usage'])
-              ctx = browser.new_context(user_agent=USER_AGENT, viewport={'width': 1920, 'height': 1080}, locale='pt-BR')
-              page = ctx.new_page()
+          if lote:
+              with sync_playwright() as p:
+                  browser = p.chromium.launch(
+                      headless=True,
+                      args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-dev-shm-usage']
+                  )
+                  ctx = browser.new_context(user_agent=USER_AGENT, viewport={'width': 1920, 'height': 1080}, locale='pt-BR')
+                  page = ctx.new_page()
 
-              def on_response(resp):
-                  try:
-                      ct = (resp.headers.get('content-type') or '').lower()
-                      if 'json' in ct:
-                          try: walk_json(resp.json())
-                          except: pass
-                      elif 'html' in ct:
-                          try: walk_html(resp.text())
-                          except: pass
-                  except: pass
-              page.on('response', on_response)
-              log("Browser iniciado")
-
-              gh_group(f"🕷️ BFS - alvo: {MAX_PAGES} paginas")
-              while queue and visited < MAX_PAGES:
-                  url = queue.popleft()
-                  if url in skip_urls: continue
-                  is_first = (visited == 0)
-                  t0 = time.time()
-                  log(f"[{visited+1}/{MAX_PAGES}] GET {url}")
-                  try:
-                      # Estratégia de carregamento: se for sitemap/api, pode ser rápido
-                      if 'sitemap' in url or 'wp-json' in url:
-                          resp = page.goto(url, wait_until='domcontentloaded', timeout=30000)
-                          page.wait_for_timeout(2000)
-                      elif is_first:
-                          log(f"  -> networkidle + 5s (SPA hydrate)")
-                          resp = page.goto(url, wait_until='networkidle', timeout=90000)
-                          page.wait_for_timeout(5000)
-                      else:
-                          try: resp = page.goto(url, wait_until='load', timeout=30000)
-                          except: resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
-                          page.wait_for_timeout(2000)
-
-                      if resp and resp.status in (404, 410):
-                          skip_urls.add(url); log(f"  -> HTTP {resp.status}, skip permanente"); continue
-                      if resp and resp.status >= 400:
-                          log(f"  -> HTTP {resp.status}, soft-fail (retry proximo run)"); continue
-
-                      try: page.wait_for_selector('a[href]', timeout=8000)
-                      except: log(f"  -> timeout em a[href], seguindo")
-
-                      # Tenta clicar em "load more"
+                  def on_response(resp):
                       try:
-                          for _ in range(3):
-                              btn = page.query_selector('button:has-text("Carregar mais"), button:has-text("Ver mais"), button:has-text("Load more"), .load-more, [class*="load-more"]')
-                              if btn: btn.click(timeout=2000); page.wait_for_timeout(1200); log(f"  -> clicou 'load more'")
-                              else: break
+                          ct = (resp.headers.get('content-type') or '').lower()
+                          if 'json' in ct:
+                              try: walk_json(resp.json())
+                              except: pass
+                          elif 'html' in ct:
+                              try: walk_html(resp.text())
+                              except: pass
                       except: pass
+                  page.on('response', on_response)
+                  log("Browser iniciado")
 
-                      # Scroll para lazy load
+                  gh_group(f"🕷️ Visitando {len(lote)} páginas")
+                  for i, url in enumerate(lote, 1):
+                      t0 = time.time()
+                      log(f"[{i}/{len(lote)}] GET {url}")
                       try:
-                          for _ in range(3): page.evaluate('window.scrollTo(0, document.body.scrollHeight)'); page.wait_for_timeout(800)
-                      except: pass
+                          try:
+                              resp = page.goto(url, wait_until='domcontentloaded', timeout=25000)
+                          except:
+                              log(f"  → timeout, skip")
+                              skip_urls.add(url); continue
 
-                      links = page.evaluate('''() => {
-                          const cards = []; const seen = new WeakSet();
-                          const sel = ['article','.card','.item','.post','.movie','.film','.serie','[class*="card"]','[class*="movie"]','[class*="serie"]','[class*="film"]','[class*="post"]','[class*="item"]','[class*="entry"]'];
-                          for (const s of sel) {
-                              document.querySelectorAll(s).forEach(el => {
-                                  if (seen.has(el)) return; seen.add(el);
-                                  const img = el.querySelector('img[src],img[data-src],img[data-lazy-src],img[data-original]');
-                                  const a = el.querySelector('a[href]');
-                                  const tEl = el.querySelector('h1,h2,h3,.title,[class*="title"],[class*="name"]');
-                                  let poster = img ? (img.src || img.dataset.src || img.dataset.lazySrc || img.dataset.original) : null;
-                                  if (!poster) { const bg = el.querySelector('[style*="background-image"]'); if (bg) { const m = bg.style.backgroundImage.match(/url\\(["']?(.+?)["']?\\)/); if (m) poster = m[1]; } }
-                                  let title = tEl ? tEl.textContent.trim() : (img ? img.alt : null);
-                                  if (poster && title) cards.push({poster, title, href: a ? a.href : null});
-                              });
-                          }
-                          const links = [...document.querySelectorAll('a[href]')].map(a => a.href);
-                          return {cards, links};
-                      }''')
-                      for c in links.get('cards', []): add_pair(None, c.get('poster'), c.get('title'))
-                      all_links = links.get('links', [])
+                          if resp and resp.status in (404, 410):
+                              skip_urls.add(url); log(f"  → HTTP {resp.status}"); continue
+                          if resp and resp.status >= 400:
+                              log(f"  → HTTP {resp.status}, soft-fail"); continue
 
-                      internal_new = [l for l in all_links if is_internal(l) and not should_skip(l) and l not in seen_urls and l not in skip_urls]
-                      visited += 1
-                      dt = time.time() - t0
-                      log(f"  ok links={len(all_links)} novos={len(internal_new)} tempo={dt:.1f}s | video={len(video_map)} title={len(title_map)}")
+                          walk_html(page.content())
+                          visited += 1
+                          seen_urls.add(url)
+                          log(f"  ok {time.time()-t0:.1f}s | video={len(video_map)} title={len(title_map)}")
 
-                      if is_first:
-                          Path('homepage_debug.html').write_text(page.content(), encoding='utf-8')
-                          try: page.screenshot(path='homepage_debug.png', full_page=False)
-                          except: pass
-                          log(f"  -> amostra: {internal_new[:5]}")
+                          if visited % 10 == 0:
+                              DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
+                              SEEN_FILE.write_text(json.dumps(list(seen_urls), ensure_ascii=False), encoding='utf-8')
+                              SKIP_FILE.write_text(json.dumps(list(skip_urls), ensure_ascii=False), encoding='utf-8')
+                              log(f"  💾 checkpoint (visited={visited})")
 
-                      for link in internal_new:
-                          seen_urls.add(link); queue.append(link); added_urls += 1
+                      except Exception as e:
+                          log(f"  ERRO: {str(e)[:150]}")
+                          skip_urls.add(url); continue
+                  gh_endgroup()
+                  browser.close()
 
-                      if visited % 5 == 0:
-                          save_all(); save_status(len(queue), visited); log(f"  checkpoint salvo (visited={visited}, queue={len(queue)})")
+          # --- estado final ---
+          DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
+          SEEN_FILE.write_text(json.dumps(list(seen_urls), ensure_ascii=False), encoding='utf-8')
+          SKIP_FILE.write_text(json.dumps(list(skip_urls), ensure_ascii=False), encoding='utf-8')
 
-                  except Exception as e:
-                      log(f"  ERRO: {str(e)[:150]}"); continue
+          faltam = len([u for u in todas if u not in seen_urls and u not in skip_urls])
+          STATUS_FILE.write_text(json.dumps({
+              'queue_remaining': faltam,
+              'visited': visited,
+              'feed_total': len(todas),
+              'seen': len(seen_urls),
+              'video_map': len(video_map),
+              'title_map': len(title_map),
+              'timestamp': int(time.time()),
+          }, ensure_ascii=False, indent=2), encoding='utf-8')
 
-              gh_endgroup()
-              queue_remaining = len(queue)
-              browser.close()
-
-          # Se não visitou quase nada, limpa o skip para a próxima run
-          if visited <= 2:
-              log(f"visited={visited} muito baixo, limpando skip p/ proxima"); skip_urls.clear(); queue_remaining = max(queue_remaining, 1)
-
-          save_all(); save_status(queue_remaining, visited)
-
-          gh_group("📊 Resumo da raspagem")
-          log(f"Visited: {visited} | Novos links: {added_urls} | Queue restante: {queue_remaining}")
-          log(f"video_map={len(video_map)} | title_map={len(title_map)} | skip={len(skip_urls)}")
+          gh_group("📊 Resumo")
+          log(f"Feed total: {len(todas)} | Visitadas agora: {visited} | Faltam: {faltam}")
+          log(f"video_map={len(video_map)} | title_map={len(title_map)}")
           gh_endgroup()
 
           if not APPLY:
-              log("APPLY=false - pulando aplicacao."); raise SystemExit(0)
+              log("APPLY=false — pulando aplicação")
+              raise SystemExit(0)
 
-          # ============ APLICA CAPAS ============
-          gh_group("🎨 Aplicando capas nos HTMLs")
+          # --- aplicação ---
+          gh_group("🎨 Aplicando capas")
           total = alterados = via_video = via_title = via_filename = sem_match = 0
           sem_match_list = []
           last_log = time.time()
@@ -352,14 +362,11 @@ jobs:
                   else: via_filename += 1
 
               if time.time() - last_log > 5:
-                  log(f"  progresso: {alterados} aplicadas ({via_video}v/{via_title}t/{via_filename}f) | {sem_match} sem match | {total} arquivos")
+                  log(f"  progresso: {alterados} aplicadas | {sem_match} sem match | {total} arquivos")
                   last_log = time.time()
 
           Path('.scrape_sem_match.txt').write_text('\n'.join(sem_match_list), encoding='utf-8')
-
-          log(f"Total HTMLs: {total}")
-          log(f"Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename})")
-          log(f"Sem match: {sem_match}")
+          log(f"Total: {total} | Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename}) | Sem match: {sem_match}")
           gh_endgroup()
           PYEOF
 
@@ -370,13 +377,12 @@ jobs:
           name: scrape-state
           if-no-files-found: ignore
           path: |
+            .scrape_feed_urls.txt
             .scrape_data.json
             .scrape_seen.json
             .scrape_skip.json
             .scrape_status.json
             .scrape_sem_match.txt
-            homepage_debug.html
-            homepage_debug.png
           retention-days: 30
 
       - name: Commitar estado do scraper
@@ -384,7 +390,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
+          git add .scrape_feed_urls.txt .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "chore: estado do scraper [skip ci]"
           git push
@@ -395,7 +401,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "*.html"
-          if git diff --cached --quiet; then echo "Nenhum HTML modificado."; exit 0; fi
+          if git diff --cached --quiet; then
+            echo "Nenhum HTML modificado."; exit 0
+          fi
           git commit -m "Auto: capas reais do site aplicadas [skip ci]"
           git push
 
@@ -406,21 +414,32 @@ jobs:
           REPO: ${{ github.repository }}
           WORKFLOW_FILE: ${{ env.WORKFLOW_FILE }}
         run: |
-          if [ ! -f .scrape_status.json ]; then echo "Sem status - chain encerrada."; exit 0; fi
+          if [ ! -f .scrape_status.json ]; then echo "Sem status"; exit 0; fi
           QUEUE=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('queue_remaining', -1))")
-          VISITED=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('visited', 0))")
-          echo "Queue: $QUEUE | Visited: $VISITED"
-          if [ "$QUEUE" -le 0 ]; then echo "Fila vazia. Chain encerrada."; exit 0; fi
-          if [ -f .scrape_stop ]; then echo ".scrape_stop encontrado. Chain parada."; exit 0; fi
+          SEEN=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('seen', 0))")
+          TOTAL=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('feed_total', 0))")
+
+          echo "📊 Feed: $TOTAL | Vistas: $SEEN | Faltam: $QUEUE"
+
+          if [ "$QUEUE" -le 0 ]; then echo "✅ Fila vazia. Chain encerrada."; exit 0; fi
+          if [ -f .scrape_stop ]; then echo "🛑 .scrape_stop. Parando."; exit 0; fi
+
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list --workflow="$WORKFLOW_FILE" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
-          if [ "$RECENTES" -ge 30 ]; then echo "Limite de 30 runs/hora. Chain encerrada."; exit 0; fi
-          APPLY="${{ inputs.apply_changes }}"; MAX_PAGES_NEXT="${{ inputs.max_pages }}"
-          echo "Disparando proxima run em 30s (apply=$APPLY, max_pages=$MAX_PAGES_NEXT)..."; sleep 30
+          if [ "$RECENTES" -ge 30 ]; then echo "⚠️ Limite de 30 runs/hora. Parando."; exit 0; fi
+
+          APPLY="${{ inputs.apply_changes }}"
+          MAX_PAGES_NEXT="${{ inputs.max_pages }}"
+          echo "🔁 Disparando próxima run em 30s..."
+          sleep 30
+
           for i in {1..5}; do
-            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main -f apply_changes="$APPLY" -f max_pages="$MAX_PAGES_NEXT"; then
-              echo "Proxima run disparada!"; break
+            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main \
+                -f apply_changes="$APPLY" \
+                -f max_pages="$MAX_PAGES_NEXT" \
+                -f refresh_feed=false; then
+              echo "✅ Próxima run disparada!"; break
             else
-              echo "Falhou (tentativa $i/5). Retry em 15s..."; sleep 15
+              echo "⚠️ Falhou ($i/5). Retry em 15s..."; sleep 15
             fi
           done
