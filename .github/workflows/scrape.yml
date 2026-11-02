@@ -116,12 +116,6 @@ jobs:
               t = re.sub(r'[^\w\s]', ' ', t)
               return re.sub(r'\s+', ' ', t).strip()
 
-          def slugify(t):
-              import unicodedata
-              t = unicodedata.normalize('NFKD', t).encode('ascii','ignore').decode()
-              t = re.sub(r'[^\w\s-]', '', t).lower().strip()
-              return re.sub(r'[-\s]+', '-', t).strip('-')
-
           def add_pair(video, cover, title=None):
               if cover:
                   cover = cover.strip()
@@ -133,21 +127,17 @@ jobs:
                       tk = norm_title(title)
                       if tk and tk not in title_map: title_map[tk] = cover
 
-          def is_detail_url(u):
-              p = urllib.parse.urlparse(u)
-              path = p.path.lower().strip('/')
-              if not path: return False
-              if path in ('dmca','contato','privacidade','sobre','termos','login','cadastro','search'): return False
-              return bool(re.match(r'^[a-z0-9]+(-[a-z0-9]+)+$', path) or re.match(r'^[a-z0-9]+(_[a-z0-9]+)+$', path))
+          def is_internal(u):
+              return 'vini7xgrave.site' in u.lower()
 
-          def is_listing_url(u):
-              p = urllib.parse.urlparse(u)
-              path = p.path.lower()
-              if re.search(r'/page/\d+', path): return True
-              if re.search(r'[?&]page=\d+', u): return True
-              for kw in ('/filme','/serie','/genero','/categoria','/tag','/letra','/category','/genre','/todos','/catalogo','/busca','/search'):
-                  if kw in path: return True
-              return path.count('/') <= 1 and bool(path.strip('/'))
+          def should_skip(u):
+              u_l = u.lower()
+              return any(x in u_l for x in (
+                  '#','mailto:','javascript:','.css','.js','.png','.jpg','.jpeg','.webp','.svg','.ico',
+                  'wp-login','wp-admin','/dmca','/contato','/privacidade','/sobre','/termos',
+                  'facebook.com','instagram.com','twitter.com','youtube.com','t.me','whatsapp',
+                  '/feed','/rss','/sitemap','/amp/'
+              ))
 
           def walk_json(obj, depth=0):
               if depth > 8: return
@@ -186,17 +176,11 @@ jobs:
               if cover: add_pair(video, cover, title)
 
           # ============ setup ============
-          start_urls = [
-              SITE + '/',
-              SITE + '/filmes/', SITE + '/series/',
-              SITE + '/page/2/', SITE + '/page/3/', SITE + '/page/4/',
-              SITE + '/categoria/filmes/', SITE + '/categoria/series/',
-              SITE + '/genero/acao/', SITE + '/genero/terror/',
-          ]
+          # SÓ O HOMEPAGE — o resto é descoberto por BFS (as URLs antigas davam 404)
+          start_urls = [SITE + '/']
 
-          # CRÍTICO: força retry das URLs base a cada run
+          # libera o homepage do skip, sempre
           skip_urls -= set(start_urls)
-          print(f"Start URLs liberadas do skip: {len(start_urls)}")
 
           visited = 0
           added_urls = 0
@@ -256,7 +240,8 @@ jobs:
                       for c in data['cards']:
                           add_pair(None, c.get('poster'), c.get('title'))
                       return data['links']
-                  except:
+                  except Exception as e:
+                      print(f"  [extract err] {e}")
                       return []
 
               while queue and visited < MAX_PAGES:
@@ -264,59 +249,90 @@ jobs:
                   if url in skip_urls:
                       print(f"[skip-cache] {url}")
                       continue
+
+                  is_first = (visited == 0)
                   try:
-                      resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                      if is_first:
+                          # igual ao run que funcionou: espera SPA hidratar
+                          print(f"[load-first] {url} (networkidle + 5s)")
+                          resp = page.goto(url, wait_until='networkidle', timeout=90000)
+                          page.wait_for_timeout(5000)
+                      else:
+                          try:
+                              resp = page.goto(url, wait_until='load', timeout=30000)
+                          except:
+                              resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                          page.wait_for_timeout(2000)
+
                       if resp and resp.status in (404, 410):
                           skip_urls.add(url)
                           print(f"[skip-{resp.status}] {url}")
                           continue
                       if resp and resp.status >= 400:
-                          print(f"[soft-{resp.status}] {url} (nao skipado, retry proximo run)")
+                          print(f"[soft-{resp.status}] {url} (nao skipado)")
                           continue
-                      page.wait_for_timeout(500)
 
+                      # espera seletor indicar conteudo (home pode nao ter article)
                       try:
-                          for _ in range(2):
+                          page.wait_for_selector('a[href]', timeout=8000)
+                      except: pass
+
+                      # tenta load-more / scroll (3 tentativas)
+                      try:
+                          for _ in range(3):
                               btn = page.query_selector('button:has-text("Carregar mais"), button:has-text("Ver mais"), button:has-text("Load more"), .load-more, [class*="load-more"]')
                               if btn:
                                   btn.click(timeout=2000); page.wait_for_timeout(1200)
                               else: break
                       except: pass
-
                       try:
-                          page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
-                          page.wait_for_timeout(500)
+                          for _ in range(3):
+                              page.evaluate('window.scrollTo(0, document.body.scrollHeight)')
+                              page.wait_for_timeout(800)
                       except: pass
 
                       links = collect_links_and_cards()
                       visited += 1
 
-                      for link in links:
-                          if not link.startswith(SITE): continue
-                          if link in seen_urls or link in skip_urls: continue
-                          if any(x in link.lower() for x in ('#','mailto:','javascript:','.css','.js','.png','.jpg','.jpeg','.webp','.svg','.ico','wp-login','/dmca','/contato','/privacidade','/sobre','/termos')):
-                              continue
-                          seen_urls.add(link)
-                          if is_detail_url(link) or is_listing_url(link):
-                              queue.append(link); added_urls += 1
+                      internal_links = [l for l in links if is_internal(l) and not should_skip(l) and l not in seen_urls and l not in skip_urls]
+                      total_links = len(links)
+                      internal_new = len(internal_links)
 
-                      if visited % 25 == 0:
-                          print(f"[{visited}/{MAX_PAGES}] queue={len(queue)} video={len(video_map)} title={len(title_map)} novos={added_urls}")
-                          save_all()
-                          save_status(len(queue), visited)
+                      print(f"[visit #{visited}] {url} | links={total_links} internos_novos={internal_new} | video={len(video_map)} title={len(title_map)}")
+
+                      if is_first:
+                          # debug da primeira página
+                          Path('homepage_debug.html').write_text(page.content(), encoding='utf-8')
+                          try: page.screenshot(path='homepage_debug.png', full_page=False)
+                          except: pass
+                          print(f"  → amostra de links: {internal_links[:8]}")
+
+                      for link in internal_links:
+                          seen_urls.add(link)
+                          queue.append(link)
+                          added_urls += 1
+
+                      if visited % 20 == 0:
+                          save_all(); save_status(len(queue), visited)
 
                   except Exception as e:
-                      print(f"[err] {url}: {str(e)[:100]} (nao skipado, retry proximo run)")
+                      print(f"[err] {url}: {str(e)[:120]}")
                       continue
 
               browser.close()
               queue_remaining = len(queue)
 
-          # CRÍTICO: se visitou quase nada, skip_urls pode estar envenenado
-          if visited <= 2:
-              print(f"⚠️  visited={visited} <= 2 -> limpando skip_urls para proxima run")
+          # --- decisão de continuar ou parar ---
+          abort_reason = None
+          if visited <= 1 and added_urls == 0:
+              abort_reason = "homepage_loaded_but_zero_links"
+              print(f"❌ visited={visited} added_urls={added_urls} -> abortando. Veja homepage_debug.html/png.")
+              # NÃO força queue=100: melhor parar e investigar do que queimar runs
+              queue_remaining = 0
+          elif visited <= 2:
+              print(f"⚠️  visited={visited} baixo, limpando skip_urls p/ próxima")
               skip_urls.clear()
-              queue_remaining = max(queue_remaining, 100)  # força chain a continuar
+              queue_remaining = max(queue_remaining, 1)
 
           save_all()
           save_status(queue_remaining, visited)
@@ -370,7 +386,6 @@ jobs:
                   else: via_filename += 1
                   print(f"[ok/{source}] {arq.name}")
 
-          # salva lista de sem-match para fallback de URL guessing na próxima run
           Path('.scrape_sem_match.txt').write_text('\n'.join(sem_match_list), encoding='utf-8')
 
           print(f"\nTotal HTMLs: {total}")
@@ -390,6 +405,8 @@ jobs:
             .scrape_skip.json
             .scrape_status.json
             .scrape_sem_match.txt
+            homepage_debug.html
+            homepage_debug.png
           retention-days: 30
 
       - name: Commitar estado do scraper
