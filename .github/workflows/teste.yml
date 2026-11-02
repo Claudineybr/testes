@@ -1,0 +1,194 @@
+name: Extrair URL do Vídeo e Capa do Outro Repo
+
+on:
+  workflow_dispatch:
+    inputs:
+      outro_repo:
+        description: 'URL do repo com os HTMLs que têm capa'
+        required: true
+        default: 'https://github.com/Claudineybr/catalogocompleto2.git'
+      branch:
+        description: 'Branch do outro repo'
+        default: 'main'
+
+permissions:
+  contents: write
+
+jobs:
+  extrair:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Baixar este repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Clonar o outro repositório
+        env:
+          OUTRO_REPO: ${{ inputs.outro_repo }}
+          BRANCH: ${{ inputs.branch }}
+        run: |
+          set -e
+          TMP=$(mktemp -d)
+          echo "Clonando $OUTRO_REPO (branch $BRANCH)..."
+          if git clone --depth 1 --branch "$BRANCH" "$OUTRO_REPO" "$TMP/outro" 2>/dev/null; then
+            echo "✓ clonado com branch $BRANCH"
+          elif git clone --depth 1 "$OUTRO_REPO" "$TMP/outro"; then
+            echo "✓ clonado com branch default"
+          else
+            echo "::error::Falha ao clonar $OUTRO_REPO"
+            exit 1
+          fi
+          echo "OUTRO_DIR=$TMP/outro" >> $GITHUB_ENV
+          echo "HTMLs encontrados: $(find "$TMP/outro" -name '*.html' | wc -l)"
+
+      - name: Extrair video_url + capa_url
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python3 -u << 'PYEOF'
+          import os, re, sys
+          from pathlib import Path
+
+          OUTRO_DIR = Path(os.environ["OUTRO_DIR"])
+
+          def is_valid_cover(url):
+              if not url or not isinstance(url, str): return False
+              url = url.strip()
+              if len(url) < 15: return False
+              if not (url.startswith('http://') or url.startswith('https://')): return False
+              if 'via.placeholder.com' in url: return False
+              if 'placehold.co' in url: return False
+              return True
+
+          def norm_video(url):
+              if not url: return ""
+              m = re.search(r'(tt\d{6,10})', url.lower())
+              if m: return m.group(1) + ".mp4"
+              m = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', url.lower())
+              if m: return m.group(1)
+              u = url.split('?')[0].split('#')[0].rstrip('/')
+              return u.split('/')[-1].lower()
+
+          def extract(html):
+              video = capa = None
+              for pat in [r'"contentUrl"\s*:\s*"([^"]+)"',
+                          r'<video[^>]+src=["\']([^"\']+)["\']']:
+                  m = re.search(pat, html, re.I)
+                  if m: video = m.group(1).strip(); break
+              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
+                          r'<video[^>]+poster=["\'](https?://[^"\']+)["\']',
+                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']']:
+                  m = re.search(pat, html, re.I)
+                  if m and is_valid_cover(m.group(1)):
+                      capa = m.group(1).strip(); break
+              return video, capa
+
+          print(f"Varrendo HTMLs em: {OUTRO_DIR}")
+
+          mapa_key = {}
+          mapa_url = {}
+          origem = {}
+
+          total = 0
+          com_video = 0
+          com_capa = 0
+          sem_video = 0
+          sem_capa = 0
+          conflitos = 0
+
+          for arq in sorted(OUTRO_DIR.rglob('*.html')):
+              if '.git' in arq.parts: continue
+              total += 1
+              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
+              except: continue
+
+              video, capa = extract(texto)
+              if not video:
+                  sem_video += 1
+                  continue
+              com_video += 1
+
+              if not is_valid_cover(capa):
+                  sem_capa += 1
+                  continue
+              com_capa += 1
+
+              vk = norm_video(video)
+              if not vk: continue
+
+              if vk in mapa_key and mapa_key[vk] != capa:
+                  conflitos += 1
+                  continue
+
+              mapa_key[vk] = capa
+              mapa_url[video] = capa
+              origem[vk] = arq.name
+
+          Path('capas_por_key.txt').write_text(
+              "video_key\tcapa_url\tarquivo_origem\n" +
+              '\n'.join(f"{k}\t{v}\t{origem.get(k,'')}" for k, v in sorted(mapa_key.items())),
+              encoding='utf-8'
+          )
+
+          Path('capas_por_url.txt').write_text(
+              "video_url\tcapa_url\n" +
+              '\n'.join(f"{k}\t{v}" for k, v in sorted(mapa_url.items())),
+              encoding='utf-8'
+          )
+
+          resumo = f"""Resumo da extração
+==================
+Repo de origem: {OUTRO_DIR}
+HTMLs varridos: {total}
+Com video URL:  {com_video}
+Com capa:       {com_capa}
+Sem capa:       {sem_capa}
+Sem video URL:  {sem_video}
+Conflitos:      {conflitos}
+
+Arquivos gerados:
+- capas_por_key.txt  ({len(mapa_key)} entradas)
+- capas_por_url.txt  ({len(mapa_url)} entradas)
+"""
+          Path('capas_resumo.txt').write_text(resumo, encoding='utf-8')
+          print(resumo)
+
+          print("\n=== Amostra capas_por_key.txt ===")
+          for k, v in list(sorted(mapa_key.items()))[:10]:
+              print(f"  {k[:50]:50s}  {v[:70]}")
+          PYEOF
+
+      - name: Mostrar resultado
+        run: |
+          echo "=== capas_resumo.txt ==="
+          cat capas_resumo.txt
+          echo ""
+          echo "=== Primeiras 10 linhas de capas_por_key.txt ==="
+          head -11 capas_por_key.txt
+
+      - name: Commitar os TXTs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add capas_por_key.txt capas_por_url.txt capas_resumo.txt
+          if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
+          git commit -m "chore: capas extraídas do catalogocompleto2 [skip ci]"
+          git push
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capas-extraidas
+          if-no-files-found: ignore
+          path: |
+            capas_por_key.txt
+            capas_por_url.txt
+            capas_resumo.txt
+          retention-days: 30
