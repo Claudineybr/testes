@@ -1,18 +1,15 @@
-name: Aplicar Capas do Site (Feed Blogger)
+name: Aplicar Capas (por URL de vídeo)
 
 on:
+  schedule:
+    - cron: '0,30 * * * *'
   workflow_dispatch:
     inputs:
-      apply_changes:
-        description: 'Aplicar capas aos HTMLs?'
-        type: boolean
-        default: true
-      max_pages:
-        description: 'Máx. de páginas a visitar por run'
-        type: string
+      lote:
+        description: 'URLs para visitar por run (só as que o feed não resolveu)'
         default: '200'
-      refresh_feed:
-        description: 'Rebaixar feed do Blogger? (deixe false após o 1º run)'
+      retry_all:
+        description: 'Reprocessar tudo (limpa mapa)?'
         type: boolean
         default: false
 
@@ -20,194 +17,54 @@ permissions:
   contents: write
 
 concurrency:
-  group: scrape-chain
+  group: capas-sem-capa
   cancel-in-progress: false
 
 jobs:
-  scrape:
+  extrair:
     runs-on: ubuntu-latest
     timeout-minutes: 350
-
-    env:
-      WORKFLOW_FILE: scrape.yml
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Baixar repositorio
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - name: Instalar Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Instalar dependências
-        run: |
-          pip install playwright requests
-          playwright install chromium
-          playwright install-deps chromium
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
 
-      # ============================================================
-      # STEP 0: sanitiza HTMLs já corrompidos + limpa cache inválido
-      # (roda sempre; custa segundos; idempotente)
-      # ============================================================
-      - name: Sanitizar HTMLs corrompidos e cache
+      - name: Aplicar capas por URL de vídeo
         env:
+          LOTE: ${{ inputs.lote || '200' }}
+          RETRY_ALL: ${{ inputs.retry_all || 'false' }}
           PYTHONUNBUFFERED: '1'
         run: |
-          python3 -u << 'PYEOF'
-          import re, json, sys
+          cat > /tmp/capas.py << 'PYEOF'
+          import re, json, requests, sys, os, time
           from pathlib import Path
-
-          PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
-          DATA_FILE   = Path('.scrape_data.json')
-
-          def is_valid_cover(url):
-              if not url or not isinstance(url, str): return False
-              url = url.strip()
-              if len(url) < 15: return False
-              if not (url.startswith('http://') or url.startswith('https://')): return False
-              if 'via.placeholder.com' in url: return False
-              if 'placehold.co' in url: return False
-              return True
-
-          # 1) filtra cache
-          if DATA_FILE.exists():
-              try:
-                  d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
-                  v_old = d.get('video_map', {})
-                  t_old = d.get('title_map', {})
-                  v = {k: u for k, u in v_old.items() if is_valid_cover(u)}
-                  t = {k: u for k, u in t_old.items() if is_valid_cover(u)}
-                  d['video_map'] = v; d['title_map'] = t
-                  DATA_FILE.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding='utf-8')
-                  print(f"::notice::Cache: removidos {len(v_old)-len(v)} videos e {len(t_old)-len(t)} titulos invalidos (restam {len(v)}/{len(t)})", flush=True)
-              except Exception as e:
-                  print(f"::warning::Erro cache: {e}", flush=True)
-
-          # 2) sanitiza HTMLs
-          fixed = 0
-          for arq in Path('.').rglob('*.html'):
-              if '.git' in arq.parts: continue
-              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
-              except: continue
-              original = texto
-
-              # poster="X" onde X não é URL -> placeholder
-              texto = re.sub(
-                  r'(<video[^>]+poster=["\'])(?!https?://|//)([^"\']*)(["\'])',
-                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
-                  texto
-              )
-              # "thumbnailUrl": ["X"] -> placeholder
-              texto = re.sub(
-                  r'("thumbnailUrl"\s*:\s*\[\s*")(?!https?://|//)([^"]*)(")',
-                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
-                  texto
-              )
-              # "thumbnailUrl": "X" -> placeholder
-              texto = re.sub(
-                  r'("thumbnailUrl"\s*:\s*")(?!https?://|//)([^"]*)(")',
-                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
-                  texto
-              )
-
-              if texto != original:
-                  arq.write_text(texto, encoding='utf-8')
-                  fixed += 1
-
-          print(f"::notice::HTMLs sanitizados: {fixed}", flush=True)
-          PYEOF
-
-      # ============================================================
-      # STEP 1: feed do Blogger -> TODAS as URLs do site
-      # ============================================================
-      - name: Descobrir URLs (feed do Blogger)
-        env:
-          REFRESH: ${{ inputs.refresh_feed }}
-          PYTHONUNBUFFERED: '1'
-        run: |
-          python3 -u << 'PYEOF'
-          import os, sys, time
-          from pathlib import Path
-          import requests
-
-          BASE_URL  = "https://www.vini7xgrave.site"
-          HEADERS   = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-          FEED_FILE = Path(".scrape_feed_urls.txt")
-          REFRESH   = os.environ.get("REFRESH", "false").lower() == "true"
-
-          if FEED_FILE.exists() and not REFRESH:
-              urls = [l for l in FEED_FILE.read_text(encoding='utf-8').splitlines() if l.strip()]
-              print(f"::notice::Feed existente: {len(urls)} URLs (refresh_feed=true para atualizar)", flush=True)
-              sys.exit(0)
-
-          print("Baixando feed do Blogger...", flush=True)
-          urls, seen = [], set()
-          start, page, t0 = 1, 0, time.time()
-          while True:
-              try:
-                  u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
-                  r = requests.get(u, headers=HEADERS, timeout=30)
-                  if r.status_code != 200:
-                      print(f"  page {page+1}: HTTP {r.status_code}, parando", flush=True); break
-                  entries = r.json().get("feed", {}).get("entry", [])
-                  if not entries:
-                      print(f"  page {page+1}: vazio, parando", flush=True); break
-                  for e in entries:
-                      link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
-                      if link:
-                          uu = link.split("?")[0].strip()
-                          if uu and uu not in seen:
-                              seen.add(uu); urls.append(uu)
-                  page += 1
-                  elapsed = int(time.time() - t0)
-                  print(f"  page {page}: {len(entries)} entries (total {len(urls)}, +{elapsed}s)", flush=True)
-                  if len(entries) < 150: break
-                  start += 150
-              except Exception as e:
-                  print(f"  erro: {e}, parando", flush=True); break
-
-          FEED_FILE.write_text("\n".join(urls), encoding='utf-8')
-          print(f"::notice::Feed salvo: {len(urls)} URLs em {page} paginas", flush=True)
-          PYEOF
-
-      # ============================================================
-      # STEP 2: visita lote + extrai pares (video -> capa)
-      # STEP 3: aplica capas nos HTMLs locais
-      # ============================================================
-      - name: Raspar páginas e aplicar capas
-        env:
-          APPLY: ${{ inputs.apply_changes }}
-          MAX_PAGES: ${{ inputs.max_pages }}
-          PYTHONUNBUFFERED: '1'
-        run: |
-          python3 -u << 'PYEOF'
-          import os, re, json, time, sys
-          from pathlib import Path
-          from playwright.sync_api import sync_playwright
-
-          START_TS = time.time()
-          def log(m):
-              e = int(time.time() - START_TS)
-              t = time.strftime("%H:%M:%S", time.gmtime())
-              print(f"[{t} +{e:>4}s] {m}", flush=True); sys.stdout.flush()
-          def gh_error(m): print(f"::error::{m}", flush=True)
-          def gh_group(m): print(f"::group::{m}", flush=True)
-          def gh_endgroup(): print("::endgroup::", flush=True)
+          from bs4 import BeautifulSoup
 
           BASE_URL    = "https://www.vini7xgrave.site"
+          HEADERS     = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
           PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
-          USER_AGENT  = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-          MAX_PAGES   = int(os.environ.get("MAX_PAGES") or "200")
-          APPLY       = os.environ.get("APPLY", "true").lower() == "true"
+          LOTE        = int(os.environ.get("LOTE") or "200")
+          RETRY_ALL   = os.environ.get("RETRY_ALL", "false").lower() == "true"
 
-          FEED_FILE   = Path(".scrape_feed_urls.txt")
-          DATA_FILE   = Path(".scrape_data.json")
-          SEEN_FILE   = Path(".scrape_seen.json")
-          SKIP_FILE   = Path(".scrape_skip.json")
-          STATUS_FILE = Path(".scrape_status.json")
+          ARQ_MAPA    = Path("capas_mapa.json")
+          ARQ_STATUS  = Path("capas_status.json")
+          ARQ_FEED_CT = Path("capas_feed_cache.json")
 
-          # ---- validação de capa ----
+          START_TS = time.time()
+          def log(*a):
+              e = int(time.time() - START_TS)
+              print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
+
+          # ---------- validadores / normalizadores ----------
           def is_valid_cover(url):
               if not url or not isinstance(url, str): return False
               url = url.strip()
@@ -217,319 +74,322 @@ jobs:
               if 'placehold.co' in url: return False
               return True
 
-          gh_group("📦 Carregando estado")
-          video_map, title_map = {}, {}
-          seen_urls, skip_urls = set(), set()
-          if DATA_FILE.exists():
-              try:
-                  d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
-                  video_map = {k: u for k, u in d.get('video_map', {}).items() if is_valid_cover(u)}
-                  title_map = {k: u for k, u in d.get('title_map', {}).items() if is_valid_cover(u)}
-                  log(f"video={len(video_map)} title={len(title_map)} (após filtro)")
-              except: pass
-          if SEEN_FILE.exists():
-              try: seen_urls = set(json.loads(SEEN_FILE.read_text(encoding='utf-8')))
-              except: pass
-          if SKIP_FILE.exists():
-              try: skip_urls = set(json.loads(SKIP_FILE.read_text(encoding='utf-8')))
-              except: pass
-          gh_endgroup()
-
           def norm_video(url):
+              """Extrai chave única do vídeo: prefere IMDb ID, senão filename."""
               if not url: return ""
               m = re.search(r'(tt\d{6,10})', url.lower())
               if m: return m.group(1) + ".mp4"
               u = url.split('?')[0].split('#')[0].rstrip('/')
               return u.split('/')[-1].lower()
 
-          def norm_title(t):
-              if not t: return ""
-              t = t.lower().strip()
-              t = re.sub(r'^(assistir|ver|onde assistir|onde ver)\s+', '', t)
-              t = re.sub(r'\s*[-–|]\s*[\w\s]*clau[\w\s]*$', '', t, flags=re.I)
-              t = re.sub(r'\s*[-–|]\s*[\w\s]*vini7xgrave[\w\s]*$', '', t, flags=re.I)
-              t = re.sub(r'\s*[-–]\s*t\d+e\d+.*$', '', t, flags=re.I)
-              t = re.sub(r'\(\d+\)', '', t)
-              t = re.sub(r'\b(19|20)\d{2}\b', '', t)
-              t = re.sub(r'\b(online|dublado|legendado|hdcam|completo|filme|serie|t\d+e\d+)\b', '', t, flags=re.I)
-              t = re.sub(r'[^\w\s]', ' ', t)
-              return re.sub(r'\s+', ' ', t).strip()
-
-          def add_pair(video, cover, title=None):
-              if not is_valid_cover(cover):
-                  return
-              cover = cover.strip()
-              if cover.startswith('//'): cover = 'https:' + cover
-              if video:
-                  vk = norm_video(video)
-                  if vk and vk not in video_map:
-                      video_map[vk] = cover
-                      log(f"  +video({len(video_map)}) {vk[:50]} <- {cover[:70]}")
-              if title:
-                  tk = norm_title(title)
-                  if tk and tk not in title_map:
-                      title_map[tk] = cover
-                      log(f"  +title({len(title_map)}) {tk[:40]} <- {cover[:70]}")
-
-          def walk_html(html):
-              video = cover = title = None
-              for pat in [r'"contentUrl"\s*:\s*"([^"]+)"',
-                          r'<video[^>]+src=["\']([^"\']+)["\']',
-                          r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']']:
+          def extrair_video_e_capa(html):
+              """Extrai (videoUrl, capaUrl) de um HTML — prioriza JSON-LD."""
+              video = capa = None
+              for pat in [
+                  r'"contentUrl"\s*:\s*"([^"]+)"',
+                  r'<video[^>]+src=["\']([^"\']+)["\']',
+                  r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']',
+              ]:
                   m = re.search(pat, html, re.I)
                   if m: video = m.group(1); break
 
-              # SOMENTE aceita URLs http/https — nunca "h" ou strings vazias
-              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
-                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']',
-                          r'<video[^>]+poster=["\'](https?://[^"\']+)["\']']:
+              for pat in [
+                  r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
+                  r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']',
+                  r'<video[^>]+poster=["\'](https?://[^"\']+)["\']',
+              ]:
                   m = re.search(pat, html, re.I)
-                  if m: cover = m.group(1); break
+                  if m and is_valid_cover(m.group(1)):
+                      capa = m.group(1); break
+              return video, capa
 
-              m = re.search(r'<title>([^<]+)</title>', html, re.I)
-              if m: title = m.group(1)
-              if cover: add_pair(video, cover, title)
+          # ============================================================
+          # 1) Arquivos locais SEM capa → {videoUrl_norm: {url, arquivos}}
+          # ============================================================
+          def listar_sem_capa():
+              log("Listando arquivos locais SEM capa...")
+              sem_capa = {}
+              sem_url = []
+              total = 0
+              for arq in sorted(Path('.').rglob('*.html')):
+                  if '.git' in arq.parts: continue
+                  try: texto = arq.read_text(encoding='utf-8', errors='ignore')
+                  except: continue
+                  if PLACEHOLDER not in texto: continue
+                  total += 1
 
-          def walk_json(obj, depth=0):
-              if depth > 8: return
-              if isinstance(obj, dict):
-                  video = cover = title = None
-                  for k in ('contentUrl','content_url','video_url','videoUrl','video','file','src','stream_url','stream'):
-                      v = obj.get(k)
-                      if isinstance(v, str) and any(x in v.lower() for x in ('.mp4','.m3u8','.ts','/hls/','/vod/','stream')):
-                          video = v; break
-                  for k in ('thumbnailUrl','thumbnail_url','poster','poster_path','cover','image','img','thumbnail','capa'):
-                      v = obj.get(k)
-                      if isinstance(v, list) and v and isinstance(v[0], str):
-                          if is_valid_cover(v[0]): cover = v[0]; break
-                      if isinstance(v, str) and is_valid_cover(v):
-                          cover = v; break
-                  for k in ('name','title','titulo'):
-                      v = obj.get(k)
-                      if isinstance(v, str) and v: title = v; break
-                  if cover: add_pair(video, cover, title)
-                  for v in obj.values(): walk_json(v, depth+1)
-              elif isinstance(obj, list):
-                  for x in obj: walk_json(x, depth+1)
+                  m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
+                  if not m:
+                      m = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', texto)
 
-          # --- fila ---
-          gh_group("📋 Preparando fila do feed")
-          if not FEED_FILE.exists():
-              gh_error("Sem .scrape_feed_urls.txt — fase 1 falhou.")
-              gh_endgroup()
-              raise SystemExit(1)
+                  if m:
+                      url_orig = m.group(1).strip()
+                      vk = norm_video(url_orig)
+                      if vk:
+                          if vk not in sem_capa:
+                              sem_capa[vk] = {'url': url_orig, 'arquivos': []}
+                          sem_capa[vk]['arquivos'].append(arq)
+                      else:
+                          sem_url.append(arq.name)
+                  else:
+                      sem_url.append(arq.name)
 
-          todas = [l.strip() for l in FEED_FILE.read_text(encoding='utf-8').splitlines() if l.strip()]
-          fila = [u for u in todas if u not in seen_urls and u not in skip_urls]
-          log(f"Feed total: {len(todas)} | Vistas: {len(seen_urls)} | Skip: {len(skip_urls)} | Fila: {len(fila)}")
-          gh_endgroup()
+              log(f"  Arquivos sem capa: {total} | URLs únicas: {len(sem_capa)} | sem contentUrl: {len(sem_url)}")
+              return sem_capa, sem_url
 
-          lote = fila[:MAX_PAGES]
-          log(f"Lote deste run: {len(lote)} URLs")
+          # ============================================================
+          # 2) Feed do Blogger → {videoUrl_norm: capa} (só os que importam)
+          # ============================================================
+          def processar_feed(sem_capa_urls):
+              log("Processando feed do Blogger (extraindo contentUrl de cada entry)...")
+              feed_map = {}       # vk → capa (resolvido direto do feed)
+              para_visitar = {}   # vk → link (feed não trouxe capa)
+              page, entries_total, seen = 0, 0, 0
 
-          visited = 0
-          queue_remaining = len(fila) - len(lote)
+              # cache de 2h para não re-baixar em runs seguidas
+              if ARQ_FEED_CT.exists():
+                  try:
+                      cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
+                      if time.time() - cached.get('ts', 0) < 7200:
+                          feed_map = {k: v for k, v in cached.get('feed_map', {}).items() if k in sem_capa_urls}
+                          para_visitar = {k: v for k, v in cached.get('para_visitar', {}).items() if k in sem_capa_urls}
+                          log(f"  cache do feed ({(time.time()-cached['ts'])/60:.0f}min): feed_map={len(feed_map)} para_visitar={len(para_visitar)}")
+                          return feed_map, para_visitar
+                  except: pass
 
-          if lote:
-              with sync_playwright() as p:
-                  browser = p.chromium.launch(
-                      headless=True,
-                      args=['--no-sandbox','--disable-blink-features=AutomationControlled','--disable-dev-shm-usage']
-                  )
-                  ctx = browser.new_context(user_agent=USER_AGENT, viewport={'width': 1920, 'height': 1080}, locale='pt-BR')
-                  page = ctx.new_page()
+              start = 1
+              while True:
+                  try:
+                      u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
+                      r = requests.get(u, headers=HEADERS, timeout=30)
+                      if r.status_code != 200: break
+                      entries = r.json().get("feed", {}).get("entry", [])
+                      if not entries: break
+                      entries_total += len(entries)
 
-                  def on_response(resp):
-                      try:
-                          ct = (resp.headers.get('content-type') or '').lower()
-                          if 'json' in ct:
-                              try: walk_json(resp.json())
-                              except: pass
-                          elif 'html' in ct:
-                              try: walk_html(resp.text())
-                              except: pass
-                      except: pass
-                  page.on('response', on_response)
-                  log("Browser iniciado")
+                      for e in entries:
+                          seen += 1
+                          link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
+                          if not link: continue
+                          link = link.split("?")[0]
 
-                  gh_group(f"🕷️ Visitando {len(lote)} páginas")
-                  for i, url in enumerate(lote, 1):
-                      t0 = time.time()
-                      log(f"[{i}/{len(lote)}] GET {url}")
-                      try:
-                          try:
-                              resp = page.goto(url, wait_until='domcontentloaded', timeout=25000)
-                          except:
-                              log(f"  → timeout, skip")
-                              skip_urls.add(url); continue
+                          content_html = (e.get("content") or {}).get("$t", "")
+                          if not content_html: continue
 
-                          if resp and resp.status in (404, 410):
-                              skip_urls.add(url); log(f"  → HTTP {resp.status}"); continue
-                          if resp and resp.status >= 400:
-                              log(f"  → HTTP {resp.status}, soft-fail"); continue
+                          video, capa = extrair_video_e_capa(content_html)
+                          if not video: continue
 
-                          walk_html(page.content())
-                          visited += 1
-                          seen_urls.add(url)
-                          log(f"  ok {time.time()-t0:.1f}s | video={len(video_map)} title={len(title_map)}")
+                          vk = norm_video(video)
+                          if vk not in sem_capa_urls: continue  # não interessa
 
-                          if visited % 10 == 0:
-                              DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
-                              SEEN_FILE.write_text(json.dumps(list(seen_urls), ensure_ascii=False), encoding='utf-8')
-                              SKIP_FILE.write_text(json.dumps(list(skip_urls), ensure_ascii=False), encoding='utf-8')
-                              log(f"  💾 checkpoint (visited={visited})")
+                          if is_valid_cover(capa):
+                              feed_map[vk] = capa
+                          elif vk not in feed_map and vk not in para_visitar:
+                              para_visitar[vk] = link
 
-                      except Exception as e:
-                          log(f"  ERRO: {str(e)[:150]}")
-                          skip_urls.add(url); continue
-                  gh_endgroup()
-                  browser.close()
+                      page += 1
+                      log(f"  page {page}: {len(entries)} entries | feed_map={len(feed_map)} para_visitar={len(para_visitar)}")
+                      if len(entries) < 150: break
+                      start += 150
+                  except Exception as e:
+                      log(f"  erro feed: {e}"); break
 
-          # --- estado final ---
-          DATA_FILE.write_text(json.dumps({'video_map': video_map, 'title_map': title_map}, ensure_ascii=False, indent=2), encoding='utf-8')
-          SEEN_FILE.write_text(json.dumps(list(seen_urls), ensure_ascii=False), encoding='utf-8')
-          SKIP_FILE.write_text(json.dumps(list(skip_urls), ensure_ascii=False), encoding='utf-8')
+              log(f"  Feed: {entries_total} entries | feed_map={len(feed_map)} | para_visitar={len(para_visitar)}")
 
-          faltam = len([u for u in todas if u not in seen_urls and u not in skip_urls])
-          STATUS_FILE.write_text(json.dumps({
-              'queue_remaining': faltam,
-              'visited': visited,
-              'feed_total': len(todas),
-              'seen': len(seen_urls),
-              'video_map': len(video_map),
-              'title_map': len(title_map),
-              'timestamp': int(time.time()),
-          }, ensure_ascii=False, indent=2), encoding='utf-8')
+              ARQ_FEED_CT.write_text(json.dumps({
+                  'ts': time.time(),
+                  'feed_map': feed_map,
+                  'para_visitar': para_visitar,
+              }, ensure_ascii=False), encoding='utf-8')
 
-          gh_group("📊 Resumo")
-          log(f"Feed total: {len(todas)} | Visitadas agora: {visited} | Faltam: {faltam}")
-          log(f"video_map={len(video_map)} | title_map={len(title_map)}")
-          gh_endgroup()
+              return feed_map, para_visitar
 
-          if not APPLY:
-              log("APPLY=false — pulando aplicação")
-              raise SystemExit(0)
+          # ============================================================
+          # 3) Visita páginas que o feed não resolveu (checando por videoUrl)
+          # ============================================================
+          def visitar_pendentes(para_visitar, sem_capa_urls, mapa):
+              fila = {k: v for k, v in para_visitar.items() if k not in mapa}
+              if not fila:
+                  log("\nNada para visitar (feed resolveu tudo).")
+                  return 0
 
-          # --- aplicação ---
-          gh_group("🎨 Aplicando capas")
-          total = alterados = via_video = via_title = via_filename = sem_match = 0
-          sem_match_list = []
-          last_log = time.time()
+              log(f"\nVisitando até {min(len(fila), LOTE)} de {len(fila)} páginas pendentes...")
+              sucesso = 0
+              for i, (vk, link) in enumerate(list(fila.items())[:LOTE], 1):
+                  log(f"  [{i}/{min(len(fila), LOTE)}] {vk[:40]} <- {link}")
+                  try:
+                      r = requests.get(link, headers=HEADERS, timeout=20)
+                      if r.status_code != 200:
+                          log(f"    HTTP {r.status_code}"); continue
 
-          for arq in sorted(Path('.').rglob('*.html')):
-              if '.git' in arq.parts: continue
-              total += 1
-              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
-              except: continue
-              if PLACEHOLDER not in texto: continue
+                      video, capa = extrair_video_e_capa(r.text)
 
-              cu = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
-              cover = None; source = None
-              if cu:
-                  cover = video_map.get(norm_video(cu.group(1)))
-                  if cover: source = "video"
-              if not cover:
-                  nm = re.search(r'"name"\s*:\s*"([^"]+)"', texto)
-                  if nm:
-                      cover = title_map.get(norm_title(nm.group(1)))
-                      if cover: source = "title"
-              if not cover:
-                  cover = title_map.get(norm_title(arq.stem))
-                  if cover: source = "filename"
-              if not cover:
-                  sem_match += 1; sem_match_list.append(arq.name); continue
+                      # CONFERE: videoUrl da página deve bater com o esperado
+                      if video and norm_video(video) != vk:
+                          log(f"    videoUrl da página não bate ({norm_video(video)[:30]}), pulando")
+                          continue
 
-              # double-check: nunca aplica placeholder
-              if not is_valid_cover(cover):
-                  sem_match += 1; sem_match_list.append(arq.name); continue
+                      if not is_valid_cover(capa):
+                          soup = BeautifulSoup(r.text, 'html.parser')
+                          og = soup.find('meta', property='og:image')
+                          if og and is_valid_cover(og.get('content')):
+                              capa = og.get('content')
 
-              novo = texto.replace(PLACEHOLDER, cover)
-              if novo != texto:
-                  arq.write_text(novo, encoding='utf-8')
-                  alterados += 1
-                  if source == "video": via_video += 1
-                  elif source == "title": via_title += 1
-                  else: via_filename += 1
+                      if is_valid_cover(capa):
+                          mapa[vk] = capa
+                          sucesso += 1
+                          log(f"    +capa {capa[:70]}")
+                      else:
+                          log(f"    sem capa encontrada")
+                  except Exception as e:
+                      log(f"    erro: {e}")
 
-              if time.time() - last_log > 5:
-                  log(f"  progresso: {alterados} aplicadas | {sem_match} sem match | {total} arquivos")
-                  last_log = time.time()
+              log(f"  Visitadas: {sucesso} sucesso de {min(len(fila), LOTE)}")
+              return sucesso
 
-          Path('.scrape_sem_match.txt').write_text('\n'.join(sem_match_list), encoding='utf-8')
-          log(f"Total: {total} | Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename}) | Sem match: {sem_match}")
-          gh_endgroup()
+          # ============================================================
+          # 4) Aplica mapa por videoUrl (só em arquivos com placeholder)
+          # ============================================================
+          def aplicar_mapa(sem_capa_urls, mapa):
+              log(f"\nAplicando {len(mapa)} capas por URL de vídeo...")
+              alterados = 0
+              sem_match = 0
+
+              for vk, info in sem_capa_urls.items():
+                  if vk not in mapa:
+                      sem_match += 1
+                      continue
+                  capa = mapa[vk]
+                  if not is_valid_cover(capa):
+                      sem_match += 1; continue
+
+                  for arq in info['arquivos']:
+                      try: texto = arq.read_text(encoding='utf-8', errors='ignore')
+                      except: continue
+                      if PLACEHOLDER not in texto: continue
+
+                      novo = texto.replace(PLACEHOLDER, capa)
+                      if novo != texto:
+                          arq.write_text(novo, encoding='utf-8')
+                          alterados += 1
+                          log(f"  [ok] {arq.name}")
+
+              log(f"  Aplicados: {alterados} arquivos | Sem match: {sem_match} URLs")
+              return alterados, sem_match
+
+          # ============================================================
+          # MAIN
+          # ============================================================
+          def main():
+              # 1) lista sem capa
+              sem_capa_urls, sem_url = listar_sem_capa()
+              if not sem_capa_urls:
+                  log("✅ Nenhum arquivo com URL de vídeo sem capa. Nada a fazer.")
+                  ARQ_STATUS.write_text(json.dumps({
+                      'total_sem_capa_urls': 0, 'sem_url_video': len(sem_url),
+                      'mapa_size': 0, 'done': True
+                  }, ensure_ascii=False, indent=2), encoding='utf-8')
+                  return
+
+              # 2) carrega mapa existente (filtrado)
+              mapa = {}
+              if ARQ_MAPA.exists() and not RETRY_ALL:
+                  try:
+                      raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
+                      mapa = {k: v for k, v in raw.items()
+                              if k in sem_capa_urls and is_valid_cover(v)}
+                      log(f"Mapa existente (filtrado): {len(mapa)}")
+                  except: mapa = {}
+              elif RETRY_ALL:
+                  log("RETRY_ALL=true: limpando mapa e cache do feed")
+
+              # 3) feed → resolve os que têm contentUrl no feed
+              feed_map, para_visitar = processar_feed(sem_capa_urls)
+              novos_feed = 0
+              for k, v in feed_map.items():
+                  if k not in mapa:
+                      mapa[k] = v
+                      novos_feed += 1
+              log(f"Feed adicionou {novos_feed} capas novas ao mapa")
+
+              # 4) visita pendentes (lote limitado)
+              visitados_ok = visitar_pendentes(para_visitar, sem_capa_urls, mapa)
+
+              # 5) salva mapa
+              ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
+
+              # 6) aplica
+              alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
+
+              # 7) status
+              faltam_visitar = max(0, len(para_visitar) - visitados_ok)
+              done = (faltam_visitar == 0 and novos_feed == 0 and visitados_ok == 0
+                      and alterados == 0 and sem_match == 0)
+
+              ARQ_STATUS.write_text(json.dumps({
+                  'total_sem_capa_urls': len(sem_capa_urls),
+                  'sem_url_video': len(sem_url),
+                  'mapa_size': len(mapa),
+                  'novos_feed': novos_feed,
+                  'novos_visitados': visitados_ok,
+                  'faltam_visitar': faltam_visitar,
+                  'alterados': alterados,
+                  'sem_match': sem_match,
+                  'done': done,
+              }, ensure_ascii=False, indent=2), encoding='utf-8')
+
+              log(f"\n📊 FINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
+                  f"novos_feed={novos_feed} | visitados={visitados_ok} | "
+                  f"alterados={alterados} | sem_match={sem_match} | done={done}")
+
+          if __name__ == "__main__":
+              main()
           PYEOF
+          python3 /tmp/capas.py
 
-      - name: Upload artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: scrape-state
-          if-no-files-found: ignore
-          path: |
-            .scrape_feed_urls.txt
-            .scrape_data.json
-            .scrape_seen.json
-            .scrape_skip.json
-            .scrape_status.json
-            .scrape_sem_match.txt
-          retention-days: 30
-
-      - name: Commitar estado do scraper
-        if: always()
+      - name: Salvar progresso
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .scrape_feed_urls.txt .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
-          if git diff --cached --quiet; then exit 0; fi
-          git commit -m "chore: estado do scraper [skip ci]"
-          git push
+          git add -f capas_mapa.json capas_status.json capas_feed_cache.json 2>/dev/null || true
+          git add -f *.html 2>/dev/null || true
+          if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
+          git commit -m "chore: capas por URL de vídeo [skip ci]"
 
-      - name: Commitar capas aplicadas
-        if: inputs.apply_changes
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "*.html"
-          if git diff --cached --quiet; then
-            echo "Nenhum HTML modificado."; exit 0
-          fi
-          git commit -m "Auto: capas reais do site aplicadas [skip ci]"
-          git push
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            git fetch origin main
+            git reset --mixed origin/main
+            git add -f capas_mapa.json capas_status.json capas_feed_cache.json 2>/dev/null || true
+            git add -f *.html 2>/dev/null || true
+            git commit -m "chore: retry $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
 
-      - name: Disparar próxima run (se fila não vazia)
+      - name: Disparar próxima run (se necessário)
         if: success()
         env:
           GH_TOKEN: ${{ secrets.PAT_CHAIN }}
           REPO: ${{ github.repository }}
-          WORKFLOW_FILE: ${{ env.WORKFLOW_FILE }}
         run: |
-          if [ ! -f .scrape_status.json ]; then echo "Sem status"; exit 0; fi
-          QUEUE=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('queue_remaining', -1))")
-          SEEN=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('seen', 0))")
-          TOTAL=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('feed_total', 0))")
+          DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
+          FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
+          MAPA=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('mapa_size', 0))" 2>/dev/null || echo 0)
+          SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
 
-          echo "📊 Feed: $TOTAL | Vistas: $SEEN | Faltam: $QUEUE"
+          echo "📊 Sem capa: $SEM | Mapa: $MAPA | Faltam visitar: $FALTAM | Done: $DONE"
 
-          if [ "$QUEUE" -le 0 ]; then echo "✅ Fila vazia. Chain encerrada."; exit 0; fi
-          if [ -f .scrape_stop ]; then echo "🛑 .scrape_stop. Parando."; exit 0; fi
+          if [ "$DONE" = "True" ]; then
+            echo "✅ Concluído. Chain encerrada."; exit 0
+          fi
 
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-          RECENTES=$(gh run list --workflow="$WORKFLOW_FILE" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
-          if [ "$RECENTES" -ge 30 ]; then echo "⚠️ Limite de 30 runs/hora. Parando."; exit 0; fi
+          RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
 
-          APPLY="${{ inputs.apply_changes }}"
-          MAX_PAGES_NEXT="${{ inputs.max_pages }}"
-          echo "🔁 Disparando próxima run em 30s..."
+          if [ "$RECENTES" -ge 30 ]; then
+            echo "⚠️ Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
+          fi
+
+          echo "⏳ Aguardando 30s antes de disparar próxima run..."
           sleep 30
-
-          for i in {1..5}; do
-            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main \
-                -f apply_changes="$APPLY" \
-                -f max_pages="$MAX_PAGES_NEXT" \
-                -f refresh_feed=false; then
-              echo "✅ Próxima run disparada!"; break
-            else
-              echo "⚠️ Falhou ($i/5). Retry em 15s..."; sleep 15
-            fi
-          done
+          gh workflow run "capas.yml" --repo "$REPO" --ref main
