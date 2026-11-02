@@ -1,4 +1,8 @@
 {
-  "video_map": {},
-  "title_map": {}
+  "video_map": {
+    "tt21967800.mp4": "https://exemplo.com/thumb.jpg"
+  },
+  "title_map": {
+    "𝑽ini𝟕x a maldição do boneco robert": "https://exemplo.com/thumb.jpg"
+  }
 }
