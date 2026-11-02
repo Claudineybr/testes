@@ -15,7 +15,6 @@ on:
 permissions:
   contents: write
 
-# evita que dois runs do chain se sobreponham
 concurrency:
   group: scrape-chain
   cancel-in-progress: false
@@ -26,7 +25,6 @@ jobs:
     timeout-minutes: 350
 
     env:
-      # ⚠️ troque se renomear o arquivo .yml
       WORKFLOW_FILE: scrape.yml
 
     steps:
@@ -66,10 +64,8 @@ jobs:
           SKIP_FILE   = Path('.scrape_skip.json')
           STATUS_FILE = Path('.scrape_status.json')
 
-          video_map = {}
-          title_map = {}
-          seen_urls = set()
-          skip_urls = set()
+          video_map, title_map = {}, {}
+          seen_urls, skip_urls = set(), set()
 
           if DATA_FILE.exists():
               try:
@@ -120,6 +116,12 @@ jobs:
               t = re.sub(r'[^\w\s]', ' ', t)
               return re.sub(r'\s+', ' ', t).strip()
 
+          def slugify(t):
+              import unicodedata
+              t = unicodedata.normalize('NFKD', t).encode('ascii','ignore').decode()
+              t = re.sub(r'[^\w\s-]', '', t).lower().strip()
+              return re.sub(r'[-\s]+', '-', t).strip('-')
+
           def add_pair(video, cover, title=None):
               if cover:
                   cover = cover.strip()
@@ -136,20 +138,16 @@ jobs:
               path = p.path.lower().strip('/')
               if not path: return False
               if path in ('dmca','contato','privacidade','sobre','termos','login','cadastro','search'): return False
-              if re.match(r'^[a-z0-9]+(-[a-z0-9]+)+$', path): return True
-              if re.match(r'^[a-z0-9]+(_[a-z0-9]+)+$', path): return True
-              return False
+              return bool(re.match(r'^[a-z0-9]+(-[a-z0-9]+)+$', path) or re.match(r'^[a-z0-9]+(_[a-z0-9]+)+$', path))
 
           def is_listing_url(u):
               p = urllib.parse.urlparse(u)
               path = p.path.lower()
               if re.search(r'/page/\d+', path): return True
               if re.search(r'[?&]page=\d+', u): return True
-              if re.search(r'[?&]paged=\d+', u): return True
-              for kw in ('/filme','/serie','/genero','/categoria','/tag','/letra','/category','/genre','/todos','/catalogo'):
+              for kw in ('/filme','/serie','/genero','/categoria','/tag','/letra','/category','/genre','/todos','/catalogo','/busca','/search'):
                   if kw in path: return True
-              if path.count('/') <= 1 and path.strip('/'): return True
-              return False
+              return path.count('/') <= 1 and bool(path.strip('/'))
 
           def walk_json(obj, depth=0):
               if depth > 8: return
@@ -187,9 +185,23 @@ jobs:
               if m: title = m.group(1)
               if cover: add_pair(video, cover, title)
 
+          # ============ setup ============
+          start_urls = [
+              SITE + '/',
+              SITE + '/filmes/', SITE + '/series/',
+              SITE + '/page/2/', SITE + '/page/3/', SITE + '/page/4/',
+              SITE + '/categoria/filmes/', SITE + '/categoria/series/',
+              SITE + '/genero/acao/', SITE + '/genero/terror/',
+          ]
+
+          # CRÍTICO: força retry das URLs base a cada run
+          skip_urls -= set(start_urls)
+          print(f"Start URLs liberadas do skip: {len(start_urls)}")
+
           visited = 0
           added_urls = 0
-          queue = deque()
+          queue = deque(start_urls)
+          seen_urls.update(start_urls)
 
           with sync_playwright() as p:
               browser = p.chromium.launch(
@@ -225,8 +237,7 @@ jobs:
                                        '[class*="film"]','[class*="post"]','[class*="item"]','[class*="entry"]'];
                           for (const s of sel) {
                               document.querySelectorAll(s).forEach(el => {
-                                  if (seen.has(el)) return;
-                                  seen.add(el);
+                                  if (seen.has(el)) return; seen.add(el);
                                   const img = el.querySelector('img[src],img[data-src],img[data-lazy-src],img[data-original]');
                                   const a = el.querySelector('a[href]');
                                   const tEl = el.querySelector('h1,h2,h3,.title,[class*="title"],[class*="name"]');
@@ -248,22 +259,20 @@ jobs:
                   except:
                       return []
 
-              start_urls = [
-                  SITE + '/',
-                  SITE + '/filmes/', SITE + '/series/',
-                  SITE + '/page/2/', SITE + '/page/3/',
-                  SITE + '/categoria/filmes/', SITE + '/categoria/series/',
-              ]
-              for u in start_urls: queue.append(u)
-              seen_urls.update(start_urls)
-
               while queue and visited < MAX_PAGES:
                   url = queue.popleft()
-                  if url in skip_urls: continue
+                  if url in skip_urls:
+                      print(f"[skip-cache] {url}")
+                      continue
                   try:
                       resp = page.goto(url, wait_until='domcontentloaded', timeout=20000)
+                      if resp and resp.status in (404, 410):
+                          skip_urls.add(url)
+                          print(f"[skip-{resp.status}] {url}")
+                          continue
                       if resp and resp.status >= 400:
-                          skip_urls.add(url); continue
+                          print(f"[soft-{resp.status}] {url} (nao skipado, retry proximo run)")
+                          continue
                       page.wait_for_timeout(500)
 
                       try:
@@ -292,29 +301,37 @@ jobs:
                               queue.append(link); added_urls += 1
 
                       if visited % 25 == 0:
-                          print(f"[{visited}/{MAX_PAGES}] queue={len(queue)} video={len(video_map)} title={len(title_map)} novos_links={added_urls}")
+                          print(f"[{visited}/{MAX_PAGES}] queue={len(queue)} video={len(video_map)} title={len(title_map)} novos={added_urls}")
                           save_all()
                           save_status(len(queue), visited)
 
-                  except Exception:
-                      skip_urls.add(url); continue
+                  except Exception as e:
+                      print(f"[err] {url}: {str(e)[:100]} (nao skipado, retry proximo run)")
+                      continue
 
               browser.close()
-              # queue ainda pode ter itens (se bateu MAX_PAGES) — capturamos aqui
               queue_remaining = len(queue)
+
+          # CRÍTICO: se visitou quase nada, skip_urls pode estar envenenado
+          if visited <= 2:
+              print(f"⚠️  visited={visited} <= 2 -> limpando skip_urls para proxima run")
+              skip_urls.clear()
+              queue_remaining = max(queue_remaining, 100)  # força chain a continuar
 
           save_all()
           save_status(queue_remaining, visited)
 
           print(f"\nVisited: {visited} | Novos links: {added_urls} | Queue restante: {queue_remaining}")
-          print(f"video_map={len(video_map)} | title_map={len(title_map)}")
+          print(f"video_map={len(video_map)} | title_map={len(title_map)} | skip={len(skip_urls)}")
 
           if not APPLY:
-              print("APPLY=false — apenas coleta. Chain vai decidir se continua.")
+              print("APPLY=false — apenas coleta.")
               raise SystemExit(0)
 
-          # aplica capas nos HTMLs
+          # ============ aplica capas ============
           total = alterados = via_video = via_title = via_filename = sem_match = 0
+          sem_match_list = []
+
           for arq in sorted(Path('.').rglob('*.html')):
               if '.git' in arq.parts: continue
               total += 1
@@ -340,7 +357,9 @@ jobs:
                   if cover: source = "filename"
 
               if not cover:
-                  sem_match += 1; continue
+                  sem_match += 1
+                  sem_match_list.append(arq.name)
+                  continue
 
               novo = texto.replace(PLACEHOLDER, cover)
               if novo != texto:
@@ -350,6 +369,9 @@ jobs:
                   elif source == "title": via_title += 1
                   else: via_filename += 1
                   print(f"[ok/{source}] {arq.name}")
+
+          # salva lista de sem-match para fallback de URL guessing na próxima run
+          Path('.scrape_sem_match.txt').write_text('\n'.join(sem_match_list), encoding='utf-8')
 
           print(f"\nTotal HTMLs: {total}")
           print(f"Alterados: {alterados} (video={via_video}, title={via_title}, filename={via_filename})")
@@ -361,11 +383,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: scrape-state
+          if-no-files-found: ignore
           path: |
             .scrape_data.json
             .scrape_seen.json
             .scrape_skip.json
             .scrape_status.json
+            .scrape_sem_match.txt
           retention-days: 30
 
       - name: Commitar estado do scraper
@@ -373,7 +397,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json 2>/dev/null || true
+          git add .scrape_data.json .scrape_seen.json .scrape_skip.json .scrape_status.json .scrape_sem_match.txt 2>/dev/null || true
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "chore: estado do scraper [skip ci]"
           git push
@@ -385,8 +409,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add "*.html"
           if git diff --cached --quiet; then
-            echo "Nenhum HTML modificado."
-            exit 0
+            echo "Nenhum HTML modificado."; exit 0
           fi
           git commit -m "Auto: capas reais do site aplicadas [skip ci]"
           git push
@@ -398,58 +421,45 @@ jobs:
           REPO: ${{ github.repository }}
           WORKFLOW_FILE: ${{ env.WORKFLOW_FILE }}
         run: |
-          # ----- status do run -----
           if [ ! -f .scrape_status.json ]; then
-            echo "Sem .scrape_status.json — chain encerrada."
-            exit 0
+            echo "Sem status — chain encerrada."; exit 0
           fi
 
           QUEUE=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('queue_remaining', -1))")
           VISITED=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('visited', 0))")
           MAX_P=$(python3 -c "import json; print(json.load(open('.scrape_status.json')).get('max_pages', 0))")
 
-          echo "📊 Queue restante: $QUEUE | Páginas visitadas: $VISITED/$MAX_P"
+          echo "📊 Queue: $QUEUE | Visited: $VISITED/$MAX_P"
 
           if [ "$QUEUE" -le 0 ]; then
-            echo "✅ Fila vazia. Chain encerrada."
-            exit 0
+            echo "✅ Fila vazia. Chain encerrada."; exit 0
           fi
 
           if [ -f .scrape_stop ]; then
-            echo "🛑 .scrape_stop encontrado. Chain parada pelo usuário."
-            exit 0
+            echo "🛑 .scrape_stop encontrado. Chain parada."; exit 0
           fi
 
-          # ----- limite 30 runs/hora -----
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list \
-            --workflow="$WORKFLOW_FILE" \
-            --limit 100 \
+            --workflow="$WORKFLOW_FILE" --limit 100 \
             --json event,createdAt \
             --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" \
             --repo "$REPO" 2>/dev/null || echo 0)
 
           if [ "$RECENTES" -ge 30 ]; then
-            echo "⚠️ Limite de 30 runs/hora atingido (recentes=$RECENTES). Chain encerrada."
-            exit 0
+            echo "⚠️ Limite de 30 runs/hora. Chain encerrada."; exit 0
           fi
 
-          # ----- dispara -----
           APPLY="${{ inputs.apply_changes }}"
           MAX_PAGES_NEXT="${{ inputs.max_pages }}"
           echo "🔁 Disparando próxima run em 30s (apply=$APPLY, max_pages=$MAX_PAGES_NEXT)..."
           sleep 30
 
           for i in {1..5}; do
-            if gh workflow run "$WORKFLOW_FILE" \
-                --repo "$REPO" \
-                --ref main \
-                -f apply_changes="$APPLY" \
-                -f max_pages="$MAX_PAGES_NEXT"; then
-              echo "✅ Próxima run disparada com sucesso!"
-              break
+            if gh workflow run "$WORKFLOW_FILE" --repo "$REPO" --ref main \
+                -f apply_changes="$APPLY" -f max_pages="$MAX_PAGES_NEXT"; then
+              echo "✅ Próxima run disparada!"; break
             else
-              echo "⚠️ Erro ao disparar (tentativa $i/5). Tentando de novo em 15s..."
-              sleep 15
+              echo "⚠️ Falhou (tentativa $i/5). Retry em 15s..."; sleep 15
             fi
           done
