@@ -1,0 +1,282 @@
+name: Auditoria - Posts sem vídeo no feed
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  auditar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: pip install requests beautifulsoup4
+
+      - name: Auditar 458 posts sem vídeo no feed
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          cat > /tmp/auditar.py << 'PYEOF'
+          import re, json, requests, sys, time, unicodedata
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+
+          BASE_URL    = "https://www.vini7xgrave.site"
+          HEADERS     = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+          PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
+          CACHE_FILE  = Path(".auditoria_cache.json")
+          REQ_DELAY   = 1.0   # 429-safe
+
+          START_TS = time.time()
+          def log(*a):
+              e = int(time.time() - START_TS)
+              print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
+
+          def safe_get(url, timeout=20, retries=3):
+              for attempt in range(retries + 1):
+                  try:
+                      r = requests.get(url, headers=HEADERS, timeout=timeout)
+                      if r.status_code == 429:
+                          wait = 10 * (attempt + 1)
+                          log(f"    429, aguardando {wait}s...")
+                          time.sleep(wait); continue
+                      return r
+                  except Exception:
+                      if attempt == retries: raise
+                      time.sleep(3)
+              return None
+
+          def norm_video(url):
+              if not url: return ""
+              m = re.search(r'(tt\d{6,10})', url.lower())
+              if m: return m.group(1) + ".mp4"
+              m = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', url.lower())
+              if m: return m.group(1)
+              u = url.split('?')[0].split('#')[0].rstrip('/')
+              return u.split('/')[-1].lower()
+
+          def extract_video(html):
+              for pat in [
+                  r'"contentUrl"\s*:\s*"([^"]+)"',
+                  r'<video[^>]+src=["\']([^"\']+)["\']',
+                  r'<source[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']',
+                  r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']',
+                  r'(?:tankie|oneplayer|gviudclrb)[^"\']*?/([\w\-\.]+\.(?:mp4|m3u8))',
+              ]:
+                  m = re.search(pat, html, re.I)
+                  if m: return m.group(1)
+              return None
+
+          def extract_cover(html):
+              for pat in [
+                  r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
+                  r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']',
+                  r'<video[^>]+poster=["\'](https?://[^"\']+)["\']',
+              ]:
+                  m = re.search(pat, html, re.I)
+                  if m and 'placeholder' not in m.group(1).lower() and len(m.group(1)) > 15:
+                      return m.group(1)
+              return None
+
+          # ============================================================
+          # 1) Vídeos locais sem capa
+          # ============================================================
+          log("Lendo vídeos locais sem capa...")
+          locais = {}  # vk → {url, arquivos}
+          for arq in Path('.').rglob('*.html'):
+              if '.git' in arq.parts: continue
+              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
+              except: continue
+              if PLACEHOLDER not in texto: continue
+              m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
+              if not m: continue
+              url_orig = m.group(1).strip()
+              if not url_orig.startswith(('http://','https://')): continue
+              vk = norm_video(url_orig)
+              if vk:
+                  locais.setdefault(vk, {'url': url_orig, 'arquivos': []})['arquivos'].append(arq.name)
+          log(f"  Vídeos locais sem capa: {len(locais)}")
+
+          # ============================================================
+          # 2) Baixar feed, guardar entries sem vídeo
+          # ============================================================
+          log("Baixando feed do Blogger (só entries SEM vídeo)...")
+          cache = {}
+          if CACHE_FILE.exists():
+              try: cache = json.loads(CACHE_FILE.read_text(encoding='utf-8'))
+              except: cache = {}
+
+          entries_sem_video = cache.get('entries_sem_video', [])
+          if not entries_sem_video:
+              start, page = 1, 0
+              while True:
+                  try:
+                      u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
+                      r = safe_get(u, timeout=30)
+                      if not r or r.status_code != 200: break
+                      entries = r.json().get("feed", {}).get("entry", [])
+                      if not entries: break
+                      for e in entries:
+                          link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
+                          if not link: continue
+                          link = link.split("?")[0]
+                          title = (e.get("title") or {}).get("$t", "")
+                          content = (e.get("content") or {}).get("$t", "")
+                          video = extract_video(content) if content else None
+                          if not video:
+                              entries_sem_video.append({'link': link, 'title': title})
+                      page += 1
+                      log(f"  page {page}: {len(entries)} entries | sem video até agora: {len(entries_sem_video)}")
+                      if len(entries) < 150: break
+                      start += 150
+                      time.sleep(0.3)
+                  except Exception as e:
+                      log(f"  erro: {e}"); break
+
+              cache['entries_sem_video'] = entries_sem_video
+              CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
+
+          log(f"  Total de posts SEM vídeo no feed: {len(entries_sem_video)}")
+
+          if not entries_sem_video:
+              log("Nada para auditar.")
+              return
+
+          # ============================================================
+          # 3) Visitar cada um e extrair contentUrl REAL da página
+          # ============================================================
+          log(f"\nVisitando {len(entries_sem_video)} posts individualmente...")
+          auditados = cache.get('auditados', {})
+          matches = []
+          novos_sem_video = 0
+          novos_com_video_diferente = 0
+
+          for i, e in enumerate(entries_sem_video, 1):
+              link = e['link']
+              if link in auditados:
+                  r_data = auditados[link]
+              else:
+                  log(f"  [{i}/{len(entries_sem_video)}] {link}")
+                  try:
+                      r = safe_get(link, timeout=20)
+                      if not r or r.status_code != 200:
+                          log(f"    HTTP {r.status_code if r else 'erro'}")
+                          auditados[link] = {'status': 'erro', 'video': None}
+                          cache['auditados'] = auditados
+                          CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
+                          time.sleep(REQ_DELAY)
+                          continue
+
+                      video = extract_video(r.text)
+                      capa = extract_cover(r.text)
+
+                      if not video:
+                          log(f"    sem video")
+                          auditados[link] = {'status': 'sem_video_na_pagina', 'video': None}
+                          novos_sem_video += 1
+                      else:
+                          vk = norm_video(video)
+                          log(f"    video: {vk[:50]}")
+                          auditados[link] = {'status': 'ok', 'video': video, 'vk': vk, 'capa': capa}
+
+                          # bate com algum local?
+                          if vk in locais:
+                              matches.append({
+                                  'link': link,
+                                  'title': e['title'],
+                                  'video_site': video,
+                                  'vk': vk,
+                                  'capa': capa,
+                                  'arquivos_locais': locais[vk]['arquivos'],
+                              })
+                              log(f"    🎯 MATCH! pertence a: {locais[vk]['arquivos'][:2]}")
+                          else:
+                              novos_com_video_diferente += 1
+
+                      cache['auditados'] = auditados
+                      CACHE_FILE.write_text(json.dumps(cache, ensure_ascii=False), encoding='utf-8')
+                      time.sleep(REQ_DELAY)
+                  except Exception as ex:
+                      log(f"    erro: {ex}")
+                      auditados[link] = {'status': 'erro', 'video': None}
+
+              # se já estava no cache, verifica match
+              if link in auditados and auditados[link].get('status') == 'ok':
+                  vk = auditados[link].get('vk')
+                  if vk in locais and not any(m['link'] == link for m in matches):
+                      matches.append({
+                          'link': link,
+                          'title': e['title'],
+                          'video_site': auditados[link]['video'],
+                          'vk': vk,
+                          'capa': auditados[link].get('capa'),
+                          'arquivos_locais': locais[vk]['arquivos'],
+                      })
+
+          # ============================================================
+          # 4) Relatório
+          # ============================================================
+          log(f"\n📊 RESULTADO DA AUDITORIA:")
+          log(f"   Posts auditados: {len(entries_sem_video)}")
+          log(f"   Matches com locais: {len(matches)}")
+          log(f"   Posts sem vídeo na página: {novos_sem_video}")
+          log(f"   Posts com vídeo diferente dos locais: {novos_com_video_diferente}")
+
+          # CSV
+          csv = ["link,title,video_site,vk,capa,arquivos_locais"]
+          for m in matches:
+              csv.append(f'"{m["link"]}","{m["title"]}","{m["video_site"]}","{m["vk"]}","{m.get("capa") or ""}","{";".join(m["arquivos_locais"])}"')
+          Path('capas_auditoria_matches.csv').write_text("\n".join(csv), encoding='utf-8')
+
+          # Locais que sobraram sem correspondência
+          matches_vk = set(m['vk'] for m in matches)
+          restantes = [vk for vk in locais if vk not in matches_vk]
+          csv2 = ["video_key,url_local,arquivos"]
+          for vk in restantes:
+              info = locais[vk]
+              csv2.append(f'"{vk}","{info["url"]}","{";".join(info["arquivos"])}"')
+          Path('capas_auditoria_restantes.csv').write_text("\n".join(csv2), encoding='utf-8')
+
+          log(f"\n   Matches → capas_auditoria_matches.csv")
+          log(f"   Restantes ({len(restantes)}) → capas_auditoria_restantes.csv")
+
+          if matches:
+              log(f"\n✅ {len(matches)} dos {len(locais)} locais FORAM encontrados nos posts sem vídeo do feed.")
+              log(f"   Esses podem ser resolvidos rodando o workflow de aplicação.")
+          if restantes:
+              log(f"\n⚠️  {len(restantes)} locais NÃO estão em nenhum dos {len(entries_sem_video)} posts.")
+              log(f"   Confirmado: esses vídeos não existem mais no site.")
+
+          PYEOF
+          python3 /tmp/auditar.py
+
+      - name: Salvar cache e relatórios
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f .auditoria_cache.json capas_auditoria_matches.csv capas_auditoria_restantes.csv 2>/dev/null || true
+          if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
+          git commit -m "chore: auditoria de posts sem vídeo [skip ci]"
+          git push origin HEAD:main || true
+
+      - name: Upload relatórios
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auditoria-capas
+          if-no-files-found: ignore
+          path: |
+            capas_auditoria_matches.csv
+            capas_auditoria_restantes.csv
+          retention-days: 30
