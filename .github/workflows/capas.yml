@@ -6,10 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       lote:
-        description: 'URLs para visitar por run (só as que o feed não resolveu)'
+        description: 'URLs para visitar por run'
         default: '200'
       retry_all:
-        description: 'Reprocessar tudo (limpa mapa)?'
+        description: 'Reprocessar tudo (limpa cache/mapa/visitados)?'
         type: boolean
         default: false
 
@@ -55,16 +55,18 @@ jobs:
           LOTE        = int(os.environ.get("LOTE") or "200")
           RETRY_ALL   = os.environ.get("RETRY_ALL", "false").lower() == "true"
 
-          ARQ_MAPA    = Path("capas_mapa.json")
-          ARQ_STATUS  = Path("capas_status.json")
-          ARQ_FEED_CT = Path("capas_feed_cache.json")
+          ARQ_MAPA      = Path("capas_mapa.json")
+          ARQ_STATUS    = Path("capas_status.json")
+          ARQ_FEED_CT   = Path("capas_feed_cache.json")
+          ARQ_VISITADOS = Path("capas_links_visitados.txt")
+
+          CACHE_VERSION = 3
 
           START_TS = time.time()
           def log(*a):
               e = int(time.time() - START_TS)
               print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
 
-          # ---------- validadores / normalizadores ----------
           def is_valid_cover(url):
               if not url or not isinstance(url, str): return False
               url = url.strip()
@@ -75,24 +77,35 @@ jobs:
               return True
 
           def norm_video(url):
-              """Extrai chave única do vídeo: prefere IMDb ID, senão filename."""
               if not url: return ""
               m = re.search(r'(tt\d{6,10})', url.lower())
               if m: return m.group(1) + ".mp4"
               u = url.split('?')[0].split('#')[0].rstrip('/')
               return u.split('/')[-1].lower()
 
+          def norm_title(t):
+              if not t: return ""
+              t = t.lower().strip()
+              t = re.sub(r'^(assistir|ver|onde assistir|onde ver)\s+', '', t)
+              t = re.sub(r'\s*[-–|]\s*[\w\s]*clau[\w\s]*$', '', t, flags=re.I)
+              t = re.sub(r'\s*[-–|]\s*[\w\s]*vini7xgrave[\w\s]*$', '', t, flags=re.I)
+              t = re.sub(r'\s*[-–]\s*t\d+e\d+.*$', '', t, flags=re.I)
+              t = re.sub(r'\(\d+\)', '', t)
+              t = re.sub(r'\b(19|20)\d{2}\b', '', t)
+              t = re.sub(r'\b(online|dublado|legendado|hdcam|completo|filme|serie|t\d+e\d+)\b', '', t, flags=re.I)
+              t = re.sub(r'[^\w\s]', ' ', t)
+              return re.sub(r'\s+', ' ', t).strip()
+
           def extrair_video_e_capa(html):
-              """Extrai (videoUrl, capaUrl) de um HTML — prioriza JSON-LD."""
               video = capa = None
               for pat in [
                   r'"contentUrl"\s*:\s*"([^"]+)"',
                   r'<video[^>]+src=["\']([^"\']+)["\']',
+                  r'<source[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']',
                   r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']',
               ]:
                   m = re.search(pat, html, re.I)
                   if m: video = m.group(1); break
-
               for pat in [
                   r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
                   r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']',
@@ -104,13 +117,15 @@ jobs:
               return video, capa
 
           # ============================================================
-          # 1) Arquivos locais SEM capa → {videoUrl_norm: {url, arquivos}}
+          # 1) Arquivos locais SEM capa -> {vk: {url, arquivos, titulos}}
           # ============================================================
           def listar_sem_capa():
               log("Listando arquivos locais SEM capa...")
-              sem_capa = {}
+              sem_capa_urls = {}
+              sem_capa_titles = {}
               sem_url = []
               total = 0
+
               for arq in sorted(Path('.').rglob('*.html')):
                   if '.git' in arq.parts: continue
                   try: texto = arq.read_text(encoding='utf-8', errors='ignore')
@@ -121,42 +136,65 @@ jobs:
                   m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
                   if not m:
                       m = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', texto)
+                  if not m:
+                      sem_url.append(arq.name); continue
 
-                  if m:
-                      url_orig = m.group(1).strip()
-                      vk = norm_video(url_orig)
-                      if vk:
-                          if vk not in sem_capa:
-                              sem_capa[vk] = {'url': url_orig, 'arquivos': []}
-                          sem_capa[vk]['arquivos'].append(arq)
-                      else:
-                          sem_url.append(arq.name)
-                  else:
-                      sem_url.append(arq.name)
+                  url_orig = m.group(1).strip()
+                  vk = norm_video(url_orig)
+                  if not vk:
+                      sem_url.append(arq.name); continue
 
-              log(f"  Arquivos sem capa: {total} | URLs únicas: {len(sem_capa)} | sem contentUrl: {len(sem_url)}")
-              return sem_capa, sem_url
+                  tm = re.search(r'"name"\s*:\s*"([^"]+)"', texto)
+                  titulos = []
+                  if tm: titulos.append(norm_title(tm.group(1)))
+                  titulos.append(norm_title(arq.stem))
+                  titulos = [t for t in titulos if t]
+
+                  if vk not in sem_capa_urls:
+                      sem_capa_urls[vk] = {'url': url_orig, 'arquivos': [], 'titulos': titulos}
+                  sem_capa_urls[vk]['arquivos'].append(arq)
+                  for t in titulos:
+                      sem_capa_titles.setdefault(t, []).append(arq)
+
+              log(f"  Arquivos sem capa: {total} | URLs únicas: {len(sem_capa_urls)} | sem contentUrl: {len(sem_url)}")
+              log(f"  Amostra URLs: {list(sem_capa_urls.keys())[:5]}")
+              log(f"  Amostra títulos: {list(sem_capa_titles.keys())[:5]}")
+              return sem_capa_urls, sem_capa_titles, sem_url
 
           # ============================================================
-          # 2) Feed do Blogger → {videoUrl_norm: capa} (só os que importam)
+          # 2) Feed do Blogger -> feed_by_video + visit_candidates
           # ============================================================
-          def processar_feed(sem_capa_urls):
-              log("Processando feed do Blogger (extraindo contentUrl de cada entry)...")
-              feed_map = {}       # vk → capa (resolvido direto do feed)
-              para_visitar = {}   # vk → link (feed não trouxe capa)
-              page, entries_total, seen = 0, 0, 0
+          def processar_feed(sem_capa_urls, sem_capa_titles):
+              log("Processando feed do Blogger...")
+              feed_by_video = {}
+              visit_candidates = {}
 
-              # cache de 2h para não re-baixar em runs seguidas
-              if ARQ_FEED_CT.exists():
+              # --- cache ---
+              if ARQ_FEED_CT.exists() and not RETRY_ALL:
                   try:
                       cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
-                      if time.time() - cached.get('ts', 0) < 7200:
-                          feed_map = {k: v for k, v in cached.get('feed_map', {}).items() if k in sem_capa_urls}
-                          para_visitar = {k: v for k, v in cached.get('para_visitar', {}).items() if k in sem_capa_urls}
-                          log(f"  cache do feed ({(time.time()-cached['ts'])/60:.0f}min): feed_map={len(feed_map)} para_visitar={len(para_visitar)}")
-                          return feed_map, para_visitar
-                  except: pass
+                      if cached.get('version') != CACHE_VERSION:
+                          log(f"  cache versao antiga (v{cached.get('version')}), refazendo")
+                      elif time.time() - cached.get('ts', 0) > 7200:
+                          log(f"  cache expirado (>2h), refazendo")
+                      elif not cached.get('scan_complete'):
+                          log(f"  cache incompleto, refazendo")
+                      else:
+                          cached_fm = cached.get('feed_by_video', {})
+                          cached_vc = cached.get('visit_candidates', {})
+                          feed_by_video = {k: v for k, v in cached_fm.items() if k in sem_capa_urls}
+                          for link, hint in cached_vc.items():
+                              if hint and hint not in sem_capa_urls:
+                                  continue
+                              visit_candidates[link] = hint
+                          log(f"  cache OK: feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
+                          return feed_by_video, visit_candidates
+                  except Exception as e:
+                      log(f"  erro cache: {e}")
 
+              # --- download fresh ---
+              entries_total = entries_with_video = matched_video = 0
+              page = 0
               start = 1
               while True:
                   try:
@@ -168,66 +206,84 @@ jobs:
                       entries_total += len(entries)
 
                       for e in entries:
-                          seen += 1
                           link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
                           if not link: continue
                           link = link.split("?")[0]
 
-                          content_html = (e.get("content") or {}).get("$t", "")
-                          if not content_html: continue
+                          title = (e.get("title") or {}).get("$t", "")
+                          content = (e.get("content") or {}).get("$t", "")
+                          video, capa = extrair_video_e_capa(content)
 
-                          video, capa = extrair_video_e_capa(content_html)
-                          if not video: continue
-
-                          vk = norm_video(video)
-                          if vk not in sem_capa_urls: continue  # não interessa
-
-                          if is_valid_cover(capa):
-                              feed_map[vk] = capa
-                          elif vk not in feed_map and vk not in para_visitar:
-                              para_visitar[vk] = link
+                          if video:
+                              entries_with_video += 1
+                              vk = norm_video(video)
+                              if vk in sem_capa_urls:
+                                  matched_video += 1
+                                  if is_valid_cover(capa):
+                                      feed_by_video[vk] = capa
+                                  else:
+                                      visit_candidates[link] = vk
+                          elif title:
+                              tnorm = norm_title(title)
+                              if tnorm and tnorm in sem_capa_titles:
+                                  visit_candidates[link] = None
 
                       page += 1
-                      log(f"  page {page}: {len(entries)} entries | feed_map={len(feed_map)} para_visitar={len(para_visitar)}")
+                      log(f"  page {page}: {len(entries)} entries | feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
                       if len(entries) < 150: break
                       start += 150
                   except Exception as e:
                       log(f"  erro feed: {e}"); break
 
-              log(f"  Feed: {entries_total} entries | feed_map={len(feed_map)} | para_visitar={len(para_visitar)}")
+              log(f"  Feed: {entries_total} entries | com video: {entries_with_video} | matches: {matched_video}")
+              log(f"  feed_by_video={len(feed_by_video)} | visit_candidates={len(visit_candidates)}")
 
               ARQ_FEED_CT.write_text(json.dumps({
+                  'version': CACHE_VERSION,
                   'ts': time.time(),
-                  'feed_map': feed_map,
-                  'para_visitar': para_visitar,
+                  'scan_complete': True,
+                  'feed_by_video': feed_by_video,
+                  'visit_candidates': visit_candidates,
               }, ensure_ascii=False), encoding='utf-8')
 
-              return feed_map, para_visitar
+              return feed_by_video, visit_candidates
 
           # ============================================================
-          # 3) Visita páginas que o feed não resolveu (checando por videoUrl)
+          # 3) Visita candidatos e verifica por URL de vídeo
           # ============================================================
-          def visitar_pendentes(para_visitar, sem_capa_urls, mapa):
-              fila = {k: v for k, v in para_visitar.items() if k not in mapa}
+          def visitar_pendentes(visit_candidates, sem_capa_urls, mapa):
+              # carrega links já visitados
+              links_visitados = set()
+              if ARQ_VISITADOS.exists() and not RETRY_ALL:
+                  try:
+                      links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
+                  except: pass
+
+              # prioriza candidatos com vk_hint (feed já viu o vídeo) sobre só título
+              fila = [(link, hint) for link, hint in visit_candidates.items()
+                      if link not in links_visitados and (not hint or hint not in mapa)]
+              fila.sort(key=lambda x: (0 if x[1] else 1, x[0]))
+
               if not fila:
-                  log("\nNada para visitar (feed resolveu tudo).")
+                  log("  Nada para visitar (todos visitados ou já resolvidos).")
                   return 0
 
-              log(f"\nVisitando até {min(len(fila), LOTE)} de {len(fila)} páginas pendentes...")
+              log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos...")
               sucesso = 0
-              for i, (vk, link) in enumerate(list(fila.items())[:LOTE], 1):
-                  log(f"  [{i}/{min(len(fila), LOTE)}] {vk[:40]} <- {link}")
+              for i, (link, hint) in enumerate(fila[:LOTE], 1):
+                  log(f"  [{i}] {link}")
                   try:
                       r = requests.get(link, headers=HEADERS, timeout=20)
                       if r.status_code != 200:
-                          log(f"    HTTP {r.status_code}"); continue
+                          log(f"    HTTP {r.status_code}"); links_visitados.add(link); continue
 
                       video, capa = extrair_video_e_capa(r.text)
+                      if not video:
+                          log(f"    sem video URL"); links_visitados.add(link); continue
 
-                      # CONFERE: videoUrl da página deve bater com o esperado
-                      if video and norm_video(video) != vk:
-                          log(f"    videoUrl da página não bate ({norm_video(video)[:30]}), pulando")
-                          continue
+                      vk = norm_video(video)
+                      if vk not in sem_capa_urls:
+                          log(f"    video URL nao corresponde ({vk[:40]})"); links_visitados.add(link); continue
 
                       if not is_valid_cover(capa):
                           soup = BeautifulSoup(r.text, 'html.parser')
@@ -238,42 +294,39 @@ jobs:
                       if is_valid_cover(capa):
                           mapa[vk] = capa
                           sucesso += 1
-                          log(f"    +capa {capa[:70]}")
+                          log(f"    ✓ capa: {capa[:70]}")
                       else:
-                          log(f"    sem capa encontrada")
+                          log(f"    sem capa")
+                      links_visitados.add(link)
                   except Exception as e:
                       log(f"    erro: {e}")
+                      links_visitados.add(link)
 
-              log(f"  Visitadas: {sucesso} sucesso de {min(len(fila), LOTE)}")
+              ARQ_VISITADOS.write_text("\n".join(sorted(links_visitados)), encoding='utf-8')
+              log(f"  Visitados OK: {sucesso}")
               return sucesso
 
           # ============================================================
-          # 4) Aplica mapa por videoUrl (só em arquivos com placeholder)
+          # 4) Aplica mapa por URL de vídeo
           # ============================================================
           def aplicar_mapa(sem_capa_urls, mapa):
               log(f"\nAplicando {len(mapa)} capas por URL de vídeo...")
               alterados = 0
               sem_match = 0
-
               for vk, info in sem_capa_urls.items():
-                  if vk not in mapa:
+                  if vk not in mapa or not is_valid_cover(mapa[vk]):
                       sem_match += 1
                       continue
                   capa = mapa[vk]
-                  if not is_valid_cover(capa):
-                      sem_match += 1; continue
-
                   for arq in info['arquivos']:
                       try: texto = arq.read_text(encoding='utf-8', errors='ignore')
                       except: continue
                       if PLACEHOLDER not in texto: continue
-
                       novo = texto.replace(PLACEHOLDER, capa)
                       if novo != texto:
                           arq.write_text(novo, encoding='utf-8')
                           alterados += 1
                           log(f"  [ok] {arq.name}")
-
               log(f"  Aplicados: {alterados} arquivos | Sem match: {sem_match} URLs")
               return alterados, sem_match
 
@@ -281,8 +334,7 @@ jobs:
           # MAIN
           # ============================================================
           def main():
-              # 1) lista sem capa
-              sem_capa_urls, sem_url = listar_sem_capa()
+              sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
               if not sem_capa_urls:
                   log("✅ Nenhum arquivo com URL de vídeo sem capa. Nada a fazer.")
                   ARQ_STATUS.write_text(json.dumps({
@@ -291,40 +343,42 @@ jobs:
                   }, ensure_ascii=False, indent=2), encoding='utf-8')
                   return
 
-              # 2) carrega mapa existente (filtrado)
               mapa = {}
               if ARQ_MAPA.exists() and not RETRY_ALL:
                   try:
                       raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
-                      mapa = {k: v for k, v in raw.items()
-                              if k in sem_capa_urls and is_valid_cover(v)}
+                      mapa = {k: v for k, v in raw.items() if k in sem_capa_urls and is_valid_cover(v)}
                       log(f"Mapa existente (filtrado): {len(mapa)}")
                   except: mapa = {}
               elif RETRY_ALL:
-                  log("RETRY_ALL=true: limpando mapa e cache do feed")
+                  log("RETRY_ALL: limpando mapa, cache e links visitados")
 
-              # 3) feed → resolve os que têm contentUrl no feed
-              feed_map, para_visitar = processar_feed(sem_capa_urls)
+              feed_by_video, visit_candidates = processar_feed(sem_capa_urls, sem_capa_titles)
+
               novos_feed = 0
-              for k, v in feed_map.items():
+              for k, v in feed_by_video.items():
                   if k not in mapa:
                       mapa[k] = v
                       novos_feed += 1
-              log(f"Feed adicionou {novos_feed} capas novas ao mapa")
+              log(f"Feed adicionou {novos_feed} capas novas")
 
-              # 4) visita pendentes (lote limitado)
-              visitados_ok = visitar_pendentes(para_visitar, sem_capa_urls, mapa)
+              visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
 
-              # 5) salva mapa
               ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
 
-              # 6) aplica
               alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
 
-              # 7) status
-              faltam_visitar = max(0, len(para_visitar) - visitados_ok)
-              done = (faltam_visitar == 0 and novos_feed == 0 and visitados_ok == 0
-                      and alterados == 0 and sem_match == 0)
+              # status
+              faltam_video = len([k for k in sem_capa_urls if k not in mapa])
+
+              links_visitados = set()
+              if ARQ_VISITADOS.exists():
+                  try:
+                      links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
+                  except: pass
+              faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
+
+              done = (faltam_video == 0) or (faltam_visitar == 0)
 
               ARQ_STATUS.write_text(json.dumps({
                   'total_sem_capa_urls': len(sem_capa_urls),
@@ -332,6 +386,7 @@ jobs:
                   'mapa_size': len(mapa),
                   'novos_feed': novos_feed,
                   'novos_visitados': visitados_ok,
+                  'faltam_video': faltam_video,
                   'faltam_visitar': faltam_visitar,
                   'alterados': alterados,
                   'sem_match': sem_match,
@@ -340,7 +395,8 @@ jobs:
 
               log(f"\n📊 FINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
                   f"novos_feed={novos_feed} | visitados={visitados_ok} | "
-                  f"alterados={alterados} | sem_match={sem_match} | done={done}")
+                  f"faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | "
+                  f"alterados={alterados} | done={done}")
 
           if __name__ == "__main__":
               main()
@@ -351,7 +407,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f capas_mapa.json capas_status.json capas_feed_cache.json 2>/dev/null || true
+          git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
           git add -f *.html 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
           git commit -m "chore: capas por URL de vídeo [skip ci]"
@@ -360,7 +416,7 @@ jobs:
             if git push origin HEAD:main; then break; fi
             git fetch origin main
             git reset --mixed origin/main
-            git add -f capas_mapa.json capas_status.json capas_feed_cache.json 2>/dev/null || true
+            git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
             git add -f *.html 2>/dev/null || true
             git commit -m "chore: retry $i" || true
             sleep $((RANDOM % 10 + 5))
@@ -374,8 +430,8 @@ jobs:
         run: |
           DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
           FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
-          MAPA=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('mapa_size', 0))" 2>/dev/null || echo 0)
           SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
+          MAPA=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('mapa_size', 0))" 2>/dev/null || echo 0)
 
           echo "📊 Sem capa: $SEM | Mapa: $MAPA | Faltam visitar: $FALTAM | Done: $DONE"
 
@@ -384,7 +440,7 @@ jobs:
           fi
 
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-          RECENTES=$(gh run list --workflow="scrape.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
+          RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
 
           if [ "$RECENTES" -ge 30 ]; then
             echo "⚠️ Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
@@ -392,4 +448,4 @@ jobs:
 
           echo "⏳ Aguardando 30s antes de disparar próxima run..."
           sleep 30
-          gh workflow run "scrape.yml" --repo "$REPO" --ref main
+          gh workflow run "capas.yml" --repo "$REPO" --ref main
