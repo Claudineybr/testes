@@ -1,0 +1,12 @@
+Resumo da extracao
+==================
+Repo: /tmp/tmp.N2X3Cc2Ob1/outro
+HTMLs varridos: 0
+Com video URL:  0
+Com capa:       0
+Sem capa:       0
+Sem video URL:  0
+Conflitos:      0
+
+capas_por_key.txt: 0 entradas
+capas_por_url.txt: 0 entradas
