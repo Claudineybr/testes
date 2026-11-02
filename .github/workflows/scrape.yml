@@ -47,63 +47,133 @@ jobs:
           playwright install-deps chromium
 
       # ============================================================
-      # FASE 1: feed do Blogger → lista de TODAS as URLs do site
+      # STEP 0: sanitiza HTMLs já corrompidos + limpa cache inválido
+      # (roda sempre; custa segundos; idempotente)
+      # ============================================================
+      - name: Sanitizar HTMLs corrompidos e cache
+        env:
+          PYTHONUNBUFFERED: '1'
+        run: |
+          python3 -u << 'PYEOF'
+          import re, json, sys
+          from pathlib import Path
+
+          PLACEHOLDER = "https://via.placeholder.com/500x750?text=Sem+Capa"
+          DATA_FILE   = Path('.scrape_data.json')
+
+          def is_valid_cover(url):
+              if not url or not isinstance(url, str): return False
+              url = url.strip()
+              if len(url) < 15: return False
+              if not (url.startswith('http://') or url.startswith('https://')): return False
+              if 'via.placeholder.com' in url: return False
+              if 'placehold.co' in url: return False
+              return True
+
+          # 1) filtra cache
+          if DATA_FILE.exists():
+              try:
+                  d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
+                  v_old = d.get('video_map', {})
+                  t_old = d.get('title_map', {})
+                  v = {k: u for k, u in v_old.items() if is_valid_cover(u)}
+                  t = {k: u for k, u in t_old.items() if is_valid_cover(u)}
+                  d['video_map'] = v; d['title_map'] = t
+                  DATA_FILE.write_text(json.dumps(d, ensure_ascii=False, indent=2), encoding='utf-8')
+                  print(f"::notice::Cache: removidos {len(v_old)-len(v)} videos e {len(t_old)-len(t)} titulos invalidos (restam {len(v)}/{len(t)})", flush=True)
+              except Exception as e:
+                  print(f"::warning::Erro cache: {e}", flush=True)
+
+          # 2) sanitiza HTMLs
+          fixed = 0
+          for arq in Path('.').rglob('*.html'):
+              if '.git' in arq.parts: continue
+              try: texto = arq.read_text(encoding='utf-8', errors='ignore')
+              except: continue
+              original = texto
+
+              # poster="X" onde X não é URL -> placeholder
+              texto = re.sub(
+                  r'(<video[^>]+poster=["\'])(?!https?://|//)([^"\']*)(["\'])',
+                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
+                  texto
+              )
+              # "thumbnailUrl": ["X"] -> placeholder
+              texto = re.sub(
+                  r'("thumbnailUrl"\s*:\s*\[\s*")(?!https?://|//)([^"]*)(")',
+                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
+                  texto
+              )
+              # "thumbnailUrl": "X" -> placeholder
+              texto = re.sub(
+                  r'("thumbnailUrl"\s*:\s*")(?!https?://|//)([^"]*)(")',
+                  lambda m: m.group(1) + PLACEHOLDER + m.group(3),
+                  texto
+              )
+
+              if texto != original:
+                  arq.write_text(texto, encoding='utf-8')
+                  fixed += 1
+
+          print(f"::notice::HTMLs sanitizados: {fixed}", flush=True)
+          PYEOF
+
+      # ============================================================
+      # STEP 1: feed do Blogger -> TODAS as URLs do site
       # ============================================================
       - name: Descobrir URLs (feed do Blogger)
         env:
           REFRESH: ${{ inputs.refresh_feed }}
+          PYTHONUNBUFFERED: '1'
         run: |
           python3 -u << 'PYEOF'
           import os, sys, time
           from pathlib import Path
           import requests
 
-          BASE_URL = "https://www.vini7xgrave.site"
-          HEADERS  = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+          BASE_URL  = "https://www.vini7xgrave.site"
+          HEADERS   = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
           FEED_FILE = Path(".scrape_feed_urls.txt")
-          REFRESH = os.environ.get("REFRESH", "false").lower() == "true"
+          REFRESH   = os.environ.get("REFRESH", "false").lower() == "true"
 
           if FEED_FILE.exists() and not REFRESH:
               urls = [l for l in FEED_FILE.read_text(encoding='utf-8').splitlines() if l.strip()]
-              print(f"::notice::Feed existente: {len(urls)} URLs (use refresh_feed=true para atualizar)")
+              print(f"::notice::Feed existente: {len(urls)} URLs (refresh_feed=true para atualizar)", flush=True)
               sys.exit(0)
 
-          print("Baixando feed do Blogger...")
+          print("Baixando feed do Blogger...", flush=True)
           urls, seen = [], set()
           start, page, t0 = 1, 0, time.time()
           while True:
               try:
-                  url = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
-                  r = requests.get(url, headers=HEADERS, timeout=30)
+                  u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
+                  r = requests.get(u, headers=HEADERS, timeout=30)
                   if r.status_code != 200:
-                      print(f"  page {page+1}: HTTP {r.status_code}, parando")
-                      break
+                      print(f"  page {page+1}: HTTP {r.status_code}, parando", flush=True); break
                   entries = r.json().get("feed", {}).get("entry", [])
                   if not entries:
-                      print(f"  page {page+1}: vazio, parando")
-                      break
+                      print(f"  page {page+1}: vazio, parando", flush=True); break
                   for e in entries:
                       link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
                       if link:
-                          u = link.split("?")[0].strip()
-                          if u and u not in seen:
-                              seen.add(u); urls.append(u)
+                          uu = link.split("?")[0].strip()
+                          if uu and uu not in seen:
+                              seen.add(uu); urls.append(uu)
                   page += 1
                   elapsed = int(time.time() - t0)
                   print(f"  page {page}: {len(entries)} entries (total {len(urls)}, +{elapsed}s)", flush=True)
                   if len(entries) < 150: break
                   start += 150
               except Exception as e:
-                  print(f"  erro: {e}, parando")
-                  break
+                  print(f"  erro: {e}, parando", flush=True); break
 
           FEED_FILE.write_text("\n".join(urls), encoding='utf-8')
-          print(f"::notice::Feed salvo: {len(urls)} URLs em {page} páginas")
+          print(f"::notice::Feed salvo: {len(urls)} URLs em {page} paginas", flush=True)
           PYEOF
 
       # ============================================================
-      # FASE 2: visita lote, extrai pares (video → capa)
-      # FASE 3: aplica capas nos HTMLs
+      # STEP 2: visita lote + extrai pares (video -> capa)
+      # STEP 3: aplica capas nos HTMLs locais
       # ============================================================
       - name: Raspar páginas e aplicar capas
         env:
@@ -137,15 +207,25 @@ jobs:
           SKIP_FILE   = Path(".scrape_skip.json")
           STATUS_FILE = Path(".scrape_status.json")
 
+          # ---- validação de capa ----
+          def is_valid_cover(url):
+              if not url or not isinstance(url, str): return False
+              url = url.strip()
+              if len(url) < 15: return False
+              if not (url.startswith('http://') or url.startswith('https://')): return False
+              if 'via.placeholder.com' in url: return False
+              if 'placehold.co' in url: return False
+              return True
+
           gh_group("📦 Carregando estado")
           video_map, title_map = {}, {}
           seen_urls, skip_urls = set(), set()
           if DATA_FILE.exists():
               try:
                   d = json.loads(DATA_FILE.read_text(encoding='utf-8'))
-                  video_map = d.get('video_map', {})
-                  title_map = d.get('title_map', {})
-                  log(f"video={len(video_map)} title={len(title_map)}")
+                  video_map = {k: u for k, u in d.get('video_map', {}).items() if is_valid_cover(u)}
+                  title_map = {k: u for k, u in d.get('title_map', {}).items() if is_valid_cover(u)}
+                  log(f"video={len(video_map)} title={len(title_map)} (após filtro)")
               except: pass
           if SEEN_FILE.exists():
               try: seen_urls = set(json.loads(SEEN_FILE.read_text(encoding='utf-8')))
@@ -176,19 +256,20 @@ jobs:
               return re.sub(r'\s+', ' ', t).strip()
 
           def add_pair(video, cover, title=None):
-              if cover:
-                  cover = cover.strip()
-                  if cover.startswith('//'): cover = 'https:' + cover
-                  if video:
-                      vk = norm_video(video)
-                      if vk and vk not in video_map:
-                          video_map[vk] = cover
-                          log(f"  +video({len(video_map)}) {vk[:50]} <- {cover[:70]}")
-                  if title:
-                      tk = norm_title(title)
-                      if tk and tk not in title_map:
-                          title_map[tk] = cover
-                          log(f"  +title({len(title_map)}) {tk[:40]} <- {cover[:70]}")
+              if not is_valid_cover(cover):
+                  return
+              cover = cover.strip()
+              if cover.startswith('//'): cover = 'https:' + cover
+              if video:
+                  vk = norm_video(video)
+                  if vk and vk not in video_map:
+                      video_map[vk] = cover
+                      log(f"  +video({len(video_map)}) {vk[:50]} <- {cover[:70]}")
+              if title:
+                  tk = norm_title(title)
+                  if tk and tk not in title_map:
+                      title_map[tk] = cover
+                      log(f"  +title({len(title_map)}) {tk[:40]} <- {cover[:70]}")
 
           def walk_html(html):
               video = cover = title = None
@@ -197,11 +278,14 @@ jobs:
                           r'<iframe[^>]+src=["\']([^"\']+\.(?:mp4|m3u8)[^"\']*)["\']']:
                   m = re.search(pat, html, re.I)
                   if m: video = m.group(1); break
-              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"([^"]+)"',
-                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\']([^"\']+)["\']',
-                          r'<video[^>]+poster=["\']([^"\']+)["\']']:
+
+              # SOMENTE aceita URLs http/https — nunca "h" ou strings vazias
+              for pat in [r'"thumbnailUrl"\s*:\s*(?:\[\s*)?"(https?://[^"]+)"',
+                          r'<meta[^>]*property=["\']og:image["\'][^>]*content=["\'](https?://[^"\']+)["\']',
+                          r'<video[^>]+poster=["\'](https?://[^"\']+)["\']']:
                   m = re.search(pat, html, re.I)
                   if m: cover = m.group(1); break
+
               m = re.search(r'<title>([^<]+)</title>', html, re.I)
               if m: title = m.group(1)
               if cover: add_pair(video, cover, title)
@@ -216,8 +300,10 @@ jobs:
                           video = v; break
                   for k in ('thumbnailUrl','thumbnail_url','poster','poster_path','cover','image','img','thumbnail','capa'):
                       v = obj.get(k)
-                      if isinstance(v, list) and v and isinstance(v[0], str): cover = v[0]; break
-                      if isinstance(v, str) and (v.startswith('http') or v.startswith('//')): cover = v; break
+                      if isinstance(v, list) and v and isinstance(v[0], str):
+                          if is_valid_cover(v[0]): cover = v[0]; break
+                      if isinstance(v, str) and is_valid_cover(v):
+                          cover = v; break
                   for k in ('name','title','titulo'):
                       v = obj.get(k)
                       if isinstance(v, str) and v: title = v; break
@@ -226,7 +312,7 @@ jobs:
               elif isinstance(obj, list):
                   for x in obj: walk_json(x, depth+1)
 
-          # --- fila a partir do feed ---
+          # --- fila ---
           gh_group("📋 Preparando fila do feed")
           if not FEED_FILE.exists():
               gh_error("Sem .scrape_feed_urls.txt — fase 1 falhou.")
@@ -351,6 +437,10 @@ jobs:
                   cover = title_map.get(norm_title(arq.stem))
                   if cover: source = "filename"
               if not cover:
+                  sem_match += 1; sem_match_list.append(arq.name); continue
+
+              # double-check: nunca aplica placeholder
+              if not is_valid_cover(cover):
                   sem_match += 1; sem_match_list.append(arq.name); continue
 
               novo = texto.replace(PLACEHOLDER, cover)
