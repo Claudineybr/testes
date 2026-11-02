@@ -1,8 +1,5 @@
 100_ou_nada_t5e4_t5e4.html
-2011.html
 2014.html
-2015.html
-a_gripe.html
 a_ilha_20.html
 a_irma_de_jack_t6e10_t6e10.html
 a_lenda_de_saint_joseph.html
@@ -119,7 +116,6 @@ anne_com_um_t3e4_t3e4.html
 anne_com_um_t3e6_t3e6.html
 anne_com_um_t3e8_t3e8.html
 aprendendo_a_voar_t4e7_t4e7.html
-armas_em_jogo_20.html
 armazem_13_t2e5_t2e5.html
 armazem_13_t2e8_t2e8.html
 armazem_13_t3e9_t3e9.html
@@ -474,7 +470,6 @@ hereditario_20.html
 homem_com_problemas_t7e4_t7e4.html
 into_the_badlands_t1e10_chapter_xvi_wolf_s_breath_dragon_fire_t1e10.html
 into_the_badlands_t1e6_mao_de_cinco_venenos_capitulo_vi_hand_of_five_poisons_t1e6.html
-invasao_a_casa_branca_20.html
 irmandade_t1e1_o_inicio_t1e1.html
 irmandade_t1e3_segredos_e_mentiras_t1e3.html
 irmandade_t1e7_sangue_nas_feridas_t1e7.html
@@ -664,7 +659,6 @@ lucifer_t6e9_adeus_lucifer_t6e9.html
 manifest_o_misterio_do_voo_828_t2e10_course_deviation_t2e10.html
 manifest_o_misterio_do_voo_828_t2e6_return_trip_t2e6.html
 manifest_o_misterio_do_voo_828_t4e8_full_upright_and_locked_position_t4e8.html
-marc_sx7_psicopata_americano_2_20.html
 marc_sx7_retaliacao_20.html
 marilia_mendonca_sentimento_louco_t1e1_versos_para_coracoes_partidos_t1e1.html
 marilia_mendonca_sentimento_louco_t1e2_o_peso_da_coroa_t1e2.html
@@ -697,10 +691,6 @@ melancia_cintilante_legendado_t1e9_t1e9.html
 minha_vida_com_a_familia_walter_t2e10_t2e10.html
 minha_vida_com_a_familia_walter_t2e4_t2e4.html
 minha_vida_com_a_familia_walter_t2e5_t2e5.html
-missao_impossivel_2_nbsp.html
-missao_impossivel_3_nbsp_nbsp.html
-missao_impossivel_nacao_secreta_nbsp.html
-missao_impossivel_nbsp.html
 mundo_selvagem_t4e2_t4e2.html
 mushuku_tensei_t1e10_t1e10.html
 mushuku_tensei_t1e11_t1e11.html
@@ -771,7 +761,6 @@ ninguem_esta_sozinho_t4e9_t4e9.html
 nos_somos_familia_t4e3_t4e3.html
 o_arco_da_fenix_estreia_t5e1_t5e1.html
 o_bairro_de_theo_t6e9_t6e9.html
-o_bom_filho_a_casa_torna.html
 o_caminho_que_voce_nao_tomou_t5e11_t5e11.html
 o_conta_da_aia_t3e4_5_numero_desconhecido_t3e4.html
 o_eternauta_t1e1_noche_de_truco_t1e1.html
@@ -806,7 +795,6 @@ o_trabalho_desta_mulher_t7e1_t7e1.html
 o_verao_que_mudou_minha_vida_t2e1_sem_amor_t2e1.html
 o_verao_que_mudou_minha_vida_t2e2_cena_de_amor_t2e2.html
 o_verao_que_mudou_minha_vida_t2e3_caida_de_amor_t2e3.html
-ong_bak_guerreiro_sagrado_20.html
 os_originais_the_originals_t1e16_salve_minha_alma_t1e16.html
 os_originais_the_originals_t4e11_promessas_t4e11.html
 para_todo_o_sempre_amem_t4e16_t4e16.html
@@ -829,7 +817,6 @@ prison_break_em_busca_da_verdade_t3e7_a_fuga_t3e7.html
 prison_break_em_busca_da_verdade_t5e3_mentiras_reunidas_t5e3.html
 procurando_pelo_fantasma_t5e10_t5e10.html
 quando_a_festa_acaba_t5e15_t5e15.html
-quarentena_2.html
 quente_demais_t5e3_t5e3.html
 rastejar_para_fora_do_fogo_final_t5e18_t5e18.html
 ravenswood_legendado_t1e10_t1e10.html
@@ -844,7 +831,6 @@ ravenswood_legendado_t1e8_t1e8.html
 ravenswood_legendado_t1e9_t1e9.html
 reviravolta_e_gritos_t6e1_t6e1.html
 salva_te_a_ti_mesmo_t4e10_t4e10.html
-sem_saida_ano_abrir_player.html
 serie_desconhecida_t2e12_t2e12.html
 serie_desconhecida_t2e13_t2e13.html
 serie_desconhecida_t2e14_t2e14.html
