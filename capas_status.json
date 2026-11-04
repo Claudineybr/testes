@@ -1,16 +1,16 @@
 {
-  "total_sem_capa_urls": 926,
+  "total_sem_capa_urls": 784,
   "sem_url_video": 0,
-  "mapa_size": 142,
+  "mapa_size": 0,
   "novos_feed": 0,
-  "novos_visitados": 144,
+  "novos_visitados": 0,
   "faltam_video": 784,
   "faltam_visitar": 0,
   "feed_all_keys": 4095,
-  "intersecao": 149,
-  "alterados": 142,
+  "intersecao": 7,
+  "alterados": 0,
   "sem_match": 784,
-  "delay_final": 15.0,
+  "delay_final": 2.5,
   "done": false,
   "motivo": "784 videos sem capa, 0 candidatos pendentes"
 }
