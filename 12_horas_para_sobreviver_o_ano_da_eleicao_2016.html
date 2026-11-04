@@ -32,10 +32,23 @@
 
   <!-- 3. O PLAYER REAL -->
   <div id="container-video-12_horas_para_sobreviver_o_ano_da_eleicao" style="display: none;">
-<video id="player-video-12_horas_para_sobreviver_o_ano_da_eleicao" controls playsinline poster="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrCl9ymDhUJyndCFT3LDMlffFxp9-hiEkcagwa4z1JKnWZlij0WbdhyzqDgO_TG8FdpB9Yu4cz5clwios4Ioc1UySILYkfcwdvBUWYp0COcO7-ZkygciGx7_TaW6hmXN_XSYzlMcjZc8AdbRxqGSxK4Chs3AxYV5LrL4psIirQHw2ROEU4x83yH9eH-nE/w1280-h720-p-k-no-nu/88LxLootqAbqfJ4uQhI7Z4BpYyp.jpg" style="width: 100%; display: block; background: #000;">
-          <source src="http://fhd1.oneplayer.site/ertg43r5g34ty34yt543t43wer234t34y3s7/FHD3/tt4094724.mp4" type="video/mp4">
-          Seu navegador não suporta vídeo HTML5.
-        </video>
+    
+    <!-- CORREÇÃO AQUI: Adicionado title e aria-label na tag video -->
+    <video 
+      id="player-video-12_horas_para_sobreviver_o_ano_da_eleicao" 
+      controls 
+      playsinline 
+      poster="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgrCl9ymDhUJyndCFT3LDMlffFxp9-hiEkcagwa4z1JKnWZlij0WbdhyzqDgO_TG8FdpB9Yu4cz5clwios4Ioc1UySILYkfcwdvBUWYp0COcO7-ZkygciGx7_TaW6hmXN_XSYzlMcjZc8AdbRxqGSxK4Chs3AxYV5LrL4psIirQHw2ROEU4x83yH9eH-nE/w1280-h720-p-k-no-nu/88LxLootqAbqfJ4uQhI7Z4BpYyp.jpg" 
+      title="12 Horas para Sobreviver: O Ano da Eleicao (2016)"
+      aria-label="12 Horas para Sobreviver: O Ano da Eleicao (2016)"
+      style="width: 100%; display: block; background: #000;">
+      
+      <!-- CORREÇÃO AQUI: Adicionado title na tag source -->
+      <source src="http://fhd1.oneplayer.site/ertg43r5g34ty34yt543t43wer234t34y3s7/FHD3/tt4094724.mp4" type="video/mp4" title="12 Horas para Sobreviver: O Ano da Eleicao (2016)">
+      
+      Seu navegador não suporta vídeo HTML5.
+    </video>
+    
   </div>
 
   <!-- CONTEÚDO DO CARD -->
@@ -50,11 +63,12 @@
   document.addEventListener("DOMContentLoaded", function() {
     const capa = document.getElementById('capa-12_horas_para_sobreviver_o_ano_da_eleicao');
     const containerVideo = document.getElementById('container-video-12_horas_para_sobreviver_o_ano_da_eleicao');
-const video = document.getElementById('player-video-12_horas_para_sobreviver_o_ano_da_eleicao');
+    const video = document.getElementById('player-video-12_horas_para_sobreviver_o_ano_da_eleicao');
 
     capa.addEventListener('click', function() {
       capa.style.display = 'none';
       containerVideo.style.display = 'block';
+      
       if (typeof video !== 'undefined' && video !== null) {
           video.play().catch(function(error) {
             console.log("Autoplay bloqueado.");
