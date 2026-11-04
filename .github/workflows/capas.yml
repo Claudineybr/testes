@@ -45,7 +45,7 @@ jobs:
           PYTHONUNBUFFERED: '1'
         run: |
           cat > /tmp/capas.py << 'PYEOF'
-          import re, json, requests, sys, os, time
+          import re, json, requests, sys, os, time, random
           from pathlib import Path
           from bs4 import BeautifulSoup
 
@@ -60,9 +60,29 @@ jobs:
           ARQ_FEED_CT   = Path("capas_feed_cache.json")
           ARQ_VISITADOS = Path("capas_links_visitados.txt")
 
-          # v5: norm_video agora retorna URL completa (chave mudou)
           CACHE_VERSION = 5
-          REQ_DELAY     = 0.8
+
+          # ============================================================
+          # Politica de rate-limit (mais educada com o servidor)
+          # ============================================================
+          REQ_DELAY_BASE     = 2.5   # segundos entre visitas (nominal)
+          REQ_DELAY_JITTER   = 1.0   # +/- jitter aleatorio
+          FEED_PAGE_DELAY    = 1.5   # segundos entre paginas do feed
+          FEED_PAGE_JITTER   = 0.5
+          BACKOFF_429_BASE   = 30    # 30, 60, 120, 240s
+          ABORT_APOS_429     = 5     # aborta visitas apos N x 429 (site bloqueando)
+
+          # Delay adaptativo: se pegar 429, sobe e NAO volta a descer nesta run.
+          _delay_atual = {"valor": REQ_DELAY_BASE}
+
+          def _jitter(base, j):
+              return max(0.5, base + random.uniform(-j, j))
+
+          def _bump_delay(fator=1.5, cap=15.0):
+              novo = min(_delay_atual["valor"] * fator, cap)
+              if novo > _delay_atual["valor"]:
+                  _delay_atual["valor"] = novo
+                  log(f"    [adaptativo] delay subiu para {novo:.2f}s")
 
           START_TS = time.time()
           def log(*a):
@@ -70,29 +90,27 @@ jobs:
               print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
 
           def safe_get(url, timeout=20, retries=2):
+              """GET basico. 429 tem backoff agressivo (30/60/120s) e sobe delay global."""
               for attempt in range(retries + 1):
                   try:
                       r = requests.get(url, headers=HEADERS, timeout=timeout)
                       if r.status_code == 429:
-                          wait = 5 * (attempt + 1)
-                          log(f"    429 rate-limited, aguardando {wait}s...")
+                          wait = BACKOFF_429_BASE * (2 ** attempt)
+                          log(f"    429 rate-limited, aguardando {wait}s (attempt {attempt+1})...")
+                          _bump_delay()
                           time.sleep(wait)
                           continue
                       return r
                   except Exception as e:
                       if attempt == retries:
                           return None
-                      time.sleep(2)
+                      time.sleep(3)
               return None
 
-          def safe_get_site(url, timeout=30, max_retries=4, wait_s=30):
+          def safe_get_site(url, timeout=30, max_retries=3, wait_s=30):
               """
-              Retry agressivo para acesso ao site:
-              4 tentativas x 30s de espera = ate 2 minutos.
-              - 200: sucesso imediato
-              - 4xx (exceto 429): retorna r imediatamente (erro definitivo)
-              - 429 / 5xx / timeout / conexao: espera 30s e retenta
-              Retorna None se esgotar retries.
+              Retry para acesso inicial ao site.
+              ATENCAO: 429 usa backoff longo - nao usar em loop apertado.
               """
               for attempt in range(max_retries + 1):
                   if attempt > 0:
@@ -105,6 +123,8 @@ jobs:
                               log(f"    ok apos {attempt} retry(s)")
                           return r
                       log(f"    HTTP {r.status_code}")
+                      if r.status_code == 429:
+                          _bump_delay(fator=2.0, cap=20.0)
                       if r.status_code not in (429, 500, 502, 503, 504):
                           return r
                   except Exception as e:
@@ -121,11 +141,6 @@ jobs:
               if 'placehold.co' in url: return False
               return True
 
-          # ============================================================
-          # norm_video v5: URL COMPLETA normalizada (chave unica)
-          # - remove query string, fragment e trailing slash
-          # - lowercase
-          # ============================================================
           def norm_video(url):
               if not url: return ""
               return url.strip().split('?')[0].split('#')[0].rstrip('/').lower()
@@ -163,59 +178,46 @@ jobs:
                       capa = m.group(1); break
               return video, capa
 
-          # ============================================================
-          # 1) Arquivos locais SEM capa
-          # ============================================================
           def listar_sem_capa():
               log("Listando arquivos locais SEM capa...")
               sem_capa_urls = {}
               sem_capa_titles = {}
               sem_url = []
               total = 0
-
               for arq in sorted(Path('.').rglob('*.html')):
                   if '.git' in arq.parts: continue
                   try: texto = arq.read_text(encoding='utf-8', errors='ignore')
                   except: continue
                   if PLACEHOLDER not in texto: continue
                   total += 1
-
                   m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', texto)
                   if not m:
                       m = re.search(r'<video[^>]+src=["\']([^"\']+)["\']', texto)
                   if not m:
                       sem_url.append(arq.name); continue
-
                   url_orig = m.group(1).strip()
                   vk = norm_video(url_orig)
                   if not vk:
                       sem_url.append(arq.name); continue
-
                   tm = re.search(r'"name"\s*:\s*"([^"]+)"', texto)
                   titulos = []
                   if tm: titulos.append(norm_title(tm.group(1)))
                   titulos.append(norm_title(arq.stem))
                   titulos = [t for t in titulos if t]
-
                   if vk not in sem_capa_urls:
                       sem_capa_urls[vk] = {'url': url_orig, 'arquivos': [], 'titulos': titulos}
                   sem_capa_urls[vk]['arquivos'].append(arq)
                   for t in titulos:
                       sem_capa_titles.setdefault(t, []).append(arq)
-
               log(f"  Arquivos sem capa: {total} | URLs únicas: {len(sem_capa_urls)} | sem contentUrl: {len(sem_url)}")
               return sem_capa_urls, sem_capa_titles, sem_url
 
-          # ============================================================
-          # 2) Feed do Blogger
-          # ============================================================
           def processar_feed(sem_capa_urls, sem_capa_titles):
               log("Processando feed do Blogger...")
               feed_by_video = {}
               visit_candidates = {}
               feed_all_keys = set()
 
-              # --- cache ---
               if ARQ_FEED_CT.exists() and not RETRY_ALL:
                   try:
                       cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
@@ -236,14 +238,12 @@ jobs:
                   except Exception as e:
                       log(f"  erro cache: {e}")
 
-              # --- fresh download ---
               entries_total = entries_with_video = matched_video = 0
               page = 0
               start = 1
               while True:
                   try:
                       u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
-                      # >>> Primeira pagina usa retry agressivo (4x30s = 2min)
                       r = safe_get_site(u) if page == 0 else safe_get(u, timeout=30)
                       if not r or r.status_code != 200: break
                       entries = r.json().get("feed", {}).get("entry", [])
@@ -254,11 +254,9 @@ jobs:
                           link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
                           if not link: continue
                           link = link.split("?")[0]
-
                           title = (e.get("title") or {}).get("$t", "")
                           content = (e.get("content") or {}).get("$t", "")
                           video, capa = extrair_video_e_capa(content)
-
                           if video:
                               entries_with_video += 1
                               vk = norm_video(video)
@@ -278,16 +276,14 @@ jobs:
                       log(f"  page {page}: {len(entries)} entries | feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
                       if len(entries) < 150: break
                       start += 150
-                      time.sleep(0.3)
+                      # pausa entre paginas com jitter
+                      time.sleep(_jitter(FEED_PAGE_DELAY, FEED_PAGE_JITTER))
                   except Exception as e:
                       log(f"  erro feed: {e}"); break
 
               log(f"  Feed: {entries_total} entries | com video: {entries_with_video} | matches: {matched_video}")
               log(f"  feed_by_video={len(feed_by_video)} | visit_candidates={len(visit_candidates)}")
 
-              # ============================================================
-              # DIAGNOSTICO: comparar amostras local vs feed
-              # ============================================================
               if feed_all_keys and sem_capa_urls:
                   local_sample = list(sem_capa_urls.keys())[:10]
                   feed_sample = list(feed_all_keys)[:10]
@@ -297,8 +293,7 @@ jobs:
                   log(f"     Feed  (10 primeiros):  {feed_sample}")
                   log(f"     Intersecao: {len(inter)} (de {len(feed_all_keys)} no feed x {len(sem_capa_urls)} locais)")
                   if len(inter) == 0:
-                      log(f"     AVISO: NENHUM video local aparece no feed.")
-                      log(f"     AVISO: Isso significa que os videos do site mudaram (CDN diferente).")
+                      log(f"     AVISO: NENHUM video local aparece no feed (CDN diferente).")
 
               ARQ_FEED_CT.write_text(json.dumps({
                   'version': CACHE_VERSION,
@@ -308,14 +303,8 @@ jobs:
                   'visit_candidates': visit_candidates,
                   'feed_all_keys': list(feed_all_keys),
               }, ensure_ascii=False), encoding='utf-8')
-
               return feed_by_video, visit_candidates, feed_all_keys
 
-          # ============================================================
-          # 3) Visita candidatos
-          # - Primeira visita usa retry agressivo (2min)
-          # - Aborta se 3 falhas consecutivas (site fora)
-          # ============================================================
           def visitar_pendentes(visit_candidates, sem_capa_urls, mapa):
               links_visitados = set()
               if ARQ_VISITADOS.exists() and not RETRY_ALL:
@@ -331,36 +320,44 @@ jobs:
                   log("  Nada para visitar (todos visitados ou ja resolvidos).")
                   return 0
 
-              log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos...")
+              log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos "
+                  f"(delay base={_delay_atual['valor']:.2f}s)...")
               sucesso = 0
               falhas_consecutivas = 0
+              qtd_429 = 0
 
               for i, (link, hint) in enumerate(fila[:LOTE], 1):
                   if falhas_consecutivas >= 3:
-                      log(f"  {falhas_consecutivas} falhas consecutivas - site parece fora. Abortando visitas.")
+                      log(f"  {falhas_consecutivas} falhas consecutivas - site parece fora. Abortando.")
+                      break
+                  if qtd_429 >= ABORT_APOS_429:
+                      log(f"  {qtd_429} x 429 - site bloqueando. Abortando visitas nesta run.")
                       break
 
                   log(f"  [{i}] {link}")
-
-                  # Primeira requisicao usa retry agressivo. Se falhar, proximas usam safe_get (rapido).
-                  if falhas_consecutivas == 0:
-                      r = safe_get_site(link, timeout=20)
-                  else:
+                  try:
                       r = safe_get(link, timeout=20)
 
-                  if not r:
-                      falhas_consecutivas += 1
-                      log(f"    falha de rede/5xx apos retries (#{falhas_consecutivas})")
-                      links_visitados.add(link)
-                      continue
-                  if r.status_code != 200:
-                      log(f"    HTTP {r.status_code}")
-                      links_visitados.add(link)
-                      continue
+                      if r is None:
+                          falhas_consecutivas += 1
+                          log(f"    falha rede/timeout (#{falhas_consecutivas})")
+                          links_visitados.add(link)
+                          continue
 
-                  falhas_consecutivas = 0
+                      if r.status_code == 429:
+                          qtd_429 += 1
+                          log(f"    429 (#{qtd_429} nesta run) - pulando, delay agora {_delay_atual['valor']:.2f}s")
+                          # NAO marca como visitado: tenta de novo na proxima run
+                          continue
 
-                  try:
+                      if r.status_code != 200:
+                          log(f"    HTTP {r.status_code}")
+                          links_visitados.add(link)
+                          continue
+
+                      falhas_consecutivas = 0
+                      qtd_429 = 0  # sucesso reseta contador de 429
+
                       video, capa = extrair_video_e_capa(r.text)
                       if not video:
                           log(f"    sem video URL")
@@ -386,18 +383,17 @@ jobs:
                       else:
                           log(f"    sem capa")
                       links_visitados.add(link)
-                      time.sleep(REQ_DELAY)
                   except Exception as e:
                       log(f"    erro processamento: {e}")
                       links_visitados.add(link)
+                  finally:
+                      # SEMPRE espera (mesmo em excecao). Isso e o que controla o rate.
+                      time.sleep(_jitter(_delay_atual["valor"], REQ_DELAY_JITTER))
 
               ARQ_VISITADOS.write_text("\n".join(sorted(links_visitados)), encoding='utf-8')
-              log(f"  Visitados OK: {sucesso}")
+              log(f"  Visitados OK: {sucesso} | 429s: {qtd_429} | delay final: {_delay_atual['valor']:.2f}s")
               return sucesso
 
-          # ============================================================
-          # 4) Aplica mapa
-          # ============================================================
           def aplicar_mapa(sem_capa_urls, mapa):
               log(f"\nAplicando {len(mapa)} capas por URL de video...")
               alterados = 0
@@ -419,154 +415,148 @@ jobs:
               log(f"  Aplicados: {alterados} arquivos | Sem match: {sem_match} URLs")
               return alterados, sem_match
 
-          # ============================================================
-          # MAIN
-          # ============================================================
-          def main():
-              # Invalida links_visitados quando CACHE_VERSION muda (chaves de video mudaram)
-              if ARQ_FEED_CT.exists() and not RETRY_ALL:
-                  try:
-                      cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
-                      if cached.get('version') != CACHE_VERSION:
-                          log(f"Cache v{cached.get('version')} != v{CACHE_VERSION}: limpando links visitados")
-                          if ARQ_VISITADOS.exists():
-                              ARQ_VISITADOS.unlink()
-                  except: pass
+              def main():
+        if ARQ_FEED_CT.exists() and not RETRY_ALL:
+            try:
+                cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
+                if cached.get('version') != CACHE_VERSION:
+                    log(f"Cache v{cached.get('version')} != v{CACHE_VERSION}: limpando links visitados")
+                    if ARQ_VISITADOS.exists():
+                        ARQ_VISITADOS.unlink()
+            except: pass
 
-              sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
-              if not sem_capa_urls:
-                  log("Nenhum arquivo com URL de video sem capa. Nada a fazer.")
-                  ARQ_STATUS.write_text(json.dumps({
-                      'total_sem_capa_urls': 0, 'sem_url_video': len(sem_url),
-                      'mapa_size': 0, 'done': True,
-                      'motivo': 'sem URLs de video sem capa'
-                  }, ensure_ascii=False, indent=2), encoding='utf-8')
-                  return
+        sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
+        if not sem_capa_urls:
+            log("Nenhum arquivo com URL de video sem capa. Nada a fazer.")
+            ARQ_STATUS.write_text(json.dumps({
+                'total_sem_capa_urls': 0, 'sem_url_video': len(sem_url),
+                'mapa_size': 0, 'done': True,
+                'motivo': 'sem URLs de video sem capa'
+            }, ensure_ascii=False, indent=2), encoding='utf-8')
+            return
 
-              mapa = {}
-              if ARQ_MAPA.exists() and not RETRY_ALL:
-                  try:
-                      raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
-                      mapa = {k: v for k, v in raw.items() if k in sem_capa_urls and is_valid_cover(v)}
-                      log(f"Mapa existente (filtrado): {len(mapa)}")
-                  except: mapa = {}
-              elif RETRY_ALL:
-                  log("RETRY_ALL: limpando mapa/cache/links visitados")
+        mapa = {}
+        if ARQ_MAPA.exists() and not RETRY_ALL:
+            try:
+                raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
+                mapa = {k: v for k, v in raw.items() if k in sem_capa_urls and is_valid_cover(v)}
+                log(f"Mapa existente (filtrado): {len(mapa)}")
+            except: mapa = {}
+        elif RETRY_ALL:
+            log("RETRY_ALL: limpando mapa/cache/links visitados")
 
-              feed_by_video, visit_candidates, feed_all_keys = processar_feed(sem_capa_urls, sem_capa_titles)
+        feed_by_video, visit_candidates, feed_all_keys = processar_feed(sem_capa_urls, sem_capa_titles)
 
-              novos_feed = 0
-              for k, v in feed_by_video.items():
-                  if k not in mapa:
-                      mapa[k] = v
-                      novos_feed += 1
-              log(f"Feed adicionou {novos_feed} capas novas")
+        novos_feed = 0
+        for k, v in feed_by_video.items():
+            if k not in mapa:
+                mapa[k] = v
+                novos_feed += 1
+        log(f"Feed adicionou {novos_feed} capas novas")
 
-              visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
+        visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
 
-              ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
+        ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
 
-              alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
+        alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
 
-              faltam_video = len([k for k in sem_capa_urls if k not in mapa])
+        faltam_video = len([k for k in sem_capa_urls if k not in mapa])
 
-              links_visitados = set()
-              if ARQ_VISITADOS.exists():
-                  try:
-                      links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
-                  except: pass
-              faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
+        links_visitados = set()
+        if ARQ_VISITADOS.exists():
+            try:
+                links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
+            except: pass
+        faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
 
-              # DONE:
-              #  - todos resolvidos, OU
-              #  - impossivel (sem intersecao e sem candidatos restantes)
-              if faltam_video > 0 and len(feed_all_keys & set(sem_capa_urls.keys())) == 0 and faltam_visitar == 0:
-                  done = True
-                  motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
-                  log(f"\nAVISO: {motivo}")
-              elif faltam_video == 0:
-                  done = True
-                  motivo = "todos resolvidos"
-              else:
-                  done = False
-                  motivo = f"{faltam_video} videos sem capa, {faltam_visitar} candidatos pendentes"
+        if faltam_video > 0 and len(feed_all_keys & set(sem_capa_urls.keys())) == 0 and faltam_visitar == 0:
+            done = True
+            motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
+            log(f"\nAVISO: {motivo}")
+        elif faltam_video == 0:
+            done = True
+            motivo = "todos resolvidos"
+        else:
+            done = False
+            motivo = f"{faltam_video} videos sem capa, {faltam_visitar} candidatos pendentes"
 
-              ARQ_STATUS.write_text(json.dumps({
-                  'total_sem_capa_urls': len(sem_capa_urls),
-                  'sem_url_video': len(sem_url),
-                  'mapa_size': len(mapa),
-                  'novos_feed': novos_feed,
-                  'novos_visitados': visitados_ok,
-                  'faltam_video': faltam_video,
-                  'faltam_visitar': faltam_visitar,
-                  'feed_all_keys': len(feed_all_keys),
-                  'intersecao': len(feed_all_keys & set(sem_capa_urls.keys())),
-                  'alterados': alterados,
-                  'sem_match': sem_match,
-                  'done': done,
-                  'motivo': motivo,
-              }, ensure_ascii=False, indent=2), encoding='utf-8')
+        ARQ_STATUS.write_text(json.dumps({
+            'total_sem_capa_urls': len(sem_capa_urls),
+            'sem_url_video': len(sem_url),
+            'mapa_size': len(mapa),
+            'novos_feed': novos_feed,
+            'novos_visitados': visitados_ok,
+            'faltam_video': faltam_video,
+            'faltam_visitar': faltam_visitar,
+            'feed_all_keys': len(feed_all_keys),
+            'intersecao': len(feed_all_keys & set(sem_capa_urls.keys())),
+            'alterados': alterados,
+            'sem_match': sem_match,
+            'delay_final': round(_delay_atual["valor"], 2),
+            'done': done,
+            'motivo': motivo,
+        }, ensure_ascii=False, indent=2), encoding='utf-8')
 
-              log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
-                  f"novos_feed={novos_feed} | visitados={visitados_ok} | "
-                  f"faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | "
-                  f"intersecao={len(feed_all_keys & set(sem_capa_urls.keys()))}/{len(feed_all_keys)} | "
-                  f"done={done} | motivo: {motivo}")
+        log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
+            f"novos_feed={novos_feed} | visitados={visitados_ok} | "
+            f"faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | "
+            f"intersecao={len(feed_all_keys & set(sem_capa_urls.keys()))}/{len(feed_all_keys)} | "
+            f"delay={_delay_atual['valor']:.2f}s | done={done} | motivo: {motivo}")
 
-          if __name__ == "__main__":
-              main()
-          PYEOF
-          python3 /tmp/capas.py
+    if __name__ == "__main__":
+        main()
+    PYEOF
+    python3 /tmp/capas.py
 
-      - name: Salvar progresso
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
-          git add -f *.html 2>/dev/null || true
-          if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "chore: capas por URL de vídeo [skip ci]"
+- name: Salvar progresso
+  run: |
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+    git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
+    git add -f *.html 2>/dev/null || true
+    if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
+    git commit -m "chore: capas por URL de vídeo [skip ci]"
 
-          for i in $(seq 1 5); do
-            if git push origin HEAD:main; then break; fi
-            git fetch origin main
-            git reset --mixed origin/main
-            git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
-            git add -f *.html 2>/dev/null || true
-            git commit -m "chore: retry $i" || true
-            sleep $((RANDOM % 10 + 5))
-          done
+    for i in $(seq 1 5); do
+      if git push origin HEAD:main; then break; fi
+      git fetch origin main
+      git reset --mixed origin/main
+      git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
+      git add -f *.html 2>/dev/null || true
+      git commit -m "chore: retry $i" || true
+      sleep $((RANDOM % 10 + 5))
+    done
 
-      - name: Disparar próxima run (se necessário)
-        if: success()
-        env:
-          GH_TOKEN: ${{ secrets.PAT_CHAIN }}
-          REPO: ${{ github.repository }}
-        run: |
-          DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
-          FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
-          SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
-          MOTIVO=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('motivo', ''))" 2>/dev/null || echo '')
-          INTER=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('intersecao', 0))" 2>/dev/null || echo 0)
+- name: Disparar próxima run (se necessário)
+  if: success()
+  env:
+    GH_TOKEN: ${{ secrets.PAT_CHAIN }}
+    REPO: ${{ github.repository }}
+  run: |
+    DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
+    FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
+    SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
+    MOTIVO=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('motivo', ''))" 2>/dev/null || echo '')
+    INTER=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('intersecao', 0))" 2>/dev/null || echo 0)
+    DELAY=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('delay_final', 0))" 2>/dev/null || echo 0)
 
-          echo "Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Done: $DONE | Motivo: $MOTIVO"
+    echo "Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Delay: ${DELAY}s | Done: $DONE | Motivo: $MOTIVO"
 
-          if [ "$DONE" = "True" ]; then
-            echo "Chain encerrada. Motivo: $MOTIVO"
-            if [ "$INTER" = "0" ] && [ "$SEM" -gt 0 ]; then
-              echo "::warning::Nenhum video local casou com o feed. Os videos do site provavelmente usam outro CDN. Veja o diagnostico no log."
-            fi
-            exit 0
-          fi
+    if [ "$DONE" = "True" ]; then
+      echo "Chain encerrada. Motivo: $MOTIVO"
+      if [ "$INTER" = "0" ] && [ "$SEM" -gt 0 ]; then
+        echo "::warning::Nenhum video local casou com o feed. Os videos do site provavelmente usam outro CDN."
+      fi
+      exit 0
+    fi
 
-          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-          RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
+    LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+    RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
 
-          if [ "$RECENTES" -ge 30 ]; then
-            echo "Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
-          fi
+    if [ "$RECENTES" -ge 30 ]; then
+      echo "Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
+    fi
 
-          echo "Aguardando 30s..."
-          sleep 30
-          gh workflow run "capas.yml" --repo "$REPO" --ref main
-                           
+    echo "Aguardando 30s..."
+    sleep 30
+    gh workflow run "capas.yml" --repo "$REPO" --ref main
