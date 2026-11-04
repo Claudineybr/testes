@@ -43,13 +43,25 @@ jobs:
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          def strip_accents(s):
-              return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
+          # Carrega todas as URLs da fila para busca exata
+          todas_urls = []
+          for f_name in ["series_fila.txt", "filmes_fila.txt"]:
+              p = Path(f_name)
+              if p.exists():
+                  todas_urls.extend([l.strip() for l in p.read_text(encoding="utf-8").splitlines() if l.strip()])
+
+          def achar_url_na_fila(slug):
+              # Transforma "breaking_bad" em "breaking-bad" para bater com a URL
+              slug_busca = slug.replace('_', '-').lower()
+              for u in todas_urls:
+                  if slug_busca in u.lower():
+                      return u
+              return None
 
           def extrair_capa(html_text):
               soup = BeautifulSoup(html_text, 'html.parser')
               
-              # 1. og:image (só se for válido)
+              # 1. og:image
               og_img = soup.find('meta', property='og:image')
               if og_img and og_img.get('content') and 'placeholder' not in og_img['content'] and len(og_img['content']) > 10:
                   return og_img['content']
@@ -59,18 +71,19 @@ jobs:
               if link_img:
                   return link_img['href']
                   
-              # 3. Tag <img> (qualquer imagem que não seja logo ou ícone)
+              # 3. Tag <img> (verifica src, data-src e srcset)
               for img in soup.find_all('img'):
-                  src = img.get('src', '')
-                  if 'blogger.googleusercontent.com' in src and not any(x in src.lower() for x in ['logo', 'icon', 'avatar']):
-                      return src
+                  for attr in ['src', 'data-src', 'srcset']:
+                      val = img.get(attr, '')
+                      if val and 'blogger.googleusercontent.com' in val and not any(x in val.lower() for x in ['logo', 'icon', 'avatar']):
+                          return val.split(' ')[0] # Pega a primeira do srcset
 
               # 4. Tag <video> (poster)
               video = soup.find('video')
               if video and video.get('poster') and 'placeholder' not in video.get('poster'):
                   return video.get('poster')
 
-              # 5. Regex no HTML inteiro
+              # 5. Regex no HTML inteiro (qualquer link do blogger)
               m = re.search(r'(https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+)', html_text)
               if m: return m.group(1)
               
@@ -101,59 +114,41 @@ jobs:
                       processados += 1
                       log(f"[{processados}/{LOTE_SIZE}] Procurando capa para: {f.name}")
                       
-                      soup = BeautifulSoup(conteudo, 'html.parser')
-                      script_ld = soup.find('script', type='application/ld+json')
-                      titulo = ""
-                      if script_ld:
+                      # Extrai o "slug" do nome do arquivo
+                      slug_arquivo = re.sub(r'_t\d+e\d+\.html$', '', f.name, flags=re.I).replace('.html', '')
+                      
+                      url_pagina = achar_url_na_fila(slug_arquivo)
+
+                      if not url_pagina:
+                          # Fallback: tenta extrair do título e buscar no Feed
+                          soup = BeautifulSoup(conteudo, 'html.parser')
+                          script_ld = soup.find('script', type='application/ld+json')
+                          titulo = ""
+                          if script_ld:
+                              try:
+                                  dados = json.loads(script_ld.string)
+                                  titulo = dados.get('name', '')
+                              except: pass
+                          
+                          if not titulo:
+                              h1 = soup.find('h1')
+                              if h1: titulo = h1.text.strip()
+
+                          busca = re.sub(r'\s*-\s*🍿Clau', '', titulo).strip()
+                          partes = re.split(r'\s+-\s+|\s*T\d+E\d+', busca, maxsplit=1, flags=re.I)
+                          nome_pai = partes[0].strip()
+                          nome_pai = re.sub(r'\s*\(?\d{4}\)?\s*$', '', nome_pai).strip()
+
                           try:
-                              dados = json.loads(script_ld.string)
-                              titulo = dados.get('name', '')
-                          except: pass
-                      
-                      if not titulo:
-                          h1 = soup.find('h1')
-                          if h1: titulo = h1.text.strip()
-
-                      busca = re.sub(r'\s*-\s*🍿Clau', '', titulo).strip()
-                      busca = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x)[^a-zA-Z0-9]*[-]?', '', busca, flags=re.I).strip()
-                      
-                      partes = re.split(r'\s+-\s+|\s*T\d+E\d+', busca, maxsplit=1, flags=re.I)
-                      nome_pai = partes[0].strip()
-                      nome_pai = re.sub(r'\s*\(?\d{4}\)?\s*$', '', nome_pai).strip()
-                      nome_pai = re.sub(r'[\s.:;,]+$', '', nome_pai).strip()
-
-                      # Extrai o slug do nome do arquivo (ex: diarios_de_um_vampiro_t1e1.html -> diarios de um vampiro)
-                      slug_arquivo = re.sub(r'_t\d+e\d+\.html$', '', f.name, flags=re.I).replace('_', ' ')
-
-                      # Estratégias de Busca (incluindo o nome do arquivo e sem acentos)
-                      queries = [
-                          nome_pai, 
-                          strip_accents(nome_pai),
-                          slug_arquivo,
-                          strip_accents(slug_arquivo)
-                      ]
-                      
-                      palavras = strip_accents(nome_pai).split()
-                      if len(palavras) > 1:
-                          queries.append(palavras[0]) 
-                          if len(palavras[0]) < 4:
-                              queries.append(palavras[1])
-
-                      url_pagina = None
-                      for q in queries:
-                          if len(q) < 3: continue
-                          try:
-                              r_feed = requests.get(f"{BASE_URL}/feeds/posts/default?q={requests.utils.quote(q)}&alt=json", headers=HEADERS, timeout=10)
+                              r_feed = requests.get(f"{BASE_URL}/feeds/posts/default?q={requests.utils.quote(nome_pai)}&alt=json", headers=HEADERS, timeout=10)
                               if r_feed.status_code == 200:
                                   entries = r_feed.json().get("feed", {}).get("entry", [])
                                   if entries:
                                       url_pagina = next((l["href"] for l in entries[0].get("link", []) if l.get("rel") == "alternate"), None)
-                                      if url_pagina: break
-                          except Exception:
-                              pass
+                          except: pass
 
                       if not url_pagina:
-                          log(f"  [-] Página não encontrada para '{nome_pai}'")
+                          log(f"  [-] URL não encontrada para '{slug_arquivo}'")
                           continue
 
                       # Visita a página principal para pegar a capa
