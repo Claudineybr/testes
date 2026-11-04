@@ -62,18 +62,19 @@ jobs:
 
           CACHE_VERSION = 5
 
-          # ============================================================
-          # Politica de rate-limit (mais educada com o servidor)
-          # ============================================================
-          REQ_DELAY_BASE     = 2.5   # segundos entre visitas (nominal)
-          REQ_DELAY_JITTER   = 1.0   # +/- jitter aleatorio
-          FEED_PAGE_DELAY    = 1.5   # segundos entre paginas do feed
-          FEED_PAGE_JITTER   = 0.5
-          BACKOFF_429_BASE   = 30    # 30, 60, 120, 240s
-          ABORT_APOS_429     = 5     # aborta visitas apos N x 429 (site bloqueando)
+          REQ_DELAY_BASE   = 2.5
+          REQ_DELAY_JITTER = 1.0
+          FEED_PAGE_DELAY  = 1.5
+          FEED_PAGE_JITTER = 0.5
+          BACKOFF_429_BASE = 30
+          ABORT_APOS_429   = 5
 
-          # Delay adaptativo: se pegar 429, sobe e NAO volta a descer nesta run.
           _delay_atual = {"valor": REQ_DELAY_BASE}
+
+          START_TS = time.time()
+          def log(*a):
+              e = int(time.time() - START_TS)
+              print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
 
           def _jitter(base, j):
               return max(0.5, base + random.uniform(-j, j))
@@ -84,13 +85,7 @@ jobs:
                   _delay_atual["valor"] = novo
                   log(f"    [adaptativo] delay subiu para {novo:.2f}s")
 
-          START_TS = time.time()
-          def log(*a):
-              e = int(time.time() - START_TS)
-              print(f"[+{e:>4}s]", *a, flush=True); sys.stdout.flush()
-
           def safe_get(url, timeout=20, retries=2):
-              """GET basico. 429 tem backoff agressivo (30/60/120s) e sobe delay global."""
               for attempt in range(retries + 1):
                   try:
                       r = requests.get(url, headers=HEADERS, timeout=timeout)
@@ -108,10 +103,6 @@ jobs:
               return None
 
           def safe_get_site(url, timeout=30, max_retries=3, wait_s=30):
-              """
-              Retry para acesso inicial ao site.
-              ATENCAO: 429 usa backoff longo - nao usar em loop apertado.
-              """
               for attempt in range(max_retries + 1):
                   if attempt > 0:
                       log(f"    retry {attempt}/{max_retries} em {wait_s}s...")
@@ -209,7 +200,7 @@ jobs:
                   sem_capa_urls[vk]['arquivos'].append(arq)
                   for t in titulos:
                       sem_capa_titles.setdefault(t, []).append(arq)
-              log(f"  Arquivos sem capa: {total} | URLs únicas: {len(sem_capa_urls)} | sem contentUrl: {len(sem_url)}")
+              log(f"  Arquivos sem capa: {total} | URLs unicas: {len(sem_capa_urls)} | sem contentUrl: {len(sem_url)}")
               return sem_capa_urls, sem_capa_titles, sem_url
 
           def processar_feed(sem_capa_urls, sem_capa_titles):
@@ -222,7 +213,7 @@ jobs:
                   try:
                       cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
                       if cached.get('version') != CACHE_VERSION:
-                          log(f"  cache versao antiga (v{cached.get('version')} != v{CACHE_VERSION}), refazendo")
+                          log(f"  cache versao antiga, refazendo")
                       elif time.time() - cached.get('ts', 0) > 7200:
                           log(f"  cache expirado (>2h), refazendo")
                       elif not cached.get('scan_complete'):
@@ -233,7 +224,7 @@ jobs:
                               if hint and hint not in sem_capa_urls: continue
                               visit_candidates[link] = hint
                           feed_all_keys = set(cached.get('feed_all_keys', []))
-                          log(f"  cache OK v{CACHE_VERSION}: feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
+                          log(f"  cache OK: feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
                           return feed_by_video, visit_candidates, feed_all_keys
                   except Exception as e:
                       log(f"  erro cache: {e}")
@@ -249,7 +240,6 @@ jobs:
                       entries = r.json().get("feed", {}).get("entry", [])
                       if not entries: break
                       entries_total += len(entries)
-
                       for e in entries:
                           link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
                           if not link: continue
@@ -271,12 +261,10 @@ jobs:
                               tnorm = norm_title(title)
                               if tnorm and tnorm in sem_capa_titles:
                                   visit_candidates[link] = None
-
                       page += 1
                       log(f"  page {page}: {len(entries)} entries | feed_by_video={len(feed_by_video)} visit_candidates={len(visit_candidates)}")
                       if len(entries) < 150: break
                       start += 150
-                      # pausa entre paginas com jitter
                       time.sleep(_jitter(FEED_PAGE_DELAY, FEED_PAGE_JITTER))
                   except Exception as e:
                       log(f"  erro feed: {e}"); break
@@ -285,15 +273,8 @@ jobs:
               log(f"  feed_by_video={len(feed_by_video)} | visit_candidates={len(visit_candidates)}")
 
               if feed_all_keys and sem_capa_urls:
-                  local_sample = list(sem_capa_urls.keys())[:10]
-                  feed_sample = list(feed_all_keys)[:10]
                   inter = feed_all_keys & set(sem_capa_urls.keys())
-                  log(f"  DIAGNOSTICO:")
-                  log(f"     Local (10 primeiros):  {local_sample}")
-                  log(f"     Feed  (10 primeiros):  {feed_sample}")
-                  log(f"     Intersecao: {len(inter)} (de {len(feed_all_keys)} no feed x {len(sem_capa_urls)} locais)")
-                  if len(inter) == 0:
-                      log(f"     AVISO: NENHUM video local aparece no feed (CDN diferente).")
+                  log(f"  DIAGNOSTICO: intersecao={len(inter)} (feed={len(feed_all_keys)} x locais={len(sem_capa_urls)})")
 
               ARQ_FEED_CT.write_text(json.dumps({
                   'version': CACHE_VERSION,
@@ -320,18 +301,17 @@ jobs:
                   log("  Nada para visitar (todos visitados ou ja resolvidos).")
                   return 0
 
-              log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos "
-                  f"(delay base={_delay_atual['valor']:.2f}s)...")
+              log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos (delay={_delay_atual['valor']:.2f}s)...")
               sucesso = 0
               falhas_consecutivas = 0
               qtd_429 = 0
 
               for i, (link, hint) in enumerate(fila[:LOTE], 1):
                   if falhas_consecutivas >= 3:
-                      log(f"  {falhas_consecutivas} falhas consecutivas - site parece fora. Abortando.")
+                      log(f"  {falhas_consecutivas} falhas consecutivas - site fora. Abortando.")
                       break
                   if qtd_429 >= ABORT_APOS_429:
-                      log(f"  {qtd_429} x 429 - site bloqueando. Abortando visitas nesta run.")
+                      log(f"  {qtd_429} x 429 - site bloqueando. Abortando.")
                       break
 
                   log(f"  [{i}] {link}")
@@ -346,8 +326,7 @@ jobs:
 
                       if r.status_code == 429:
                           qtd_429 += 1
-                          log(f"    429 (#{qtd_429} nesta run) - pulando, delay agora {_delay_atual['valor']:.2f}s")
-                          # NAO marca como visitado: tenta de novo na proxima run
+                          log(f"    429 (#{qtd_429}) - pulando, delay={_delay_atual['valor']:.2f}s")
                           continue
 
                       if r.status_code != 200:
@@ -356,7 +335,7 @@ jobs:
                           continue
 
                       falhas_consecutivas = 0
-                      qtd_429 = 0  # sucesso reseta contador de 429
+                      qtd_429 = 0
 
                       video, capa = extrair_video_e_capa(r.text)
                       if not video:
@@ -366,7 +345,7 @@ jobs:
 
                       vk = norm_video(video)
                       if vk not in sem_capa_urls:
-                          log(f"    video nao corresponde ({vk[:60]} != {hint or '?'})")
+                          log(f"    video nao corresponde")
                           links_visitados.add(link)
                           continue
 
@@ -379,7 +358,7 @@ jobs:
                       if is_valid_cover(capa):
                           mapa[vk] = capa
                           sucesso += 1
-                          log(f"    OK capa: {capa[:70]}")
+                          log(f"    OK capa")
                       else:
                           log(f"    sem capa")
                       links_visitados.add(link)
@@ -387,7 +366,6 @@ jobs:
                       log(f"    erro processamento: {e}")
                       links_visitados.add(link)
                   finally:
-                      # SEMPRE espera (mesmo em excecao). Isso e o que controla o rate.
                       time.sleep(_jitter(_delay_atual["valor"], REQ_DELAY_JITTER))
 
               ARQ_VISITADOS.write_text("\n".join(sorted(links_visitados)), encoding='utf-8')
@@ -395,7 +373,7 @@ jobs:
               return sucesso
 
           def aplicar_mapa(sem_capa_urls, mapa):
-              log(f"\nAplicando {len(mapa)} capas por URL de video...")
+              log(f"\nAplicando {len(mapa)} capas...")
               alterados = 0
               sem_match = 0
               for vk, info in sem_capa_urls.items():
@@ -411,48 +389,49 @@ jobs:
                       if novo != texto:
                           arq.write_text(novo, encoding='utf-8')
                           alterados += 1
-                          log(f"  [ok] {arq.name}")
               log(f"  Aplicados: {alterados} arquivos | Sem match: {sem_match} URLs")
               return alterados, sem_match
 
-              def main():
-        if ARQ_FEED_CT.exists() and not RETRY_ALL:
-            try:
-                cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
-                if cached.get('version') != CACHE_VERSION:
-                    log(f"Cache v{cached.get('version')} != v{CACHE_VERSION}: limpando links visitados")
-                    if ARQ_VISITADOS.exists():
-                        ARQ_VISITADOS.unlink()
-            except: pass
+          def main():
+              if ARQ_FEED_CT.exists() and not RETRY_ALL:
+                  try:
+                      cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
+                      if cached.get('version') != CACHE_VERSION:
+                          log(f"Cache antigo: limpando links visitados")
+                          if ARQ_VISITADOS.exists():
+                              ARQ_VISITADOS.unlink()
+                  except: pass
 
-        sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
-        if not sem_capa_urls:
-            log("Nenhum arquivo com URL de video sem capa. Nada a fazer.")
-            ARQ_STATUS.write_text(json.dumps({
-                'total_sem_capa_urls': 0, 'sem_url_video': len(sem_url),
-                'mapa_size': 0, 'done': True,
-                'motivo': 'sem URLs de video sem capa'
-            }, ensure_ascii=False, indent=2), encoding='utf-8')
-            return
+              sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
+              if not sem_capa_urls:
+                  log("Nenhum arquivo com URL de video sem capa. Nada a fazer.")
+                  ARQ_STATUS.write_text(json.dumps({
+                      'total_sem_capa_urls': 0,
+                      'sem_url_video': len(sem_url),
+                      'mapa_size': 0,
+                      'done': True,
+                      'motivo': 'sem URLs de video sem capa'
+                  }, ensure_ascii=False, indent=2), encoding='utf-8')
+                  return
 
-        mapa = {}
-        if ARQ_MAPA.exists() and not RETRY_ALL:
-            try:
-                raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
-                mapa = {k: v for k, v in raw.items() if k in sem_capa_urls and is_valid_cover(v)}
-                log(f"Mapa existente (filtrado): {len(mapa)}")
-            except: mapa = {}
-        elif RETRY_ALL:
-            log("RETRY_ALL: limpando mapa/cache/links visitados")
+              mapa = {}
+              if ARQ_MAPA.exists() and not RETRY_ALL:
+                  try:
+                      raw = json.loads(ARQ_MAPA.read_text(encoding='utf-8'))
+                      mapa = {k: v for k, v in raw.items() if k in sem_capa_urls and is_valid_cover(v)}
+                      log(f"Mapa existente (filtrado): {len(mapa)}")
+                  except: mapa = {}
+              elif RETRY_ALL:
+                  log("RETRY_ALL: limpando")
 
-        feed_by_video, visit_candidates, feed_all_keys = processar_feed(sem_capa_urls, sem_capa_titles)
+              feed_by_video, visit_candidates, feed_all_keys = processar_feed(sem_capa_urls, sem_capa_titles)
 
-        novos_feed = 0
-        for k, v in feed_by_video.items():
-            if k not in mapa:
-                mapa[k] = v
-                novos_feed += 1
-        log(f"Feed adicionou {novos_feed} capas novas")
+              novos_feed = 0
+              for k, v in feed_by_video.items():
+                  if k not in mapa:
+                      mapa[k] = v
+                      novos_feed += 1
+                      log(f"Feed adicionou {novos_feed} capas novas")
 
         visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
 
@@ -469,7 +448,8 @@ jobs:
             except: pass
         faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
 
-        if faltam_video > 0 and len(feed_all_keys & set(sem_capa_urls.keys())) == 0 and faltam_visitar == 0:
+        inter = len(feed_all_keys & set(sem_capa_urls.keys()))
+        if faltam_video > 0 and inter == 0 and faltam_visitar == 0:
             done = True
             motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
             log(f"\nAVISO: {motivo}")
@@ -489,7 +469,7 @@ jobs:
             'faltam_video': faltam_video,
             'faltam_visitar': faltam_visitar,
             'feed_all_keys': len(feed_all_keys),
-            'intersecao': len(feed_all_keys & set(sem_capa_urls.keys())),
+            'intersecao': inter,
             'alterados': alterados,
             'sem_match': sem_match,
             'delay_final': round(_delay_atual["valor"], 2),
@@ -497,11 +477,7 @@ jobs:
             'motivo': motivo,
         }, ensure_ascii=False, indent=2), encoding='utf-8')
 
-        log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
-            f"novos_feed={novos_feed} | visitados={visitados_ok} | "
-            f"faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | "
-            f"intersecao={len(feed_all_keys & set(sem_capa_urls.keys()))}/{len(feed_all_keys)} | "
-            f"delay={_delay_atual['valor']:.2f}s | done={done} | motivo: {motivo}")
+        log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | novos_feed={novos_feed} | visitados={visitados_ok} | faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | inter={inter}/{len(feed_all_keys)} | delay={_delay_atual['valor']:.2f}s | done={done}")
 
     if __name__ == "__main__":
         main()
@@ -560,3 +536,5 @@ jobs:
     echo "Aguardando 30s..."
     sleep 30
     gh workflow run "capas.yml" --repo "$REPO" --ref main
+
+           
