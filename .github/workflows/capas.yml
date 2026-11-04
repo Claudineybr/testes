@@ -431,103 +431,107 @@ jobs:
                   if k not in mapa:
                       mapa[k] = v
                       novos_feed += 1
-                              log(f"Feed adicionou {novos_feed} capas novas")
+              log(f"Feed adicionou {novos_feed} capas novas")
 
-        visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
+              visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
 
-        ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
+              ARQ_MAPA.write_text(json.dumps(mapa, ensure_ascii=False, indent=2), encoding='utf-8')
 
-        alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
+              alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
 
-        faltam_video = len([k for k in sem_capa_urls if k not in mapa])
+              faltam_video = len([k for k in sem_capa_urls if k not in mapa])
 
-        links_visitados = set()
-        if ARQ_VISITADOS.exists():
-            try:
-                links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
-            except: pass
-        faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
+              links_visitados = set()
+              if ARQ_VISITADOS.exists():
+                  try:
+                      links_visitados = set(l.strip() for l in ARQ_VISITADOS.read_text(encoding='utf-8').splitlines() if l.strip())
+                  except: pass
+              faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
 
-        inter = len(feed_all_keys & set(sem_capa_urls.keys()))
-        if faltam_video > 0 and inter == 0 and faltam_visitar == 0:
-            done = True
-            motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
-            log(f"\nAVISO: {motivo}")
-        elif faltam_video == 0:
-            done = True
-            motivo = "todos resolvidos"
-        else:
-            done = False
-            motivo = f"{faltam_video} videos sem capa, {faltam_visitar} candidatos pendentes"
+              inter = len(feed_all_keys & set(sem_capa_urls.keys()))
+              if faltam_video > 0 and inter == 0 and faltam_visitar == 0:
+                  done = True
+                  motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
+                  log(f"\nAVISO: {motivo}")
+              elif faltam_video == 0:
+                  done = True
+                  motivo = "todos resolvidos"
+              else:
+                  done = False
+                  motivo = f"{faltam_video} videos sem capa, {faltam_visitar} candidatos pendentes"
 
-        ARQ_STATUS.write_text(json.dumps({
-            'total_sem_capa_urls': len(sem_capa_urls),
-            'sem_url_video': len(sem_url),
-            'mapa_size': len(mapa),
-            'novos_feed': novos_feed,
-            'novos_visitados': visitados_ok,
-            'faltam_video': faltam_video,
-            'faltam_visitar': faltam_visitar,
-            'feed_all_keys': len(feed_all_keys),
-            'intersecao': inter,
-            'alterados': alterados,
-            'sem_match': sem_match,
-            'delay_final': round(_delay_atual["valor"], 2),
-            'done': done,
-            'motivo': motivo,
-        }, ensure_ascii=False, indent=2), encoding='utf-8')
-        log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | novos_feed={novos_feed} | visitados={visitados_ok} | faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | inter={inter}/{len(feed_all_keys)} | delay={_delay_atual['valor']:.2f}s | done={done}")
-        if __name__ == "__main__":
-        main()
-    PYEOF
-    python3 /tmp/capas.py
-- name: Salvar progresso
-  run:git config user.name "github-actions[bot]"
-    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-    git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
-    git add -f *.html 2>/dev/null || true
-    if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-    git commit -m "chore: capas por URL de vídeo [skip ci]"
-    for i in $(seq 1 5); do
-      if git push origin HEAD:main; then break; fi
-      git fetch origin main
-      git reset --mixed origin/main
-      git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
-      git add -f *.html 2>/dev/null || true
-      git commit -m "chore: retry $i" || true
-      sleep $((RANDOM % 10 + 5))
-    done
+              ARQ_STATUS.write_text(json.dumps({
+                  'total_sem_capa_urls': len(sem_capa_urls),
+                  'sem_url_video': len(sem_url),
+                  'mapa_size': len(mapa),
+                  'novos_feed': novos_feed,
+                  'novos_visitados': visitados_ok,
+                  'faltam_video': faltam_video,
+                  'faltam_visitar': faltam_visitar,
+                  'feed_all_keys': len(feed_all_keys),
+                  'intersecao': inter,
+                  'alterados': alterados,
+                  'sem_match': sem_match,
+                  'delay_final': round(_delay_atual["valor"], 2),
+                  'done': done,
+                  'motivo': motivo,
+              }, ensure_ascii=False, indent=2), encoding='utf-8')
 
-- name: Disparar próxima run (se necessário)
-  if: success()
-  env:
-    GH_TOKEN: ${{ secrets.PAT_CHAIN }}
-    REPO: ${{ github.repository }}
-  run: |
-    DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
-    FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
-    SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
-    MOTIVO=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('motivo', ''))" 2>/dev/null || echo '')
-    INTER=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('intersecao', 0))" 2>/dev/null || echo 0)
-    DELAY=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('delay_final', 0))" 2>/dev/null || echo 0)
+              log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | novos_feed={novos_feed} | visitados={visitados_ok} | faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | inter={inter}/{len(feed_all_keys)} | delay={_delay_atual['valor']:.2f}s | done={done}")
 
-    echo "Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Delay: ${DELAY}s | Done: $DONE | Motivo: $MOTIVO"
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/capas.py
 
-    if [ "$DONE" = "True" ]; then
-      echo "Chain encerrada. Motivo: $MOTIVO"
-      if [ "$INTER" = "0" ] && [ "$SEM" -gt 0 ]; then
-        echo "::warning::Nenhum video local casou com o feed. Os videos do site provavelmente usam outro CDN."
-      fi
-      exit 0
-    fi
+      - name: Salvar progresso
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
+          git add -f *.html 2>/dev/null || true
+          if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
+          git commit -m "chore: capas por URL de vídeo [skip ci]"
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            git fetch origin main
+            git reset --mixed origin/main
+            git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
+            git add -f *.html 2>/dev/null || true
+            git commit -m "chore: retry $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
 
-    LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-    RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
+      - name: Disparar próxima run (se necessário)
+        if: success()
+        env:
+          GH_TOKEN: ${{ secrets.PAT_CHAIN }}
+          REPO: ${{ github.repository }}
+        run: |
+          DONE=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('done', False))" 2>/dev/null || echo False)
+          FALTAM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('faltam_visitar', 0))" 2>/dev/null || echo 0)
+          SEM=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('total_sem_capa_urls', 0))" 2>/dev/null || echo 0)
+          MOTIVO=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('motivo', ''))" 2>/dev/null || echo '')
+          INTER=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('intersecao', 0))" 2>/dev/null || echo 0)
+          DELAY=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('delay_final', 0))" 2>/dev/null || echo 0)
 
-    if [ "$RECENTES" -ge 30 ]; then
-      echo "Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
-    fi
+          echo "Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Delay: ${DELAY}s | Done: $DONE | Motivo: $MOTIVO"
 
-    echo "Aguardando 30s..."
-    sleep 30
-    gh workflow run "capas.yml" --repo "$REPO" --ref main
+          if [ "$DONE" = "True" ]; then
+            echo "Chain encerrada. Motivo: $MOTIVO"
+            if [ "$INTER" = "0" ] && [ "$SEM" -gt 0 ]; then
+              echo "::warning::Nenhum video local casou com o feed. Os videos do site provavelmente usam outro CDN."
+            fi
+            exit 0
+          fi
+
+          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
+
+          if [ "$RECENTES" -ge 30 ]; then
+            echo "Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
+          fi
+
+          echo "Aguardando 30s..."
+          sleep 30
+          gh workflow run "capas.yml" --repo "$REPO" --ref main
