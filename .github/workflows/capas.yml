@@ -431,7 +431,7 @@ jobs:
                   if k not in mapa:
                       mapa[k] = v
                       novos_feed += 1
-                      log(f"Feed adicionou {novos_feed} capas novas")
+                              log(f"Feed adicionou {novos_feed} capas novas")
 
         visitados_ok = visitar_pendentes(visit_candidates, sem_capa_urls, mapa)
 
@@ -476,23 +476,18 @@ jobs:
             'done': done,
             'motivo': motivo,
         }, ensure_ascii=False, indent=2), encoding='utf-8')
-
         log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | novos_feed={novos_feed} | visitados={visitados_ok} | faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | inter={inter}/{len(feed_all_keys)} | delay={_delay_atual['valor']:.2f}s | done={done}")
-
-    if __name__ == "__main__":
+        if __name__ == "__main__":
         main()
     PYEOF
     python3 /tmp/capas.py
-
 - name: Salvar progresso
-  run: |
-    git config user.name "github-actions[bot]"
+  run:git config user.name "github-actions[bot]"
     git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     git add -f capas_mapa.json capas_status.json capas_feed_cache.json capas_links_visitados.txt 2>/dev/null || true
     git add -f *.html 2>/dev/null || true
     if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
     git commit -m "chore: capas por URL de vídeo [skip ci]"
-
     for i in $(seq 1 5); do
       if git push origin HEAD:main; then break; fi
       git fetch origin main
@@ -536,5 +531,3 @@ jobs:
     echo "Aguardando 30s..."
     sleep 30
     gh workflow run "capas.yml" --repo "$REPO" --ref main
-
-           
