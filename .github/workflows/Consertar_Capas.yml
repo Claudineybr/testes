@@ -1,0 +1,168 @@
+name: Consertar Capas Faltantes
+
+on:
+  workflow_dispatch:
+    inputs:
+      lote:
+        description: 'Quantos arquivos verificar por run'
+        required: false
+        default: '200'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: consertar-capas
+  cancel-in-progress: false
+
+jobs:
+  consertar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Verificar e consertar capas
+        env:
+          LOTE_SIZE: ${{ inputs.lote || '200' }}
+        run: |
+          cat > /tmp/consertar_capas.py << 'PYEOF'
+          import requests, re, os, sys, json
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+
+          BASE_URL = "https://www.vini7xgrave.site"
+          HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 200))
+
+          def log(*a): print(*a, flush=True); sys.stdout.flush()
+
+          def extrair_capa(html_text):
+              soup = BeautifulSoup(html_text, 'html.parser')
+              
+              og_img = soup.find('meta', property='og:image')
+              if og_img and og_img.get('content') and 'placeholder' not in og_img['content']:
+                  return og_img['content']
+              
+              link_img = soup.find('a', href=re.compile(r'https://blogger\.googleusercontent\.com/img/'))
+              if link_img:
+                  return link_img['href']
+                  
+              m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
+              if m: return m.group(0)
+              
+              return None
+
+          def main():
+              arquivos = list(Path(".").glob("*.html"))
+              total = len(arquivos)
+              log(f"Analisando {total} arquivos HTML...")
+              
+              processados = 0
+              consertados = 0
+
+              for i, f in enumerate(arquivos, 1):
+                  if processados >= LOTE_SIZE:
+                      log(f"Lote de {LOTE_SIZE} atingido. Parando por hoje.")
+                      break
+
+                  try:
+                      conteudo = f.read_text(encoding="utf-8")
+                      
+                      # Se não tem a capa genérica, pula
+                      if "via.placeholder.com" not in conteudo and "Sem+Capa" not in conteudo:
+                          continue
+                          
+                      processados += 1
+                      log(f"[{processados}/{LOTE_SIZE}] Procurando capa para: {f.name}")
+                      
+                      # Extrai o título do JSON-LD ou H1
+                      soup = BeautifulSoup(conteudo, 'html.parser')
+                      script_ld = soup.find('script', type='application/ld+json')
+                      titulo = ""
+                      if script_ld:
+                          try:
+                              dados = json.loads(script_ld.string)
+                              titulo = dados.get('name', '')
+                          except: pass
+                      
+                      if not titulo:
+                          h1 = soup.find('h1')
+                          if h1: titulo = h1.text.strip()
+
+                      # Limpa o nome (remove o 🍿Clau e anos)
+                      busca = re.sub(r'\s*-\s*🍿Clau', '', titulo).strip()
+                      
+                      # Regex para pegar o nome da série (Tudo antes do T1E1)
+                      # Ex: "Breaking Bad - T1E1 - Piloto" -> "Breaking Bad"
+                      match_serie = re.search(r'^(.+?)\s*-\s*T\d+E\d+', busca, re.I)
+                      if match_serie:
+                          nome_pai = match_serie.group(1).strip()
+                      else:
+                          # Se for filme, tira o ano
+                          nome_pai = re.sub(r'\s*\(?\d{4}\)?\s*$', '', busca).strip()
+                      
+                      # Tenta achar a URL da série/filme no feed
+                      url_pagina = None
+                      try:
+                          r_feed = requests.get(f"{BASE_URL}/feeds/posts/default?q={requests.utils.quote(nome_pai)}&alt=json", headers=HEADERS, timeout=10)
+                          if r_feed.status_code == 200:
+                              entries = r_feed.json().get("feed", {}).get("entry", [])
+                              if entries:
+                                  url_pagina = next((l["href"] for l in entries[0].get("link", []) if l.get("rel") == "alternate"), None)
+                      except Exception as e:
+                          log(f"  [-] Erro na busca do feed: {e}")
+
+                      if not url_pagina:
+                          log(f"  [-] Página não encontrada para '{nome_pai}'")
+                          continue
+
+                      # Visita a página principal para pegar a capa
+                      r = requests.get(url_pagina, headers=HEADERS, timeout=15)
+                      nova_capa = extrair_capa(r.text)
+
+                      if nova_capa:
+                          conteudo = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', conteudo)
+                          conteudo = re.sub(r'"thumbnailUrl":\s*\[[^\]]*\]', f'"thumbnailUrl": ["{nova_capa}"]', conteudo, flags=re.DOTALL)
+                          f.write_text(conteudo, encoding="utf-8")
+                          log(f"  [+] Capa atualizada: {f.name}")
+                          consertados += 1
+                      else:
+                          log(f"  [-] Não foi possível extrair a capa da página {url_pagina}")
+                          
+                  except Exception as e:
+                      log(f"  [x] Erro ao processar {f.name}: {e}")
+
+              log(f"Finalizado! Arquivos analisados: {processados} | Capas consertadas: {consertados}")
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/consertar_capas.py
+
+      - name: Salvar arquivos e progresso
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          git reset .github/ 2>/dev/null || true
+          
+          if git diff --cached --quiet; then echo "Nenhuma capa precisou ser consertada nesta run."; exit 0; fi
+          git commit -m "fix: consertar capas faltantes nos arquivos antigos"
+          
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            echo "Conflito detectado. Sincronizando de forma segura..."
+            git pull origin main --no-rebase -X ours --no-edit
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry consertar capas $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
