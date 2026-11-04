@@ -60,8 +60,9 @@ jobs:
           ARQ_FEED_CT   = Path("capas_feed_cache.json")
           ARQ_VISITADOS = Path("capas_links_visitados.txt")
 
-          CACHE_VERSION = 4
-          REQ_DELAY     = 0.8   # segundos entre requisições (evita 429)
+          # v5: norm_video agora retorna URL completa (chave mudou)
+          CACHE_VERSION = 5
+          REQ_DELAY     = 0.8
 
           START_TS = time.time()
           def log(*a):
@@ -80,8 +81,35 @@ jobs:
                       return r
                   except Exception as e:
                       if attempt == retries:
-                          raise
+                          return None
                       time.sleep(2)
+              return None
+
+          def safe_get_site(url, timeout=30, max_retries=4, wait_s=30):
+              """
+              Retry agressivo para acesso ao site:
+              4 tentativas x 30s de espera = ate 2 minutos.
+              - 200: sucesso imediato
+              - 4xx (exceto 429): retorna r imediatamente (erro definitivo)
+              - 429 / 5xx / timeout / conexao: espera 30s e retenta
+              Retorna None se esgotar retries.
+              """
+              for attempt in range(max_retries + 1):
+                  if attempt > 0:
+                      log(f"    retry {attempt}/{max_retries} em {wait_s}s...")
+                      time.sleep(wait_s)
+                  try:
+                      r = requests.get(url, headers=HEADERS, timeout=timeout)
+                      if r.status_code == 200:
+                          if attempt > 0:
+                              log(f"    ok apos {attempt} retry(s)")
+                          return r
+                      log(f"    HTTP {r.status_code}")
+                      if r.status_code not in (429, 500, 502, 503, 504):
+                          return r
+                  except Exception as e:
+                      log(f"    erro conexao: {e}")
+              log(f"    falhou apos {max_retries} retries ({max_retries * wait_s}s)")
               return None
 
           def is_valid_cover(url):
@@ -94,20 +122,13 @@ jobs:
               return True
 
           # ============================================================
-          # norm_video v4: IMDb ID -> UUID (HLS) -> filename
+          # norm_video v5: URL COMPLETA normalizada (chave unica)
+          # - remove query string, fragment e trailing slash
+          # - lowercase
           # ============================================================
           def norm_video(url):
               if not url: return ""
-              url_l = url.lower()
-              # 1) IMDb ID (ttXXXXXXX) — melhor chave
-              m = re.search(r'(tt\d{6,10})', url_l)
-              if m: return m.group(1) + ".mp4"
-              # 2) UUID (tankie.tube HLS e similares)
-              m = re.search(r'([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})', url_l)
-              if m: return m.group(1)
-              # 3) fallback: filename final
-              u = url.split('?')[0].split('#')[0].rstrip('/')
-              return u.split('/')[-1].lower()
+              return url.strip().split('?')[0].split('#')[0].rstrip('/').lower()
 
           def norm_title(t):
               if not t: return ""
@@ -199,7 +220,7 @@ jobs:
                   try:
                       cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
                       if cached.get('version') != CACHE_VERSION:
-                          log(f"  cache versao antiga (v{cached.get('version')}), refazendo")
+                          log(f"  cache versao antiga (v{cached.get('version')} != v{CACHE_VERSION}), refazendo")
                       elif time.time() - cached.get('ts', 0) > 7200:
                           log(f"  cache expirado (>2h), refazendo")
                       elif not cached.get('scan_complete'):
@@ -222,7 +243,8 @@ jobs:
               while True:
                   try:
                       u = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
-                      r = safe_get(u, timeout=30)
+                      # >>> Primeira pagina usa retry agressivo (4x30s = 2min)
+                      r = safe_get_site(u) if page == 0 else safe_get(u, timeout=30)
                       if not r or r.status_code != 200: break
                       entries = r.json().get("feed", {}).get("entry", [])
                       if not entries: break
@@ -264,20 +286,19 @@ jobs:
               log(f"  feed_by_video={len(feed_by_video)} | visit_candidates={len(visit_candidates)}")
 
               # ============================================================
-              # DIAGNÓSTICO: comparar amostras local vs feed
+              # DIAGNOSTICO: comparar amostras local vs feed
               # ============================================================
               if feed_all_keys and sem_capa_urls:
                   local_sample = list(sem_capa_urls.keys())[:10]
                   feed_sample = list(feed_all_keys)[:10]
                   inter = feed_all_keys & set(sem_capa_urls.keys())
-                  log(f"  🔍 DIAGNÓSTICO:")
+                  log(f"  DIAGNOSTICO:")
                   log(f"     Local (10 primeiros):  {local_sample}")
                   log(f"     Feed  (10 primeiros):  {feed_sample}")
-                  log(f"     Interseção: {len(inter)} (de {len(feed_all_keys)} no feed × {len(sem_capa_urls)} locais)")
+                  log(f"     Intersecao: {len(inter)} (de {len(feed_all_keys)} no feed x {len(sem_capa_urls)} locais)")
                   if len(inter) == 0:
-                      log(f"     ⚠️  NENHUM vídeo local aparece no feed.")
-                      log(f"     ⚠️  Isso significa que os vídeos do site mudaram (CDN diferente).")
-                      log(f"     ⚠️  Match por URL não vai funcionar. Veja amostras acima.")
+                      log(f"     AVISO: NENHUM video local aparece no feed.")
+                      log(f"     AVISO: Isso significa que os videos do site mudaram (CDN diferente).")
 
               ARQ_FEED_CT.write_text(json.dumps({
                   'version': CACHE_VERSION,
@@ -292,6 +313,8 @@ jobs:
 
           # ============================================================
           # 3) Visita candidatos
+          # - Primeira visita usa retry agressivo (2min)
+          # - Aborta se 3 falhas consecutivas (site fora)
           # ============================================================
           def visitar_pendentes(visit_candidates, sem_capa_urls, mapa):
               links_visitados = set()
@@ -305,28 +328,50 @@ jobs:
               fila.sort(key=lambda x: (0 if x[1] else 1, x[0]))
 
               if not fila:
-                  log("  Nada para visitar (todos visitados ou já resolvidos).")
+                  log("  Nada para visitar (todos visitados ou ja resolvidos).")
                   return 0
 
               log(f"Visitando {min(len(fila), LOTE)} de {len(fila)} candidatos...")
               sucesso = 0
-              for i, (link, hint) in enumerate(fila[:LOTE], 1):
-                  log(f"  [{i}] {link}")
-                  try:
-                      r = safe_get(link, timeout=20)
-                      if not r or r.status_code != 200:
-                          log(f"    HTTP {r.status_code if r else 'erro'}")
-                          links_visitados.add(link); continue
+              falhas_consecutivas = 0
 
+              for i, (link, hint) in enumerate(fila[:LOTE], 1):
+                  if falhas_consecutivas >= 3:
+                      log(f"  {falhas_consecutivas} falhas consecutivas - site parece fora. Abortando visitas.")
+                      break
+
+                  log(f"  [{i}] {link}")
+
+                  # Primeira requisicao usa retry agressivo. Se falhar, proximas usam safe_get (rapido).
+                  if falhas_consecutivas == 0:
+                      r = safe_get_site(link, timeout=20)
+                  else:
+                      r = safe_get(link, timeout=20)
+
+                  if not r:
+                      falhas_consecutivas += 1
+                      log(f"    falha de rede/5xx apos retries (#{falhas_consecutivas})")
+                      links_visitados.add(link)
+                      continue
+                  if r.status_code != 200:
+                      log(f"    HTTP {r.status_code}")
+                      links_visitados.add(link)
+                      continue
+
+                  falhas_consecutivas = 0
+
+                  try:
                       video, capa = extrair_video_e_capa(r.text)
                       if not video:
                           log(f"    sem video URL")
-                          links_visitados.add(link); continue
+                          links_visitados.add(link)
+                          continue
 
                       vk = norm_video(video)
                       if vk not in sem_capa_urls:
-                          log(f"    video nao corresponde ({vk[:40]} != {hint or '?'})")
-                          links_visitados.add(link); continue
+                          log(f"    video nao corresponde ({vk[:60]} != {hint or '?'})")
+                          links_visitados.add(link)
+                          continue
 
                       if not is_valid_cover(capa):
                           soup = BeautifulSoup(r.text, 'html.parser')
@@ -337,13 +382,13 @@ jobs:
                       if is_valid_cover(capa):
                           mapa[vk] = capa
                           sucesso += 1
-                          log(f"    ✓ capa: {capa[:70]}")
+                          log(f"    OK capa: {capa[:70]}")
                       else:
                           log(f"    sem capa")
                       links_visitados.add(link)
                       time.sleep(REQ_DELAY)
                   except Exception as e:
-                      log(f"    erro: {e}")
+                      log(f"    erro processamento: {e}")
                       links_visitados.add(link)
 
               ARQ_VISITADOS.write_text("\n".join(sorted(links_visitados)), encoding='utf-8')
@@ -354,7 +399,7 @@ jobs:
           # 4) Aplica mapa
           # ============================================================
           def aplicar_mapa(sem_capa_urls, mapa):
-              log(f"\nAplicando {len(mapa)} capas por URL de vídeo...")
+              log(f"\nAplicando {len(mapa)} capas por URL de video...")
               alterados = 0
               sem_match = 0
               for vk, info in sem_capa_urls.items():
@@ -378,13 +423,23 @@ jobs:
           # MAIN
           # ============================================================
           def main():
+              # Invalida links_visitados quando CACHE_VERSION muda (chaves de video mudaram)
+              if ARQ_FEED_CT.exists() and not RETRY_ALL:
+                  try:
+                      cached = json.loads(ARQ_FEED_CT.read_text(encoding='utf-8'))
+                      if cached.get('version') != CACHE_VERSION:
+                          log(f"Cache v{cached.get('version')} != v{CACHE_VERSION}: limpando links visitados")
+                          if ARQ_VISITADOS.exists():
+                              ARQ_VISITADOS.unlink()
+                  except: pass
+
               sem_capa_urls, sem_capa_titles, sem_url = listar_sem_capa()
               if not sem_capa_urls:
-                  log("✅ Nenhum arquivo com URL de vídeo sem capa. Nada a fazer.")
+                  log("Nenhum arquivo com URL de video sem capa. Nada a fazer.")
                   ARQ_STATUS.write_text(json.dumps({
                       'total_sem_capa_urls': 0, 'sem_url_video': len(sem_url),
                       'mapa_size': 0, 'done': True,
-                      'motivo': 'sem URLs de vídeo sem capa'
+                      'motivo': 'sem URLs de video sem capa'
                   }, ensure_ascii=False, indent=2), encoding='utf-8')
                   return
 
@@ -413,7 +468,6 @@ jobs:
 
               alterados, sem_match = aplicar_mapa(sem_capa_urls, mapa)
 
-              # status — DONE corrigido: só quando sem URL sem capa
               faltam_video = len([k for k in sem_capa_urls if k not in mapa])
 
               links_visitados = set()
@@ -423,12 +477,13 @@ jobs:
                   except: pass
               faltam_visitar = len([l for l, h in visit_candidates.items() if l not in links_visitados and (not h or h not in mapa)])
 
-              # v4: DONE só se não há mais vídeos sem capa E não há mais candidatos
-              # (se a interseção for zero, não tem como resolver — marca como bloqueado)
+              # DONE:
+              #  - todos resolvidos, OU
+              #  - impossivel (sem intersecao e sem candidatos restantes)
               if faltam_video > 0 and len(feed_all_keys & set(sem_capa_urls.keys())) == 0 and faltam_visitar == 0:
                   done = True
                   motivo = "IMPOSSIVEL: videos locais nao existem no feed atual (CDN diferente)"
-                  log(f"\n⚠️  {motivo}")
+                  log(f"\nAVISO: {motivo}")
               elif faltam_video == 0:
                   done = True
                   motivo = "todos resolvidos"
@@ -452,7 +507,7 @@ jobs:
                   'motivo': motivo,
               }, ensure_ascii=False, indent=2), encoding='utf-8')
 
-              log(f"\n📊 FINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
+              log(f"\nFINAL: sem_capa={len(sem_capa_urls)} | mapa={len(mapa)} | "
                   f"novos_feed={novos_feed} | visitados={visitados_ok} | "
                   f"faltam_video={faltam_video} | faltam_visitar={faltam_visitar} | "
                   f"intersecao={len(feed_all_keys & set(sem_capa_urls.keys()))}/{len(feed_all_keys)} | "
@@ -494,12 +549,12 @@ jobs:
           MOTIVO=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('motivo', ''))" 2>/dev/null || echo '')
           INTER=$(python3 -c "import json; print(json.load(open('capas_status.json')).get('intersecao', 0))" 2>/dev/null || echo 0)
 
-          echo "📊 Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Done: $DONE | Motivo: $MOTIVO"
+          echo "Sem capa: $SEM | Intersecao: $INTER | Faltam visitar: $FALTAM | Done: $DONE | Motivo: $MOTIVO"
 
           if [ "$DONE" = "True" ]; then
-            echo "✅ Chain encerrada. Motivo: $MOTIVO"
+            echo "Chain encerrada. Motivo: $MOTIVO"
             if [ "$INTER" = "0" ] && [ "$SEM" -gt 0 ]; then
-              echo "::warning::Nenhum vídeo local casou com o feed. Os vídeos do site provavelmente usam outro CDN. Veja o diagnóstico no log."
+              echo "::warning::Nenhum video local casou com o feed. Os videos do site provavelmente usam outro CDN. Veja o diagnostico no log."
             fi
             exit 0
           fi
@@ -508,9 +563,10 @@ jobs:
           RECENTES=$(gh run list --workflow="capas.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
 
           if [ "$RECENTES" -ge 30 ]; then
-            echo "⚠️ Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
+            echo "Limite de 30 runs/hora atingido. Aguardando cron."; exit 0
           fi
 
-          echo "⏳ Aguardando 30s..."
+          echo "Aguardando 30s..."
           sleep 30
           gh workflow run "capas.yml" --repo "$REPO" --ref main
+                           
