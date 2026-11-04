@@ -49,9 +49,9 @@ jobs:
           def extrair_capa(html_text):
               soup = BeautifulSoup(html_text, 'html.parser')
               
-              # 1. og:image
+              # 1. og:image (só se for válido)
               og_img = soup.find('meta', property='og:image')
-              if og_img and og_img.get('content') and 'placeholder' not in og_img['content']:
+              if og_img and og_img.get('content') and 'placeholder' not in og_img['content'] and len(og_img['content']) > 10:
                   return og_img['content']
               
               # 2. Link <a> do blogger
@@ -59,15 +59,20 @@ jobs:
               if link_img:
                   return link_img['href']
                   
-              # 3. Tag <img> direta
+              # 3. Tag <img> (qualquer imagem que não seja logo ou ícone)
               for img in soup.find_all('img'):
                   src = img.get('src', '')
-                  if 'blogger.googleusercontent.com' in src and 'logo' not in src.lower():
+                  if 'blogger.googleusercontent.com' in src and not any(x in src.lower() for x in ['logo', 'icon', 'avatar']):
                       return src
 
-              # 4. Regex
-              m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-              if m: return m.group(0)
+              # 4. Tag <video> (poster)
+              video = soup.find('video')
+              if video and video.get('poster') and 'placeholder' not in video.get('poster'):
+                  return video.get('poster')
+
+              # 5. Regex no HTML inteiro
+              m = re.search(r'(https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+)', html_text)
+              if m: return m.group(1)
               
               return None
 
@@ -84,7 +89,6 @@ jobs:
                       log(f"Lote de {LOTE_SIZE} atingido. Parando por hoje.")
                       break
 
-                  # Pula arquivos inúteis
                   if any(x in f.name for x in ["catalogo", "serie_desconhecida", "index"]):
                       continue
 
@@ -118,13 +122,22 @@ jobs:
                       nome_pai = re.sub(r'\s*\(?\d{4}\)?\s*$', '', nome_pai).strip()
                       nome_pai = re.sub(r'[\s.:;,]+$', '', nome_pai).strip()
 
-                      # Estratégias de Busca
-                      queries = [nome_pai, strip_accents(nome_pai)]
+                      # Extrai o slug do nome do arquivo (ex: diarios_de_um_vampiro_t1e1.html -> diarios de um vampiro)
+                      slug_arquivo = re.sub(r'_t\d+e\d+\.html$', '', f.name, flags=re.I).replace('_', ' ')
+
+                      # Estratégias de Busca (incluindo o nome do arquivo e sem acentos)
+                      queries = [
+                          nome_pai, 
+                          strip_accents(nome_pai),
+                          slug_arquivo,
+                          strip_accents(slug_arquivo)
+                      ]
+                      
                       palavras = strip_accents(nome_pai).split()
                       if len(palavras) > 1:
-                          queries.append(palavras[0]) # Ex: "Cavaleiros"
+                          queries.append(palavras[0]) 
                           if len(palavras[0]) < 4:
-                              queries.append(palavras[1]) # Se a primeira for "Os", usa "Cavaleiros"
+                              queries.append(palavras[1])
 
                       url_pagina = None
                       for q in queries:
