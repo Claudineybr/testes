@@ -6,7 +6,7 @@ on:
       lote:
         description: 'Quantos arquivos verificar por run'
         required: false
-        default: '200'
+        default: '1000'
         type: string
 
 permissions:
@@ -30,18 +30,21 @@ jobs:
 
       - name: Verificar e consertar capas
         env:
-          LOTE_SIZE: ${{ inputs.lote || '200' }}
+          LOTE_SIZE: ${{ inputs.lote || '1000' }}
         run: |
           cat > /tmp/consertar_capas.py << 'PYEOF'
-          import requests, re, os, sys, json
+          import requests, re, os, sys, json, unicodedata
           from pathlib import Path
           from bs4 import BeautifulSoup
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
-          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 200))
+          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 1000))
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
+
+          def strip_accents(s):
+              return ''.join(c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn')
 
           def extrair_capa(html_text):
               soup = BeautifulSoup(html_text, 'html.parser')
@@ -51,20 +54,20 @@ jobs:
               if og_img and og_img.get('content') and 'placeholder' not in og_img['content']:
                   return og_img['content']
               
-              # 2. Link do blogger em tags <a>
+              # 2. Link <a> do blogger
               link_img = soup.find('a', href=re.compile(r'https://blogger\.googleusercontent\.com/img/'))
               if link_img:
                   return link_img['href']
                   
-              # 3. Regex no HTML
-              m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-              if m: return m.group(0)
-
-              # 4. Fallback: Primeira imagem que não seja logo/ads
+              # 3. Tag <img> direta
               for img in soup.find_all('img'):
                   src = img.get('src', '')
-                  if src and 'blogger' in src and 'logo' not in src.lower() and 'banner' not in src.lower():
+                  if 'blogger.googleusercontent.com' in src and 'logo' not in src.lower():
                       return src
+
+              # 4. Regex
+              m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
+              if m: return m.group(0)
               
               return None
 
@@ -81,17 +84,19 @@ jobs:
                       log(f"Lote de {LOTE_SIZE} atingido. Parando por hoje.")
                       break
 
+                  # Pula arquivos inúteis
+                  if any(x in f.name for x in ["catalogo", "serie_desconhecida", "index"]):
+                      continue
+
                   try:
                       conteudo = f.read_text(encoding="utf-8")
                       
-                      # Se não tem a capa genérica, pula
                       if "via.placeholder.com" not in conteudo and "Sem+Capa" not in conteudo:
                           continue
                           
                       processados += 1
                       log(f"[{processados}/{LOTE_SIZE}] Procurando capa para: {f.name}")
                       
-                      # Extrai o título do JSON-LD ou H1
                       soup = BeautifulSoup(conteudo, 'html.parser')
                       script_ld = soup.find('script', type='application/ld+json')
                       titulo = ""
@@ -105,30 +110,34 @@ jobs:
                           h1 = soup.find('h1')
                           if h1: titulo = h1.text.strip()
 
-                      # Limpa o nome para busca
                       busca = re.sub(r'\s*-\s*🍿Clau', '', titulo).strip()
-                      
-                      # Remove prefixos do site (ex: Marcøsx7 - )
                       busca = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x)[^a-zA-Z0-9]*[-]?', '', busca, flags=re.I).strip()
                       
-                      # Pega a parte antes do primeiro " - " ou T\d+E\d+
                       partes = re.split(r'\s+-\s+|\s*T\d+E\d+', busca, maxsplit=1, flags=re.I)
                       nome_pai = partes[0].strip()
-                      
-                      # Remove anos no final (se for filme)
                       nome_pai = re.sub(r'\s*\(?\d{4}\)?\s*$', '', nome_pai).strip()
                       nome_pai = re.sub(r'[\s.:;,]+$', '', nome_pai).strip()
-                      
-                      # Tenta achar a URL da série/filme no feed
+
+                      # Estratégias de Busca
+                      queries = [nome_pai, strip_accents(nome_pai)]
+                      palavras = strip_accents(nome_pai).split()
+                      if len(palavras) > 1:
+                          queries.append(palavras[0]) # Ex: "Cavaleiros"
+                          if len(palavras[0]) < 4:
+                              queries.append(palavras[1]) # Se a primeira for "Os", usa "Cavaleiros"
+
                       url_pagina = None
-                      try:
-                          r_feed = requests.get(f"{BASE_URL}/feeds/posts/default?q={requests.utils.quote(nome_pai)}&alt=json", headers=HEADERS, timeout=10)
-                          if r_feed.status_code == 200:
-                              entries = r_feed.json().get("feed", {}).get("entry", [])
-                              if entries:
-                                  url_pagina = next((l["href"] for l in entries[0].get("link", []) if l.get("rel") == "alternate"), None)
-                      except Exception as e:
-                          log(f"  [-] Erro na busca do feed: {e}")
+                      for q in queries:
+                          if len(q) < 3: continue
+                          try:
+                              r_feed = requests.get(f"{BASE_URL}/feeds/posts/default?q={requests.utils.quote(q)}&alt=json", headers=HEADERS, timeout=10)
+                              if r_feed.status_code == 200:
+                                  entries = r_feed.json().get("feed", {}).get("entry", [])
+                                  if entries:
+                                      url_pagina = next((l["href"] for l in entries[0].get("link", []) if l.get("rel") == "alternate"), None)
+                                      if url_pagina: break
+                          except Exception:
+                              pass
 
                       if not url_pagina:
                           log(f"  [-] Página não encontrada para '{nome_pai}'")
