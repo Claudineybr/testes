@@ -1,16 +1,16 @@
 {
-  "total_sem_capa_urls": 906,
+  "total_sem_capa_urls": 716,
   "sem_url_video": 0,
-  "mapa_size": 190,
+  "mapa_size": 193,
   "novos_feed": 0,
-  "novos_visitados": 192,
-  "faltam_video": 716,
-  "faltam_visitar": 438,
+  "novos_visitados": 199,
+  "faltam_video": 523,
+  "faltam_visitar": 236,
   "feed_all_keys": 4100,
-  "intersecao": 738,
-  "alterados": 190,
-  "sem_match": 716,
+  "intersecao": 548,
+  "alterados": 193,
+  "sem_match": 523,
   "delay_final": 15.0,
   "done": false,
-  "motivo": "716 videos sem capa, 438 candidatos pendentes"
+  "motivo": "523 videos sem capa, 236 candidatos pendentes"
 }
