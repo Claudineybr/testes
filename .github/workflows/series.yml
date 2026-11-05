@@ -1,4 +1,4 @@
-name: Mega Extrair Filmes e Series
+name: Mega Extrair Series
 
 on:
   schedule:
@@ -71,9 +71,14 @@ jobs:
           MAX_TENTATIVAS = 6
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 100))
 
+          # Contadores de resumo
+          CONT_NOVOS = 0
+          CONT_ATUALIZADOS = 0
+          CONT_IGNORADOS = 0
+
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          # ---------- FILA / ESTADO ----------
+          # ---------- FILA ----------
           def construir_fila():
               log("Criando/atualizando fila...")
               urls, vistos = [], set()
@@ -133,7 +138,27 @@ jobs:
               with open(ARQ_FEITAS,"a",encoding="utf-8") as f:
                   f.write(url.strip()+"\n")
 
-          # ---------- DETECÇÃO DE TIPO ----------
+          # ============================================================
+          # ÍNDICE: contentUrl → arquivo existente (dedup por vídeo)
+          # ============================================================
+          mapa_videos = {}  # contentUrl -> Path
+          for arq in Path(".").glob("*.html"):
+              if arq.name == "index.html": continue
+              try:
+                  c = arq.read_text(encoding='utf-8', errors='ignore')
+                  m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', c)
+                  if m:
+                      url_v = m.group(1).strip()
+                      if url_v and "quebrado" not in url_v.lower():
+                          mapa_videos[url_v] = arq
+              except: pass
+          log(f"📚 Índice de vídeos existentes: {len(mapa_videos)} arquivos.")
+
+          def registrar_video(link, arquivo):
+              if link and "quebrado" not in link.lower():
+                  mapa_videos[link.strip()] = Path(arquivo)
+
+          # ---------- DETECÇÃO ----------
           def eh_serie(soup, url_pagina):
               for script in soup.find_all('script', type='application/ld+json'):
                   try:
@@ -143,7 +168,6 @@ jobs:
                           if isinstance(d, dict) and d.get('@type') in ['TVSeries','TVSeason','TVEpisode']:
                               return True
                   except: pass
-
               for a in soup.find_all('a', href=True):
                   href = a['href'].lower()
                   texto = a.get_text(strip=True).lower()
@@ -151,15 +175,12 @@ jobs:
                   if re.search(r'temporada[-_/]\d+', href, re.I): return True
                   if re.search(r'\bepis[oó]dio\s+\d+', texto, re.I): return True
                   if re.search(r'\btemporada\s+\d+', texto, re.I): return True
-
               texto_pagina = soup.get_text(" ", strip=True).lower()
               if re.search(r'lista de epis[oó]dios', texto_pagina, re.I): return True
               if re.search(r'\b\d+\s*[ªº]\s*temporada', texto_pagina, re.I): return True
               if re.search(r'\bepis[oó]dio\s+\d+', texto_pagina, re.I): return True
-
               titulo = soup.title.string.lower() if soup.title else ""
               if re.search(r'\bepis[oó]dio\b', titulo, re.I): return True
-
               if re.search(r'/(?:temporada|season|episodio|episode)[/-]', url_pagina, re.I): return True
               return False
 
@@ -224,7 +245,6 @@ jobs:
               return matches[0] if matches else None
 
           def extrair_dados_pagina(html_text, url_pagina):
-              """Retorna (titulo, capa, ano). Não filtra por tipo — quem decide é processar_item()."""
               soup = BeautifulSoup(html_text, 'html.parser')
 
               titulo = ""
@@ -251,7 +271,6 @@ jobs:
               titulo = titulo.replace('🍿Clau', '').strip(' -')
               titulo = re.sub(r'\.html?$', '', titulo, flags=re.I).strip()
 
-              # Captura ano ANTES de remover do título
               match_ano = re.search(r'\b(19\d{2}|20\d{2})\b', titulo)
               ano = match_ano.group(1) if match_ano else ""
 
@@ -276,31 +295,26 @@ jobs:
 
               return titulo.strip(), capa, ano
 
-          # ---------- OBTENÇÃO DE VÍDEO + CAPA (MESMO CONTEXTO) ----------
+          # ---------- OBTENÇÃO DE LINK + CAPA ----------
           async def obter_link_e_capa(context, url, capa_fallback):
               link, capa = None, None
               try:
-                  log(f"      [⏳] Buscando vídeo e capa...")
                   r = await asyncio.to_thread(requests.get, url, headers=HEADERS, timeout=20)
                   html = r.text
                   vo = extrair_videoobject(html)
                   if vo and vo.get('contentUrl'):
                       link = vo['contentUrl']
                       capa = vo.get('thumbnailUrl')
-                      log(f"      [⚡] VideoObject encontrado.")
                   if not link:
                       link = extrair_video_da_pagina(html)
-                      if link: log(f"      [⚡] Vídeo via regex.")
                   if not capa_valida(capa):
                       capa = extrair_capa_de_html(html)
-                      if capa_valida(capa): log(f"      [⚡] Capa via og:image.")
                   if link and capa_valida(capa):
                       return link, capa
               except Exception: pass
 
               if not link or not capa_valida(capa):
                   try:
-                      log(f"      [🌐] Abrindo Playwright...")
                       page = await context.new_page()
                       await page.goto(url, wait_until="domcontentloaded", timeout=20000)
                       await asyncio.sleep(5)
@@ -308,100 +322,113 @@ jobs:
                       await page.close()
                       vo = extrair_videoobject(html)
                       if vo and vo.get('contentUrl'):
-                          if not link:
-                              link = vo['contentUrl']
-                              log(f"      [✅] Vídeo via VideoObject (Playwright).")
+                          if not link: link = vo['contentUrl']
                           if not capa_valida(capa) and capa_valida(vo.get('thumbnailUrl')):
                               capa = vo['thumbnailUrl']
-                              log(f"      [✅] Capa via VideoObject (Playwright).")
                       if not link:
                           link = extrair_video_da_pagina(html)
-                          if link: log(f"      [✅] Vídeo via regex (Playwright).")
                       if not capa_valida(capa):
                           capa = extrair_capa_de_html(html)
-                          if capa_valida(capa): log(f"      [✅] Capa via og:image (Playwright).")
                   except Exception as e:
-                      log(f"      [❌] Erro no Playwright: {e}")
+                      log(f"      [❌] Playwright: {e}")
 
               return link, capa if capa_valida(capa) else capa_fallback
 
-          # ---------- ATUALIZAÇÃO CONDICIONAL DE CAPA ----------
-          async def atualizar_capa_se_corresponder(context, nome_arquivo, url_pagina):
-              """Só aplica nova capa se o contentUrl da página == contentUrl do arquivo."""
+          # ============================================================
+          # ATUALIZAÇÃO DE ARQUIVO (sempre por correspondência de vídeo)
+          # ============================================================
+          def atualizar_capa_arquivo(arquivo, nova_capa, link_esperado):
+              """Atualiza só a capa. Só aplica se contentUrl do arquivo == link_esperado."""
+              global CONT_ATUALIZADOS, CONT_IGNORADOS
               try:
-                  conteudo = Path(nome_arquivo).read_text(encoding='utf-8')
+                  arquivo = Path(arquivo)
+                  conteudo = arquivo.read_text(encoding='utf-8')
                   m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', conteudo)
-                  if not m:
+                  url_atual = m.group(1).strip() if m else ""
+                  if url_atual != link_esperado.strip():
+                      CONT_IGNORADOS += 1
                       return False
-                  video_atual = m.group(1).strip()
-                  if not video_atual:
+                  if not capa_valida(nova_capa):
+                      CONT_IGNORADOS += 1
                       return False
-
                   m_capa = re.search(r'"thumbnailUrl"\s*:\s*\[\s*"([^"]+)"', conteudo)
                   capa_atual = m_capa.group(1).strip() if m_capa else None
-
-                  nova_capa = None
-                  html = None
-                  try:
-                      r = await asyncio.to_thread(requests.get, url_pagina, headers=HEADERS, timeout=20)
-                      html = r.text
-                  except Exception:
-                      html = None
-
-                  vo = extrair_videoobject(html) if html else None
-                  video_pagina = vo.get('contentUrl') if vo else None
-                  if not video_pagina and html:
-                      video_pagina = extrair_video_da_pagina(html)
-
-                  if video_pagina and video_pagina.strip() == video_atual:
-                      if vo and capa_valida(vo.get('thumbnailUrl')):
-                          nova_capa = vo['thumbnailUrl']
-                          log(f"      [✅] Vídeo confere; capa do VideoObject.")
-                      elif html:
-                          c = extrair_capa_de_html(html)
-                          if capa_valida(c):
-                              nova_capa = c
-                              log(f"      [✅] Vídeo confere; capa do og:image.")
-                  elif video_pagina:
-                      log(f"      [⚠️] Vídeo da página NÃO confere. Ignorando capa.")
-
-                  if not capa_valida(nova_capa):
-                      try:
-                          log(f"      [🌐] Playwright para confirmar capa...")
-                          page = await context.new_page()
-                          await page.goto(url_pagina, wait_until="domcontentloaded", timeout=20000)
-                          await asyncio.sleep(5)
-                          html2 = await page.content()
-                          await page.close()
-                          vo2 = extrair_videoobject(html2)
-                          video_pagina2 = (vo2.get('contentUrl') if vo2 else None) or extrair_video_da_pagina(html2)
-                          if video_pagina2 and video_pagina2.strip() == video_atual:
-                              if vo2 and capa_valida(vo2.get('thumbnailUrl')):
-                                  nova_capa = vo2['thumbnailUrl']
-                              else:
-                                  c = extrair_capa_de_html(html2)
-                                  if capa_valida(c): nova_capa = c
-                              log(f"      [✅] Vídeo confirmado via Playwright.")
-                          else:
-                              log(f"      [⚠️] Vídeo (Playwright) NÃO confere. Ignorando capa.")
-                      except Exception as e:
-                          log(f"      [-] Erro no Playwright: {e}")
-
-                  if not capa_valida(nova_capa):
-                      return False
-
                   if capa_atual == nova_capa:
-                      log(f"      [ℹ️] Capa já está atualizada.")
+                      CONT_IGNORADOS += 1
                       return False
-
                   conteudo = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', conteudo)
                   conteudo = re.sub(r'"thumbnailUrl":\s*\[[^\]]*\]', f'"thumbnailUrl": ["{nova_capa}"]', conteudo, flags=re.DOTALL)
-                  Path(nome_arquivo).write_text(conteudo, encoding='utf-8')
-                  log(f"      [✅] Capa atualizada (vídeo confirmado).")
+                  arquivo.write_text(conteudo, encoding='utf-8')
+                  CONT_ATUALIZADOS += 1
+                  log(f"      [🔄] capa atualizada em {arquivo.name}")
                   return True
               except Exception as e:
-                  log(f"      [-] Erro ao atualizar capa: {e}")
+                  log(f"      [-] Erro: {e}")
+                  CONT_IGNORADOS += 1
                   return False
+
+          def atualizar_url_e_capa(arquivo, nova_capa, novo_link):
+              """Conserta arquivo com contentUrl quebrado: atualiza URL e capa."""
+              global CONT_ATUALIZADOS
+              try:
+                  arquivo = Path(arquivo)
+                  conteudo = arquivo.read_text(encoding='utf-8')
+                  conteudo = re.sub(r'"contentUrl"\s*:\s*"[^"]*"', f'"contentUrl": "{novo_link}"', conteudo)
+                  conteudo = re.sub(r'"embedUrl"\s*:\s*"[^"]*"', f'"embedUrl": "{novo_link}"', conteudo)
+                  conteudo = re.sub(r'(<video[^>]*\bsrc=")[^"]*(")', lambda m: m.group(1) + novo_link + m.group(2), conteudo)
+                  if capa_valida(nova_capa):
+                      conteudo = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', conteudo)
+                      conteudo = re.sub(r'"thumbnailUrl":\s*\[[^\]]*\]', f'"thumbnailUrl": ["{nova_capa}"]', conteudo, flags=re.DOTALL)
+                  arquivo.write_text(conteudo, encoding='utf-8')
+                  CONT_ATUALIZADOS += 1
+                  log(f"      [🔄] URL + capa corrigidos em {arquivo.name}")
+                  return True
+              except Exception as e:
+                  log(f"      [-] Erro: {e}")
+                  return False
+
+          # ============================================================
+          # DECISÃO PRINCIPAL: criar / atualizar / ignorar por vídeo
+          # ============================================================
+          def processar_episodio_por_video(link, capa_ep, nome_arquivo, nome_json):
+              """
+              1º) Busca por contentUrl. Se achou → atualiza capa, não cria.
+              2º) Verifica nome de arquivo (corrige quebrados, pula conflitos).
+              3º) Só cria novo se nada acima resolveu.
+              """
+              global CONT_NOVOS, CONT_ATUALIZADOS, CONT_IGNORADOS
+
+              # PRIORIDADE 1: vídeo já existe em algum arquivo
+              arquivo_existente = mapa_videos.get(link.strip())
+              if arquivo_existente and arquivo_existente.exists():
+                  log(f"      [ℹ️] Vídeo já existe em {arquivo_existente.name}")
+                  atualizar_capa_arquivo(arquivo_existente, capa_ep, link)
+                  return
+
+              # PRIORIDADE 2: nome de arquivo já existe
+              path_nome = Path(nome_arquivo)
+              if path_nome.exists():
+                  conteudo = path_nome.read_text(encoding='utf-8')
+                  m = re.search(r'"contentUrl"\s*:\s*"([^"]+)"', conteudo)
+                  url_atual = m.group(1).strip() if m else ""
+                  if not url_atual or "quebrado" in url_atual.lower():
+                      # Arquivo quebrado — consertar
+                      atualizar_url_e_capa(path_nome, capa_ep, link)
+                      registrar_video(link, nome_arquivo)
+                  elif url_atual == link:
+                      # Mesmo vídeo — só atualizar capa se diferente
+                      atualizar_capa_arquivo(path_nome, capa_ep, link)
+                  else:
+                      # Nome ocupado por outro vídeo — não mexer
+                      log(f"      [⚠️] {path_nome.name} já tem outro vídeo. Ignorando.")
+                      CONT_IGNORADOS += 1
+                  return
+
+              # PRIORIDADE 3: criar novo
+              salvar_html(nome_arquivo, nome_json, link, capa_ep)
+              registrar_video(link, nome_arquivo)
+              CONT_NOVOS += 1
+              log(f"      [+] Salvo: {nome_arquivo}")
 
           # ---------- SALVAR HTML ----------
           def salvar_html(nome_arquivo, nome_json, link, capa_url):
@@ -444,7 +471,7 @@ jobs:
               )
               Path(nome_arquivo).write_text(html, encoding='utf-8')
 
-          # ---------- PROCESSAR SÉRIE ----------
+          # ---------- EPISÓDIOS ----------
           def extrair_episodios_de_soup(soup):
               temporada, eps = 1, []
               for tag in soup.find_all(['b', 'h2', 'h3', 'p', 'a', 'div']):
@@ -472,7 +499,6 @@ jobs:
 
               eps = extrair_episodios_de_soup(soup)
 
-              # Fallback com Playwright se não achou episódios no HTML estático
               if not eps:
                   log("    (Nenhum episódio no HTML estático. Tentando Playwright...)")
                   try:
@@ -489,7 +515,7 @@ jobs:
                       log(f"    [-] Playwright falhou: {e}")
 
               if not eps:
-                  log("    (Ainda sem episódios. NÃO marcando como feita, retry depois.)")
+                  log("    (Ainda sem episódios. NÃO marcando como feita.)")
                   return
 
               marcar_feita(url_serie)
@@ -497,23 +523,16 @@ jobs:
 
               for it in eps:
                   nome_arquivo = f"{slug}_t{it['temp']}e{it['ep']}.html"
-                  if Path(nome_arquivo).exists():
-                      log(f"      (Já existe: {nome_arquivo}) — checando capa...")
-                      await atualizar_capa_se_corresponder(context, nome_arquivo, it['url'])
-                      continue
-
                   nome_json = f"{titulo} - T{it['temp']}E{it['ep']} - {it['titulo']} - 🍿Clau"
-                  log(f"    -> Processando T{it['temp']}E{it['ep']} - {it['titulo']}")
+                  log(f"    -> T{it['temp']}E{it['ep']} - {it['titulo']}")
                   link, capa_ep = await obter_link_e_capa(context, it['url'], capa_url)
                   if not link:
-                      log(f"      [-] Falhou. Vai pra pendentes.")
+                      log(f"      [-] Sem vídeo. Vai pra pendentes.")
                       if not any(p['arquivo']==nome_arquivo for p in pendentes):
                           pendentes.append({"arquivo": nome_arquivo, "nome_json": nome_json, "url": it['url'], "tentativas": 1})
                       continue
-                  salvar_html(nome_arquivo, nome_json, link, capa_ep)
-                  log(f"      [+] Salvo: {nome_arquivo}")
+                  processar_episodio_por_video(link, capa_ep, nome_arquivo, nome_json)
 
-          # ---------- PROCESSAR FILME ----------
           async def _processar_filme(context, url_filme, soup, html_final):
               titulo, capa_url, ano = extrair_dados_pagina(html_final, url_filme)
               if not titulo or len(titulo) < 3:
@@ -525,33 +544,25 @@ jobs:
               if not slug: slug = "desconhecido"
 
               nome_arquivo = f"{slug}_{ano}.html" if ano else f"{slug}.html"
-
-              if Path(nome_arquivo).exists():
-                  log(f"    (Já existe: {nome_arquivo}) — checando capa...")
-                  await atualizar_capa_se_corresponder(context, nome_arquivo, url_filme)
-                  marcar_feita(url_filme)
-                  return
-
               nome_json = f"{titulo} ({ano}) - 🍿Clau" if ano else f"{titulo} - 🍿Clau"
-              log(f"    -> Processando FILME: {nome_json}")
+
+              log(f"    -> FILME: {nome_json}")
               link, capa_ep = await obter_link_e_capa(context, url_filme, capa_url)
 
               if not link:
-                  log(f"      [-] Falhou ao obter link. Vai pra pendentes.")
+                  log(f"      [-] Sem vídeo. Vai pra pendentes.")
                   if not any(p['arquivo']==nome_arquivo for p in pendentes):
                       pendentes.append({"arquivo": nome_arquivo, "nome_json": nome_json, "url": url_filme, "tentativas": 1})
                   marcar_feita(url_filme)
                   return
 
-              salvar_html(nome_arquivo, nome_json, link, capa_ep)
-              log(f"      [+] Salvo: {nome_arquivo}")
+              processar_episodio_por_video(link, capa_ep, nome_arquivo, nome_json)
               marcar_feita(url_filme)
 
           # ---------- DISPATCH ----------
           async def processar_item(context, url):
               if any(m in url.lower() for m in SERIES_MORTAS):
-                  marcar_feita(url)
-                  return
+                  marcar_feita(url); return
               log(f"\n--> Verificando: {url}")
               try:
                   r = await asyncio.to_thread(requests.get, url, headers=HEADERS, timeout=20)
@@ -559,22 +570,19 @@ jobs:
                   html_final = r.text
 
                   if eh_serie(soup, url):
-                      log("    (Detectado como SÉRIE.)")
+                      log("    (SÉRIE detectada.)")
                       await _processar_serie(context, url, soup, html_final)
                       return
 
-                  # Não é série via requests. Pode ser filme OU série JS.
-                  # Se já tem vídeo no HTML estático, é filme (não precisa Playwright).
                   vo = extrair_videoobject(html_final)
                   tem_video = bool(vo and vo.get('contentUrl')) or bool(extrair_video_da_pagina(html_final))
 
                   if tem_video:
-                      log("    (Sem sinais de série e vídeo encontrado. Detectado como FILME.)")
+                      log("    (FILME detectado — vídeo presente.)")
                       await _processar_filme(context, url, soup, html_final)
                       return
 
-                  # Sem vídeo no requests: pode ser série JS. Verificar com Playwright.
-                  log("    (Sem vídeo no HTML estático. Abrindo Playwright para decidir...)")
+                  log("    (Sem vídeo. Playwright pra decidir...)")
                   try:
                       async with async_playwright() as pw:
                           browser = await pw.chromium.launch(headless=True)
@@ -592,15 +600,14 @@ jobs:
                       return
 
                   if eh_serie(soup_r, url):
-                      log("    (Playwright confirmou: SÉRIE.)")
+                      log("    (SÉRIE confirmada.)")
                       await _processar_serie(context, url, soup_r, html_r)
                   else:
-                      log("    (Playwright confirmou: FILME.)")
+                      log("    (FILME confirmado.)")
                       await _processar_filme(context, url, soup_r, html_r)
               except Exception as e:
                   log(f"    Erro: {e}")
 
-          # ---------- MAIN ----------
           async def main():
               async with async_playwright() as pw:
                   browser = await pw.chromium.launch(headless=True)
@@ -610,7 +617,7 @@ jobs:
                       await processar_item(ctx, url)
 
                   if pendentes:
-                      log(f"\n=== RETENTANDO {len(pendentes)} ITENS ===")
+                      log(f"\n=== RETENTANDO {len(pendentes)} PENDENTES ===")
                       ainda = []
                       for item in pendentes:
                           if Path(item['arquivo']).exists(): continue
@@ -623,13 +630,19 @@ jobs:
                           link, capa_url = await obter_link_e_capa(ctx, item['url'],
                               "https://via.placeholder.com/500x750?text=Sem+Capa")
                           if link:
-                              salvar_html(item['arquivo'], item['nome_json'], link, capa_url)
+                              processar_episodio_por_video(link, capa_url, item['arquivo'], item['nome_json'])
                               log("    [+] SUCESSO")
                           else:
                               item["tentativas"] = item.get("tentativas",1) + 1
                               ainda.append(item)
                       pendentes.clear(); pendentes.extend(ainda)
                   await browser.close()
+
+                  log(f"\n══════════ RESUMO ══════════")
+                  log(f"Novos:        {CONT_NOVOS}")
+                  log(f"Atualizados:  {CONT_ATUALIZADOS}")
+                  log(f"Ignorados:    {CONT_IGNORADOS}")
+                  log(f"Índice total: {len(mapa_videos)} vídeos")
 
           if __name__ == "__main__":
               asyncio.run(main())
@@ -647,7 +660,7 @@ jobs:
           git commit -m "chore: atualizar catalogo filmes e series (lote ${{ inputs.lote || '100' }})"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
-            echo "Conflito detectado. Sincronizando de forma segura..."
+            echo "Conflito. Sincronizando..."
             git pull origin main --no-rebase -X ours --no-edit
             git add -A
             git reset .github/ 2>/dev/null || true
@@ -666,21 +679,16 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT_CHAIN }}
           REPO: ${{ github.repository }}
         run: |
-          echo "Verificando se há fila para próxima run..."
+          echo "Verificando fila..."
           TOTAL=$(wc -l < series_fila.txt)
           FEITOS=$(sort -u series_feitas.txt | wc -l)
           FALTAM=$((TOTAL - FEITOS))
           echo "Total: $TOTAL | Feitos: $FEITOS | Faltam: $FALTAM"
-          if [ "$FALTAM" -le 0 ]; then
-            echo "✅ Fila vazia. Chain encerrada."; exit 0
-          fi
+          if [ "$FALTAM" -le 0 ]; then echo "✅ Fila vazia."; exit 0; fi
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list --workflow="series.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
-          if [ "$RECENTES" -ge 100 ]; then
-            echo "⚠️ Limite de 100 runs/hora atingido. Aguardando cron."; exit 0
-          fi
-          echo "⏳ Aguardando 30 segundos antes de disparar a próxima run..."
+          if [ "$RECENTES" -ge 100 ]; then echo "⚠️ Limite/hora atingido."; exit 0; fi
+          echo "⏳ 30s antes de disparar..."
           sleep 30
-          echo "🔁 Disparando próxima run..."
           gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false
           echo "✅ Próxima run disparada."
