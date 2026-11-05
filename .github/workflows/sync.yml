@@ -65,23 +65,18 @@ jobs:
               return (is_novo, len(arq.name))
           arquivos.sort(key=prioridade, reverse=True)
 
-          def limpar_titulo(raw_text):
-              if not raw_text: return "Desconhecido"
-              texto = str(raw_text)
-              
-              # NOVO: se o texto for uma URL, transforma em texto limpo antes de tudo
-              if 'http' in texto or 'www.' in texto or 'vini7xgrave' in texto:
-                  texto = re.sub(r'https?://', '', texto)
-                  texto = re.sub(r'www\.', '', texto)
-                  texto = re.sub(r'vini7xgrave\.site[^/]*/?', '', texto)
-                  texto = re.sub(r'[_-]', ' ', texto) # troca _ e - por espaço
-                  
-              texto_norm = unicodedata.normalize('NFKD', texto)
+          def limpar_lixo(raw_text):
+              if not raw_text: return ""
+              texto_norm = unicodedata.normalize('NFKD', str(raw_text))
               texto_norm = "".join([c for c in texto_norm if not unicodedata.combining(c)])
-              
               for lixo in ['🍿Clau', '🕸️ PK', '🕸️', 'PK', '👾', 'Marcos', 'Clau', 'clau']:
-                  texto_norm = texto_norm.replace(lixo, '')
-                  
+                  texto_norm = re.sub(re.escape(lixo), '', texto_norm, flags=re.IGNORECASE)
+              return texto_norm.strip()
+
+          def limpar_titulo(raw_text):
+              texto_norm = limpar_lixo(raw_text)
+              if not texto_norm: return "Desconhecido"
+              
               texto_norm = re.sub(r'(?i)\bT\d+E\d+\b', '', texto_norm)
               texto_norm = re.sub(r'(?i)_t\d+e\d+', '', texto_norm)
               texto_norm = re.sub(r'(?i)Epis[oó]dio\s*\d+', '', texto_norm)
@@ -97,16 +92,7 @@ jobs:
                   if p_limpo:
                       partes_limpas.append(p_limpo)
                       
-              # NOVO: Não usa o partes[0] se for lixo/url.
-              if partes_limpas:
-                  titulo_final = ' - '.join(partes_limpas)
-              else:
-                  titulo_final = "Desconhecido"
-                  for p in partes:
-                      if len(p) > 3 and not any(pref in p.lower() for pref in ['vini', 'marcos', 'inix', 'lili', 'estrelinha', 'grave', 'site', 'online', 'blogspot', 'assistir', 'download']):
-                          titulo_final = p
-                          break
-
+              titulo_final = ' - '.join(partes_limpas) if partes_limpas else partes[0] if partes else "Desconhecido"
               titulo_final = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo_final).strip()
               titulo_final = re.sub(r'\s*\(\d+\)$', '', titulo_final).strip()
               titulo_final = re.sub(r'[\s.:;,]+$', '', titulo_final).strip()
@@ -122,6 +108,7 @@ jobs:
               elif not url.startswith('http'): url = 'http://' + url
               return url.split()[0] if url.split() else ""
 
+          # --- TEMPLATE EXATO DO NOVO CARD VISUAL ---
           template_base = textwrap.dedent("""
               <script type="application/ld+json">
               __JSON__
@@ -146,7 +133,7 @@ jobs:
           """).strip()
 
           for arq in arquivos:
-              if any(x in arq.name for x in ['pendentes', 'fila', 'feitas', 'descartados', 'cache', 'renomeados', 'lista', 'index', 'capas_']): 
+              if any(x in arq.name for x in ['pendentes', 'fila', 'feitas', 'descartados', 'cache', 'renomeados', 'lista', 'index']): 
                   continue
                   
               try:
@@ -161,24 +148,16 @@ jobs:
                       urls_quebradas.append(arq.name)
                       nova_url = url if url else "http://quebrado.com/video.mp4"
 
-                  # Evita descartar todos os arquivos sem URL
                   clean_url_lower = nova_url.split('?')[0].lower()
-                  dedup_key = clean_url_lower if clean_url_lower != "http://quebrado.com/video.mp4" else arq.name
-                  
-                  if dedup_key in links_vistos: 
+                  if clean_url_lower in links_vistos: 
                       continue
-                  links_vistos.add(dedup_key)
+                  links_vistos.add(clean_url_lower)
 
                   match_name = re.search(r'"name"\s*:\s*"([^"]*)"', content)
                   nome_atual = match_name.group(1) if match_name else arq.name.replace('.json', '').replace('.html', '')
                   if len(nome_atual) < 5:
                       nome_atual = arq.name.replace('.json', '').replace('.html', '')
                       
-                  # NOVO: Limpa o nome_atual se for URL ou se contiver o nome do site
-                  if 'http' in nome_atual or 'www.' in nome_atual or 'vini7xgrave' in nome_atual:
-                      nome_atual = re.sub(r'https?://[^/]+/', '', nome_atual)
-                      nome_atual = re.sub(r'[_-]', ' ', nome_atual)
-
                   match_ano = re.search(r'\b(19\d{2}|20\d{2})\b', nome_atual)
                   ano = match_ano.group(1) if match_ano else ""
                   
@@ -188,24 +167,34 @@ jobs:
                   desc_match = re.search(r'"description"\s*:\s*"([^"]*)"', content)
                   descricao_atual = desc_match.group(1) if desc_match else "Assista ao filme"
 
-                  titulo_limpo = limpar_titulo(nome_atual)
-                  
+                  # LÓGICA DE SEPARAÇÃO DE SÉRIES E FILMES
                   m_ep = re.search(r'(?i)_t(\d+)e(\d+)', arq.name)
                   if not m_ep: m_ep = re.search(r'(?i)t(\d+)e(\d+)', nome_atual)
-                  
+
                   if m_ep:
                       ep_tag = f"T{int(m_ep.group(1))}E{int(m_ep.group(2))}"
-                      novo_nome_json = f"{titulo_limpo} {ep_tag} - 🍿Clau"
+                      
+                      nome_str = limpar_lixo(nome_atual)
+                      nome_str = re.sub(r'(?i)T\d+E\d+', '', nome_str) # Remove a tag do meio do texto
+                      nome_str = re.sub(r'(\s*-\s*)+', ' - ', nome_str).strip(' -') # Conserta os hifens duplos
+                      
+                      partes = [p.strip() for p in nome_str.split(' - ') if p.strip()]
+                      if len(partes) >= 2:
+                          show_name = partes[0]
+                          ep_name = ' - '.join(partes[1:])
+                          novo_nome_json = f"{show_name} {ep_tag} - {ep_name} - 🍿Clau"
+                          titulo_base = show_name
+                      else:
+                          show_name = nome_str
+                          novo_nome_json = f"{show_name} {ep_tag} - 🍿Clau"
+                          titulo_base = show_name
                   else:
-                      ep_tag = ""
+                      titulo_limpo = limpar_titulo(nome_atual)
                       novo_nome_json = f"{titulo_limpo} ({ano}) - 🍿Clau" if ano else f"{titulo_limpo} - 🍿Clau"
+                      titulo_base = titulo_limpo
 
-                  titulo_base = re.sub(r'(?i)\bT\d+E\d+\b', '', titulo_limpo).strip()
                   slug = re.sub(r'[^a-z0-9]', '_', titulo_base.lower())
                   slug = re.sub(r'_+', '_', slug).strip('_')
-                  
-                  # Fallback extremo para não ficar vazio
-                  if not slug: slug = "arquivo_sem_nome"
                   
                   if ep_tag:
                       novo_nome_arq = f"{slug}_{ep_tag.lower()}.json"
@@ -225,8 +214,7 @@ jobs:
                       "contentUrl": nova_url
                   }
 
-                  # Evita quebra de HTML se houver </script> na descrição
-                  json_str = json.dumps(novo_json, ensure_ascii=False, indent=2).replace("</", "<\\/")
+                  json_str = json.dumps(novo_json, ensure_ascii=False, indent=2)
 
                   novo_html = template_base.replace("__JSON__", json_str).replace("__NOME__", novo_nome_json).replace("__URL__", nova_url).replace("__CAPA__", thumb_atual)
                   novo_html = novo_html.replace("https://redetoons.cards", "https://redetoons.my")
@@ -253,12 +241,7 @@ jobs:
           find . -maxdepth 1 -name "*.json" -delete
           find . -maxdepth 1 -name "*.html" ! -name "index.html" -delete
           
-          # Proteção extra para não quebrar se a pasta estiver vazia
-          shopt -s nullglob
-          htmls=("$T"/saida/*.html)
-          if [ ${#htmls[@]} -gt 0 ]; then
-            cp -f "${htmls[@]}" .
-          fi
+          cp -f "$T"/saida/*.html .
           
           if [ -f "$T/saida/urls_invalidas.txt" ]; then 
             cp -f "$T/saida/urls_invalidas.txt" .
@@ -276,7 +259,7 @@ jobs:
             exit 0
           fi
           
-          git commit -m "sync: limpeza de titulos URL, padronizacao e suporte a catalogocompleto2"
+          git commit -m "sync: novo formato de nome de serie (Nome T1E1 - Ep - Selo) e padrao json-ld"
           
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then
