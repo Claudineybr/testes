@@ -171,6 +171,8 @@ jobs:
                   m_ep = re.search(r'(?i)_t(\d+)e(\d+)', arq.name)
                   if not m_ep: m_ep = re.search(r'(?i)t(\d+)e(\d+)', nome_atual)
 
+                  ep_tag = None  # <-- CORREÇÃO: inicializa antes do if
+
                   if m_ep:
                       ep_tag = f"T{int(m_ep.group(1))}E{int(m_ep.group(2))}"
                       
