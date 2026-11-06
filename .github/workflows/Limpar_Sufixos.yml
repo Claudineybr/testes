@@ -1,0 +1,122 @@
+name: Limpar Sufixos HTML e Renomear
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: limpar-sufixos
+  cancel-in-progress: false
+
+jobs:
+  limpar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependências
+        run: pip install beautifulsoup4
+
+      - name: Limpar sufixos
+        run: |
+          cat > /tmp/limpar_sufixos.py << 'PYEOF'
+          import re, json, os
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+
+          def main():
+              arquivos = list(Path(".").glob("*.html"))
+              consertados = 0
+
+              for f in arquivos:
+                  if "_html_20" not in f.name:
+                      continue
+
+                  try:
+                      conteudo = f.read_text(encoding="utf-8")
+                      soup = BeautifulSoup(conteudo, 'html.parser')
+                      
+                      # Pega o nome base (ex: inix_127_horas_2010) e o ano falso (ex: 2025)
+                      # Padrão: (inix|arc|arcx|entre-nos)_(Nome_do_Filme_Ano)_html_(Ano_do_site).html
+                      match = re.search(r'^(?:inix|arc|arcx|entre-nos)[-_](.+?)(?:_html_(\d{4}))?\.html$', f.name, re.I)
+                      
+                      if not match:
+                          continue
+
+                      titulo_bruto = match.group(1)
+                      # Remove o ano falso do final se tiver (ex: 127_horas_2010 -> 127_horas_2010)
+                      
+                      # Transforma 127_horas_2010 em "127 Horas 2010"
+                      titulo_bonito = titulo_bruto.replace('_', ' ').title()
+                      
+                      # Limpa alguns resíduos
+                      titulo_bonito = re.sub(r'\s+', ' ', titulo_bonito).strip()
+                      
+                      nome_json = f"{titulo_bonito} - 🍿Clau"
+                      
+                      # Conserta o JSON
+                      script_ld = soup.find('script', type='application/ld+json')
+                      if script_ld:
+                          try:
+                              dados = json.loads(script_ld.string)
+                              dados['name'] = nome_json
+                              dados['description'] = f"Assista {nome_json}"
+                              js_novo = json.dumps(dados, ensure_ascii=False, indent=4)
+                              novo_html = conteudo.replace(script_ld.string, js_novo)
+                          except: 
+                              novo_html = conteudo
+                      else:
+                          novo_html = conteudo
+
+                      # Conserta o HTML
+                      novo_html = re.sub(r'<title>.*?</title>', f'<title>{nome_json}</title>', novo_html)
+                      novo_html = re.sub(r'<h1.*?>.*?</h1>', f'<h1 class="post-title">{nome_json}</h1>', novo_html)
+
+                      # Novo nome do arquivo (ex: 127_horas_2010.html)
+                      novo_slug = re.sub(r'[^a-z0-9]', '_', titulo_bonito.lower())
+                      novo_slug = re.sub(r'_+', '_', novo_slug).strip('_')
+                      novo_nome = f"{novo_slug}.html"
+
+                      Path(novo_nome).write_text(novo_html, encoding="utf-8")
+                      if f.name != novo_nome:
+                          f.unlink()
+                      
+                      consertados += 1
+                      if consertados % 100 == 0:
+                          print(f"[{consertados}] Consertados...")
+
+                  except Exception as e:
+                      print(f"Erro em {f.name}: {e}")
+
+              print(f"Finalizado! Total de arquivos limpos e renomeados: {consertados}")
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/limpar_sufixos.py
+
+      - name: Salvar arquivos e progresso
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          git reset .github/ 2>/dev/null || true
+          
+          if git diff --cached --quiet; then echo "Nenhum arquivo precisou ser limpo."; exit 0; fi
+          git commit -m "fix: limpar sufixos html e nomes duplicados"
+          
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            echo "Conflito detectado. Sincronizando de forma segura..."
+            git pull origin main --no-rebase -X ours --no-edit
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry limpar sufixos $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
