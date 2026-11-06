@@ -1,0 +1,197 @@
+name: Corrigir Todos os Arquivos Quebrados
+
+on:
+  workflow_dispatch:
+    inputs:
+      lote:
+        description: 'Quantos arquivos quebrados verificar por run'
+        required: false
+        default: '500'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: corrigir-quebrados
+  cancel-in-progress: false
+
+jobs:
+  consertar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Verificar e consertar todos
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          LOTE_SIZE: ${{ inputs.lote || '500' }}
+        run: |
+          cat > /tmp/corrigir_tudo.py << 'PYEOF'
+          import re, os, sys, json, requests
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+
+          API_KEY = os.environ.get("TMDB_API_KEY")
+          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 500))
+          TMDB_API = "https://api.themoviedb.org/3"
+          IMG_BASE = "https://image.tmdb.org/t/p/w500"
+
+          def log(*a): print(*a, flush=True); sys.stdout.flush()
+
+          def buscar_tmdb(imdb_id):
+              if not API_KEY: return None
+              try:
+                  r = requests.get(f"{TMDB_API}/find/{imdb_id}?external_source=imdb_id&api_key={API_KEY}&language=pt-BR", timeout=10)
+                  dados = r.json()
+                  if dados.get("movie_results"):
+                      m = dados["movie_results"][0]
+                      ano = m.get("release_date", "")[:4]
+                      titulo = m.get("title", "Desconhecido")
+                      if ano: titulo = f"{titulo} ({ano})"
+                      capa = IMG_BASE + m["poster_path"] if m.get("poster_path") else None
+                      return titulo, capa
+                  
+                  if dados.get("tv_results"):
+                      t = dados["tv_results"][0]
+                      ano = t.get("first_air_date", "")[:4]
+                      titulo = t.get("name", "Desconhecido")
+                      if ano: titulo = f"{titulo} ({ano})"
+                      capa = IMG_BASE + t["poster_path"] if t.get("poster_path") else None
+                      return titulo, capa
+              except: pass
+              return None
+
+          def main():
+              arquivos = list(Path(".").glob("*.html"))
+              log(f"Analisando {len(arquivos)} arquivos HTML...")
+              
+              processados = 0
+              consertados = 0
+              deletados = 0
+
+              for f in arquivos:
+                  if processados >= LOTE_SIZE:
+                      log(f"Lote de {LOTE_SIZE} consertos atingido. Parando por hoje.")
+                      break
+
+                  if f.name in ["catalogo.html", "index.html"]:
+                      continue
+
+                  try:
+                      conteudo = f.read_text(encoding="utf-8")
+                      soup = BeautifulSoup(conteudo, 'html.parser')
+                      script_ld = soup.find('script', type='application/ld+json')
+                      
+                      if not script_ld: continue
+                      
+                      try: dados = json.loads(script_ld.string)
+                      except: continue
+                      
+                      nome_atual = dados.get('name', '')
+                      video_link = dados.get('contentUrl', '')
+                      
+                      # Verifica se o nome está quebrado
+                      is_broken = False
+                      if not nome_atual or len(nome_atual) < 3: is_broken = True
+                      if "http" in nome_atual or "desconhecid" in nome_atual.lower(): is_broken = True
+                      if re.match(r'^\d{4}\s*-', nome_atual): is_broken = True # Ex: "2024 - 🍿Clau"
+                      
+                      if not is_broken:
+                          continue # Pula os que já estão bons
+                          
+                      processados += 1
+                      log(f"[{processados}/{LOTE_SIZE}] Arquivo quebrado encontrado: {f.name} (Nome atual: '{nome_atual}')")
+                      
+                      novo_nome_json = None
+                      nova_capa = None
+                      
+                      # 1. Tenta resgatar via IMDB (TMDB)
+                      match_imdb = re.search(r'(tt\d{7,9})', video_link)
+                      if match_imdb and API_KEY:
+                          imdb_id = match_imdb.group(1)
+                          res = buscar_tmdb(imdb_id)
+                          if res:
+                              titulo_tmdb, capa_tmdb = res
+                              novo_nome_json = f"{titulo_tmdb} - 🍿Clau"
+                              nova_capa = capa_tmdb
+                              log(f"  [+] Resgatado via TMDB: {titulo_tmdb}")
+
+                      # 2. Se não achou no TMDB, tenta usar o nome da URL
+                      if not novo_nome_json:
+                          # Ex: extrai "escolha_de_sofia_1982" de https_www..._inix_escolha_de_sofia_1982_html.html
+                          m_slug = re.search(r'_site_\d{4}_\d{2}_([^/]+)\.html', f.name)
+                          if m_slug:
+                              slug = m_slug.group(1).replace('_', ' ').title()
+                              novo_nome_json = f"{slug} - 🍿Clau"
+                              log(f"  [+] Resgatado via URL: {slug}")
+                          else:
+                              log(f"  [X] Sem salvação. Deletando arquivo lixo.")
+                              f.unlink()
+                              deletados += 1
+                              continue
+
+                      # Aplica as correções
+                      dados['name'] = novo_nome_json
+                      dados['description'] = f"Assista {novo_nome_json}"
+                      if nova_capa:
+                          dados['thumbnailUrl'] = [nova_capa]
+                          
+                      novo_json = json.dumps(dados, ensure_ascii=False, indent=4)
+                      novo_html = conteudo.replace(script_ld.string, novo_json)
+                      novo_html = re.sub(r'<title>.*?</title>', f'<title>{novo_nome_json}</title>', novo_html)
+                      novo_html = re.sub(r'<h1.*?>.*?</h1>', f'<h1 class="post-title">{novo_nome_json}</h1>', novo_html)
+                      
+                      if nova_capa:
+                          novo_html = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', novo_html)
+                          novo_html = re.sub(r'<img src="[^"]*"', f'<img src="{nova_capa}"', novo_html)
+
+                      # Renomeia o arquivo
+                      base_titulo = re.sub(r'\s*-\s*🍿Clau', '', novo_nome_json)
+                      novo_slug = re.sub(r'[^a-z0-9]', '_', base_titulo.lower())
+                      novo_slug = re.sub(r'_+', '_', novo_slug).strip('_')
+                      nome_final = f"{novo_slug}.html"
+                      
+                      Path(nome_final).write_text(novo_html, encoding="utf-8")
+                      if f.name != nome_final:
+                          f.unlink()
+                          
+                      log(f"  [+] Salvo como: {nome_final}")
+                      consertados += 1
+                      
+                  except Exception as e:
+                      log(f"  [x] Erro ao processar {f.name}: {e}")
+
+              log(f"Finalizado! Quebrados analisados: {processados} | Consertados: {consertados} | Deletados: {deletados}")
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/corrigir_tudo.py
+
+      - name: Salvar arquivos e progresso
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          git reset .github/ 2>/dev/null || true
+          
+          if git diff --cached --quiet; then echo "Nenhum arquivo precisou ser consertado."; exit 0; fi
+          git commit -m "fix: varrer e consertar todos os arquivos quebrados do catalogo"
+          
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            echo "Conflito detectado. Sincronizando de forma segura..."
+            git pull origin main --no-rebase -X ours --no-edit
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry corrigir quebrados $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
