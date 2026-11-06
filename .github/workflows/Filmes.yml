@@ -78,9 +78,6 @@ jobs:
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          # ==========================================
-          # LIMPEZA BLINDADA
-          # ==========================================
           def limpar_titulo_bruto(titulo, url):
               if not titulo: titulo = ""
               if "http" in titulo.lower() or titulo.lower().endswith(".html"): titulo = ""
@@ -103,9 +100,6 @@ jobs:
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
               return titulo
 
-          # ==========================================
-          # ÍNDICE DE VÍDEOS EXISTENTES
-          # ==========================================
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
               indice = {}
@@ -113,8 +107,7 @@ jobs:
                   try:
                       texto = f.read_text(encoding="utf-8")
                       m = re.search(r'"contentUrl":\s*"([^"]+)"', texto)
-                      if m:
-                          indice[m.group(1)] = f
+                      if m: indice[m.group(1)] = f
                   except: pass
               log(f"Encontrados {len(indice)} vídeos já cadastrados.")
               return indice
@@ -274,9 +267,6 @@ jobs:
                   return False
               except: return True
 
-          def nome_arquivo_quebrado(arquivo):
-              return arquivo.name.startswith("https_www_") or "_html_20" in arquivo.name
-
           async def processar_item(context, url_pagina):
               log(f"\n--> Verificando: {url_pagina}")
               try:
@@ -321,26 +311,25 @@ jobs:
 
                   with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
 
-                  # ====== LÓGICA DE CONSERTO / CRIAÇÃO ======
                   arquivo_existente = INDICE_VIDEOS.get(link) if link else None
 
                   if arquivo_existente:
                       log(f"    (Arquivo existente: {arquivo_existente.name})")
-                      if arquivo_precisa_conserto(arquivo_existente) or nome_arquivo_quebrado(arquivo_existente):
-                          log(f"    [🔄] Consertando arquivo...")
-                          if nome_arquivo_quebrado(arquivo_existente) and arquivo_existente.name != nome_arquivo_calculado:
-                              novo_caminho = Path(nome_arquivo_calculado)
-                              salvar_html(novo_caminho, nome_json, link, capa_url)
-                              arquivo_existente.unlink()
-                              log(f"    [+] Renomeado para: {novo_caminho.name}")
-                          else:
-                              salvar_html(arquivo_existente, nome_json, link, capa_url)
-                              log(f"    [+] Consertado in-place")
+                      # MUDANÇA: Se o nome for diferente do calculado, força a renomeação/conserto
+                      if arquivo_existente.name != nome_arquivo_calculado:
+                          log(f"    [🔄] Nome incorreto. Renomeando para: {nome_arquivo_calculado}")
+                          novo_caminho = Path(nome_arquivo_calculado)
+                          salvar_html(novo_caminho, nome_json, link, capa_url)
+                          arquivo_existente.unlink()
+                          log(f"    [+] Renomeado e consertado.")
+                      elif arquivo_precisa_conserto(arquivo_existente):
+                          log(f"    [🔄] Conteúdo com defeito. Consertando in-place...")
+                          salvar_html(arquivo_existente, nome_json, link, capa_url)
+                          log(f"    [+] Consertado in-place.")
                       else:
                           log(f"    (Arquivo já está perfeito).")
                       return
 
-                  # Se o arquivo com o nome calculado existir, atualiza
                   arquivo_por_nome = Path(nome_arquivo_calculado)
                   if arquivo_por_nome.exists():
                       log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado})")
@@ -352,7 +341,6 @@ jobs:
                           log(f"    (Já está perfeito)")
                       return
 
-                  # ====== NÃO EXISTE: CRIA (se permitido) ======
                   if APENAS_CONSERTAR:
                       log(f"    (Não existe e estamos em modo de conserto. Pulando.)")
                       return
@@ -399,7 +387,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (apenas conserto)"
+          git commit -m "feat: mega extracao de filmes (conserto de nomes duplicados)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
