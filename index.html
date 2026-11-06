@@ -7,34 +7,26 @@
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     
-    /* ======================================================== */
-    /* FUNDO DO SITE - AGORA BEM MAIS VISÍVEL                   */
-    /* ======================================================== */
     body { 
       background: linear-gradient(rgba(15, 15, 30, 0.4), rgba(15, 15, 30, 0.8)), 
                   url('https://i.imgur.com/5JlyUlv.png') center/cover no-repeat fixed;
-      color: #fff; 
-      min-height: 100vh; 
+      color: #fff; min-height: 100vh; 
     }
     
-    /* HEADER */
     header { background: rgba(15, 15, 30, 0.85); backdrop-filter: blur(10px); padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
     .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(45deg, #ff2e63, #ff8c42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; letter-spacing: 1px; }
     .logo span { -webkit-text-fill-color: #fff; }
     
-    /* BARRA DE PESQUISA */
     .search-container { flex: 1; max-width: 500px; margin: 0 30px; position: relative; }
     .search-container input { width: 100%; padding: 12px 45px 12px 20px; border-radius: 30px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 0.95rem; outline: none; transition: all 0.3s ease; }
     .search-container input::placeholder { color: rgba(255, 255, 255, 0.6); }
     .search-container input:focus { border-color: #ff2e63; background: rgba(255, 255, 255, 0.15); box-shadow: 0 0 20px rgba(255, 46, 99, 0.3); }
     .search-icon { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.7); pointer-events: none; font-size: 1.1rem; }
 
-    /* NAV */
     nav ul { display: flex; gap: 25px; list-style: none; }
     nav ul li a { color: rgba(255, 255, 255, 0.75); text-decoration: none; font-weight: 500; transition: color 0.3s; cursor: pointer; padding-bottom: 5px; border-bottom: 2px solid transparent; }
     nav ul li a:hover, nav ul li a.active { color: #ff2e63; border-bottom: 2px solid #ff2e63; }
 
-    /* HERO (Agora ele é transparente, deixando sua foto aparecer) */
     .hero { height: 450px; background: linear-gradient(to right, rgba(15, 15, 30, 0.8), transparent); display: flex; align-items: center; padding: 0 60px; position: relative; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .hero-content { max-width: 600px; }
     .hero-content .badge { display: inline-block; background: #ff2e63; padding: 5px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; margin-bottom: 15px; text-transform: uppercase; box-shadow: 0 4px 10px rgba(255, 46, 99, 0.4); }
@@ -44,13 +36,11 @@
     .btn-primary { background: linear-gradient(45deg, #ff2e63, #ff8c42); color: #fff; box-shadow: 0 4px 15px rgba(255, 46, 99, 0.4); }
     .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255, 46, 99, 0.6); }
 
-    /* SECTIONS E GRID */
     .section { padding: 50px 60px; }
     .section h2 { font-size: 1.8rem; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); }
     .section h2::before { content: ''; width: 5px; height: 28px; background: linear-gradient(45deg, #ff2e63, #ff8c42); border-radius: 3px; }
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 25px; }
 
-    /* CARDS (Mais transparentes para ver o fundo) */
     .card { background: rgba(26, 26, 46, 0.7); border-radius: 12px; overflow: hidden; cursor: pointer; transition: all 0.3s ease; border: 1px solid rgba(255, 255, 255, 0.1); position: relative; text-decoration: none; color: #fff; display: block; content-visibility: auto; contain-intrinsic-size: 200px 350px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); backdrop-filter: blur(8px); }
     .card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(255, 46, 99, 0.3); border-color: rgba(255, 46, 99, 0.6); }
     .card img { width: 100%; height: 300px; object-fit: cover; display: block; }
@@ -61,7 +51,6 @@
     .card-info .meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: rgba(255, 255, 255, 0.7); }
     .rating { color: #ff2e63; font-weight: 600; }
 
-    /* PAGINAÇÃO */
     .pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 40px; flex-wrap: wrap; }
     .page-btn { background: rgba(26, 26, 46, 0.7); backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
     .page-btn:hover { background: rgba(255, 46, 99, 0.3); border-color: #ff2e63; }
@@ -69,7 +58,6 @@
     .page-btn:disabled { opacity: 0.5; cursor: not-allowed; background: transparent; border-color: rgba(255, 255, 255, 0.1); }
     .page-dots { color: rgba(255, 255, 255, 0.7); padding: 0 5px; }
 
-    /* UTILS */
     .no-results { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: rgba(255, 255, 255, 0.8); text-shadow: 1px 1px 4px rgba(0,0,0,0.9); }
     .no-results h3 { font-size: 1.5rem; margin-bottom: 10px; color: #fff; }
     .aviso-mais { grid-column: 1 / -1; text-align: center; padding: 15px; color: #ff8c42; font-weight: 600; background: rgba(26, 26, 46, 0.8); backdrop-filter: blur(8px); border-radius: 8px; margin-top: 10px; font-size: 1rem; border: 1px solid rgba(255, 140, 66, 0.3); }
@@ -159,6 +147,23 @@
       return /_t\d+e\d+/i.test(item.link) || /T\d+E\d+/i.test(item.titulo);
     }
 
+    // FUNÇÃO NOVA: Agrupa os episódios e cria 1 card para a série
+    function agruparSeries(listaOriginal) {
+      const agrupado = {};
+      listaOriginal.forEach(item => {
+        if (!agrupado[item.serie]) {
+          agrupado[item.serie] = {
+            titulo: item.serie,
+            serie: item.serie,
+            thumbnailUrl: item.thumbnailUrl, // Pega a capa do primeiro ep
+            link: `serie.html?nome=${encodeURIComponent(item.serie)}`, // Link para a página da série
+            isAgrupado: true // Marcador para sabermos que é uma série agrupada
+          };
+        }
+      });
+      return Object.values(agrupado);
+    }
+
     function embaralhar(array) {
       const copia = [...array];
       for (let i = copia.length - 1; i > 0; i--) {
@@ -188,12 +193,17 @@
 
       if (!forcarNovos && linksSalvos && timestampSalvo && (agora - parseInt(timestampSalvo)) < TRINTA_MINUTOS_MS) {
         const linksArray = JSON.parse(linksSalvos);
-        destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link));
+        destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link) || linksArray.includes(item.titulo));
         return; 
       }
 
-      destaquesIniciais = embaralhar(catalogo).slice(0, 20);
-      localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(destaquesIniciais.map(i => i.link)));
+      // Pega uma mistura aleatória de filmes e séries agrupadas
+      const filmesSoltos = catalogo.filter(item => !isSerie(item));
+      const seriesAgrupadas = agruparSeries(catalogo.filter(item => isSerie(item)));
+      const tudoJunto = [...filmesSoltos, ...seriesAgrupadas];
+
+      destaquesIniciais = embaralhar(tudoJunto).slice(0, 20);
+      localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(destaquesIniciais.map(i => i.isAgrupado ? i.titulo : i.link)));
       localStorage.setItem(STORAGE_KEY_TIMESTAMP, agora.toString());
     }
 
@@ -202,8 +212,9 @@
         const resposta = await fetch('catalogo.json');
         catalogo = await resposta.json();
         
+        // Separa filmes e agrupa séries
         listaFilmes = ordenarLista(catalogo.filter(item => !isSerie(item)));
-        listaSeries = ordenarLista(catalogo.filter(item => isSerie(item)));
+        listaSeries = ordenarLista(agruparSeries(catalogo.filter(item => isSerie(item))));
         
         gerenciarDestaques();
         mudarView('home');
@@ -252,13 +263,13 @@
         <a href="${item.link}" class="card">
           ${item.thumbnailUrl ? 
             `<img src="${item.thumbnailUrl}" alt="${item.titulo}" loading="lazy" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-             <div class="card-header-fallback" style="display:none;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span></div>` 
+             <div class="card-header-fallback" style="display:none;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">${item.isAgrupado ? 'SÉRIE' : 'FILME'}</span></div>` 
             : 
-            `<div class="card-header-fallback" style="display:flex;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">T${item.temporada} E${item.episodio}</span></div>`
+            `<div class="card-header-fallback" style="display:flex;"><span style="font-size:2rem; font-weight:bold; color:#ff2e63;">${item.isAgrupado ? 'SÉRIE' : 'FILME'}</span></div>`
           }
           <div class="card-info">
             <h3>${item.titulo}</h3>
-            <div class="meta"><span>${item.serie}</span><span class="rating">▶ Play</span></div>
+            <div class="meta"><span>${item.isAgrupado ? 'Ver Episódios' : 'Assistir'}</span><span class="rating">▶ Play</span></div>
           </div>
         </a>
       `).join('');
@@ -310,9 +321,11 @@
       if (termo.length === 0) { mudarView(viewAtual); return; }
 
       tituloSecao.innerText = `Resultados para: "${termo}"`;
-      itensFiltradosAtuais = ordenarLista(catalogo.filter(item => 
-        item.titulo.toLowerCase().includes(termo) || item.serie.toLowerCase().includes(termo)
-      ));
+      
+      const filmesFiltrados = catalogo.filter(item => !isSerie(item) && item.titulo.toLowerCase().includes(termo));
+      const seriesFiltradas = agruparSeries(catalogo.filter(item => isSerie(item) && item.serie.toLowerCase().includes(termo)));
+      
+      itensFiltradosAtuais = ordenarLista([...filmesFiltrados, ...seriesFiltradas]);
       paginaAtual = 1; 
       renderizar();
     }
