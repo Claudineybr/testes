@@ -1,0 +1,159 @@
+name: Consertar Capas via TMDB
+
+on:
+  workflow_dispatch:
+    inputs:
+      lote:
+        description: 'Quantos arquivos verificar por run'
+        required: false
+        default: '1000'
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: consertar-tmdb
+  cancel-in-progress: false
+
+jobs:
+  consertar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Verificar e consertar capas
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          LOTE_SIZE: ${{ inputs.lote || '1000' }}
+        run: |
+          cat > /tmp/consertar_tmdb.py << 'PYEOF'
+          import requests, re, os, sys, json, time
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+          from urllib.parse import quote
+
+          API_KEY = os.environ.get("TMDB_API_KEY")
+          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 1000))
+          TMDB_API = "https://api.themoviedb.org/3"
+          IMG_BASE = "https://image.tmdb.org/t/p/w500"
+
+          if not API_KEY:
+              print("ERRO: TMDB_API_KEY não configurada nos secrets!")
+              sys.exit(1)
+
+          def log(*a): print(*a, flush=True); sys.stdout.flush()
+
+          def buscar_tmdb(titulo, ano=None, tipo="movie"):
+              # Tenta buscar primeiro com o ano (se tiver), depois sem
+              params = {"api_key": API_KEY, "query": titulo, "language": "pt-BR"}
+              if ano: params["year" if tipo == "movie" else "first_air_date_year"] = ano
+              
+              try:
+                  r = requests.get(f"{TMDB_API}/search/{tipo}", params=params, timeout=10)
+                  dados = r.json().get("results", [])
+                  if dados:
+                      return dados[0].get("poster_path")
+                  
+                  # Se não achou com ano, tenta sem
+                  if ano:
+                      del params["year" if tipo == "movie" else "first_air_date_year"]
+                      r = requests.get(f"{TMDB_API}/search/{tipo}", params=params, timeout=10)
+                      dados = r.json().get("results", [])
+                      if dados:
+                          return dados[0].get("poster_path")
+              except Exception:
+                  pass
+              return None
+
+          def main():
+              arquivos = list(Path(".").glob("*.html"))
+              log(f"Analisando {len(arquivos)} arquivos HTML...")
+              
+              processados = 0
+              consertados = 0
+
+              for f in arquivos:
+                  if processados >= LOTE_SIZE:
+                      log(f"Lote de {LOTE_SIZE} atingido. Parando por hoje.")
+                      break
+
+                  try:
+                      conteudo = f.read_text(encoding="utf-8")
+                      
+                      if "via.placeholder.com" not in conteudo and "Sem+Capa" not in conteudo:
+                          continue
+                          
+                      processados += 1
+                      log(f"[{processados}/{LOTE_SIZE}] Procurando no TMDB: {f.name}")
+                      
+                      # Extrai o nome e o ano do nome do arquivo
+                      # Ex: 127_horas_2010.html -> titulo: 127 horas, ano: 2010
+                      # Ex: breaking_bad_t1e1.html -> titulo: breaking bad, ano: None
+                      nome_base = re.sub(r'_t\d+e\d+\.html$', '', f.name, flags=re.I).replace('.html', '')
+                      
+                      # Separa o ano (se houver 4 dígitos no final)
+                      match_ano = re.search(r'_(\d{4})$', nome_base)
+                      ano = match_ano.group(1) if match_ano else None
+                      
+                      # Remove o ano do título
+                      titulo_slug = re.sub(r'_\d{4}$', '', nome_base)
+                      titulo = titulo_slug.replace('_', ' ').title()
+                      
+                      # Define se é filme ou série pelo nome do arquivo
+                      tipo = "tv" if "_t" in f.name.lower() and re.search(r'_t\d+e\d+', f.name, re.I) else "movie"
+                      
+                      poster_path = buscar_tmdb(titulo, ano, tipo)
+                      
+                      if poster_path:
+                          nova_capa = IMG_BASE + poster_path
+                          
+                          # Substitui no HTML
+                          novo_html = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', conteudo)
+                          novo_html = re.sub(r'<img src="[^"]*"', f'<img src="{nova_capa}"', novo_html)
+                          novo_html = re.sub(r'"thumbnailUrl":\s*\[[^\]]*\]', f'"thumbnailUrl": ["{nova_capa}"]', novo_html, flags=re.DOTALL)
+                          
+                          f.write_text(novo_html, encoding="utf-8")
+                          log(f"  [+] Capa atualizada: {nova_capa}")
+                          consertados += 1
+                      else:
+                          log(f"  [-] Não encontrado no TMDB.")
+                          
+                      time.sleep(0.1) # Evita bloqueio da API do TMDB
+                      
+                  except Exception as e:
+                      log(f"  [x] Erro ao processar {f.name}: {e}")
+
+              log(f"Finalizado! Analisados: {processados} | Consertados: {consertados}")
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/consertar_tmdb.py
+
+      - name: Salvar arquivos e progresso
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          
+          git add -A
+          git reset .github/ 2>/dev/null || true
+          
+          if git diff --cached --quiet; then echo "Nenhuma capa precisou ser consertada."; exit 0; fi
+          git commit -m "fix: consertar capas usando TMDB API"
+          
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            echo "Conflito detectado. Sincronizando de forma segura..."
+            git pull origin main --no-rebase -X ours --no-edit
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry consertar tmdb $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
