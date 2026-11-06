@@ -1,1 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Episódios - Clau Flix</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    body { 
+      background: linear-gradient(rgba(15, 15, 30, 0.85), rgba(15, 15, 30, 0.95)), 
+                  url('https://i.imgur.com/5JlyUlv.png') center/cover no-repeat fixed;
+      color: #fff; min-height: 100vh; 
+    }
+    
+    header { background: rgba(15, 15, 30, 0.95); backdrop-filter: blur(10px); padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5); }
+    .logo { font-size: 1.8rem; font-weight: 800; background: linear-gradient(45deg, #ff2e63, #ff8c42); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; letter-spacing: 1px; text-decoration: none; }
+    .logo span { -webkit-text-fill-color: #fff; }
+    .btn-voltar { color: rgba(255, 255, 255, 0.7); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
+    .btn-voltar:hover { color: #ff2e63; transform: translateX(-5px); }
 
+    .container { max-width: 800px; margin: 50px auto; padding: 0 20px; }
+    
+    .header-serie { text-align: center; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+    .header-serie h1 { font-size: 2.5rem; font-weight: 800; color: #fff; margin-bottom: 10px; text-shadow: 2px 2px 8px rgba(0,0,0,0.8); }
+    .header-serie p { color: #ff8c42; font-size: 1.1rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+
+    .temporada-bloco { margin-bottom: 40px; background: rgba(26, 26, 46, 0.7); border-radius: 16px; padding: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .temporada-titulo { font-size: 1.5rem; color: #fff; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+    .temporada-titulo::before { content: ''; width: 4px; height: 24px; background: #ff2e63; border-radius: 2px; }
+
+    .lista-eps { display: flex; flex-direction: column; gap: 10px; }
+    
+    .ep-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px; background: rgba(255, 255, 255, 0.03); border-radius: 10px; text-decoration: none; color: #fff; border: 1px solid transparent; transition: all 0.2s; }
+    .ep-item:hover { background: rgba(255, 46, 99, 0.1); border-color: rgba(255, 46, 99, 0.4); transform: translateX(5px); }
+    
+    .ep-info { display: flex; align-items: center; gap: 20px; }
+    .ep-numero { font-size: 1.2rem; font-weight: 800; color: #ff2e63; }
+    .ep-titulo { font-size: 1.1rem; font-weight: 500; }
+    
+    .ep-play { background: rgba(255, 255, 255, 0.1); width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; transition: 0.3s; }
+    .ep-item:hover .ep-play { background: #ff2e63; box-shadow: 0 0 15px rgba(255, 46, 99, 0.6); }
+
+    .loading { text-align: center; font-size: 1.2rem; color: #aaa; margin-top: 50px; }
+    .erro-msg { text-align: center; color: #ff2e63; font-size: 1.2rem; margin-top: 50px; background: rgba(255,46,99,0.1); padding: 20px; border-radius: 10px; border: 1px solid #ff2e63; }
+    
+    @media (max-width: 600px) {
+      .header-serie h1 { font-size: 1.8rem; }
+      .temporada-bloco { padding: 20px 15px; }
+      .ep-item { padding: 12px 15px; }
+      .ep-titulo { font-size: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <a href="index.html" class="logo">Clau <span>Flix</span></a>
+    <a href="index.html" class="btn-voltar">← Voltar ao Início</a>
+  </header>
+
+  <div class="container">
+    <div class="header-serie">
+      <h1 id="tituloSerie">Carregando...</h1>
+      <p id="subtituloSerie">Selecione um episódio abaixo</p>
+    </div>
+
+    <div id="conteudoEpisodios">
+      <div class="loading">Buscando episódios... 🍿</div>
+    </div>
+  </div>
+
+  <script>
+    // Pega o nome da série da URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const nomeSerie = urlParams.get('nome');
+
+    if (!nomeSerie) {
+      document.getElementById('tituloSerie').innerText = "Série não encontrada";
+      document.getElementById('conteudoEpisodios').innerHTML = '<div class="erro-msg">O nome da série não foi passado na URL. Volte e clique novamente.</div>';
+    } else {
+      document.getElementById('tituloSerie').innerText = nomeSerie;
+      carregarEpisodios();
+    }
+
+    async function carregarEpisodios() {
+      try {
+        const resposta = await fetch('catalogo.json');
+        
+        if (!resposta.ok) {
+          throw new Error("Arquivo catalogo.json não encontrado.");
+        }
+        
+        const catalogo = await resposta.json();
+
+        // Filtra os episódios (ignorando maiúsculas/minúsculas e espaços extras)
+        let epsDaSerie = catalogo.filter(item => 
+          item.serie.trim().toLowerCase() === nomeSerie.trim().toLowerCase()
+        );
+
+        if (epsDaSerie.length === 0) {
+          document.getElementById('conteudoEpisodios').innerHTML = '<div class="erro-msg">Nenhum episódio encontrado no catálogo para esta série.</div>';
+          return;
+        }
+
+        // Ordena por temporada, depois por episódio
+        epsDaSerie.sort((a, b) => {
+          if (a.temporada !== b.temporada) {
+            return a.temporada - b.temporada;
+          }
+          return a.episodio - b.episodio;
+        });
+
+        // Agrupa por temporada
+        const temporadas = {};
+        epsDaSerie.forEach(ep => {
+          if (!temporadas[ep.temporada]) {
+            temporadas[ep.temporada] = [];
+          }
+          temporadas[ep.temporada].push(ep);
+        });
+
+        // Monta o HTML
+        let htmlFinal = '';
+        
+        for (const numTemporada in temporadas) {
+          htmlFinal += `
+            <div class="temporada-bloco">
+              <h2 class="temporada-titulo">${numTemporada}ª Temporada</h2>
+              <div class="lista-eps">
+          `;
+
+          temporadas[numTemporada].forEach(ep => {
+            // Limpa o título para não repetir o nome da série
+            let tituloLimpo = ep.titulo.replace(nomeSerie, '').replace(/-\s*T\d+E\d+/i, '').replace(/T\d+E\d+/, '').trim();
+            if(tituloLimpo.startsWith('-')) tituloLimpo = tituloLimpo.substring(1).trim();
+            if(tituloLimpo === '') tituloLimpo = `Episódio ${ep.episodio}`;
+
+            htmlFinal += `
+              <a href="${ep.link}" class="ep-item">
+                <div class="ep-info">
+                  <span class="ep-numero">E${ep.episodio.toString().padStart(2, '0')}</span>
+                  <span class="ep-titulo">${tituloLimpo}</span>
+                </div>
+                <div class="ep-play">▶</div>
+              </a>
+            `;
+          });
+
+          htmlFinal += `
+              </div>
+            </div>
+          `;
+        }
+
+        document.getElementById('conteudoEpisodios').innerHTML = htmlFinal;
+
+      } catch (erro) {
+        console.error(erro);
+        document.getElementById('conteudoEpisodios').innerHTML = `<div class="erro-msg">Erro ao carregar: ${erro.message}</div>`;
+      }
+    }
+  </script>
+</body>
+</html>
