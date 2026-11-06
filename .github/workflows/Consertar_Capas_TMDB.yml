@@ -1,4 +1,4 @@
-name: Consertar Capas via TMDB
+name: Consertar Capas via TMDB (V2 Final)
 
 on:
   workflow_dispatch:
@@ -33,11 +33,10 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           LOTE_SIZE: ${{ inputs.lote || '1000' }}
         run: |
-          cat > /tmp/consertar_tmdb.py << 'PYEOF'
+          cat > /tmp/consertar_tmdb_v2.py << 'PYEOF'
           import requests, re, os, sys, json, time
           from pathlib import Path
           from bs4 import BeautifulSoup
-          from urllib.parse import quote
 
           API_KEY = os.environ.get("TMDB_API_KEY")
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 1000))
@@ -45,29 +44,38 @@ jobs:
           IMG_BASE = "https://image.tmdb.org/t/p/w500"
 
           if not API_KEY:
-              print("ERRO: TMDB_API_KEY não configurada nos secrets!")
+              print("ERRO: TMDB_API_KEY não configurada!")
               sys.exit(1)
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          def buscar_tmdb(titulo, ano=None, tipo="movie"):
-              # Tenta buscar primeiro com o ano (se tiver), depois sem
+          def limpar_nome_arquivo(nome_arquivo):
+              # Remove .html
+              nome = nome_arquivo.replace('.html', '')
+              
+              # Remove T1E1 (episódios) -> Busca a série inteira
+              nome = re.sub(r'_t\d+e\d+', '', nome, flags=re.I)
+              
+              # Remove TODOS os anos (ex: _2024, _2026) para buscar só o nome limpo
+              nome = re.sub(r'_(?:19|20)\d{2}', '', nome)
+              
+              # Remove lixos comuns
+              lixo = r'_(comedia|infantil|aventura|thriller|legendado|dublado|hdcam|hd|webdl|bluray|suspense|terror|acao|romance|drama|misterio|guerra|documentario|anime|animacao|fantasia|familia|crime|historia|musica|novela|reality|talk_show|podcast|_ep\d*|_\d+)'
+              nome = re.sub(lixo, '', nome, flags=re.I)
+              
+              # Substitui underline por espaço
+              nome = nome.replace('_', ' ').strip()
+              
+              return nome.title()
+
+          def buscar_tmdb(titulo, tipo="movie"):
               params = {"api_key": API_KEY, "query": titulo, "language": "pt-BR"}
-              if ano: params["year" if tipo == "movie" else "first_air_date_year"] = ano
               
               try:
                   r = requests.get(f"{TMDB_API}/search/{tipo}", params=params, timeout=10)
                   dados = r.json().get("results", [])
                   if dados:
                       return dados[0].get("poster_path")
-                  
-                  # Se não achou com ano, tenta sem
-                  if ano:
-                      del params["year" if tipo == "movie" else "first_air_date_year"]
-                      r = requests.get(f"{TMDB_API}/search/{tipo}", params=params, timeout=10)
-                      dados = r.json().get("results", [])
-                      if dados:
-                          return dados[0].get("poster_path")
               except Exception:
                   pass
               return None
@@ -78,6 +86,7 @@ jobs:
               
               processados = 0
               consertados = 0
+              deletados = 0
 
               for f in arquivos:
                   if processados >= LOTE_SIZE:
@@ -87,34 +96,38 @@ jobs:
                   try:
                       conteudo = f.read_text(encoding="utf-8")
                       
+                      # Pula os que já têm capa
                       if "via.placeholder.com" not in conteudo and "Sem+Capa" not in conteudo:
                           continue
                           
+                      # Pula arquivos lixo
+                      if any(x in f.name for x in ["catalogo", "serie_desconhecida", "index", "blog_post", "contexthttp", "html_2025"]):
+                          f.unlink() # Deleta o lixo
+                          deletados += 1
+                          continue
+                          
                       processados += 1
-                      log(f"[{processados}/{LOTE_SIZE}] Procurando no TMDB: {f.name}")
+                      titulo_busca = limpar_nome_arquivo(f.name)
                       
-                      # Extrai o nome e o ano do nome do arquivo
-                      # Ex: 127_horas_2010.html -> titulo: 127 horas, ano: 2010
-                      # Ex: breaking_bad_t1e1.html -> titulo: breaking bad, ano: None
-                      nome_base = re.sub(r'_t\d+e\d+\.html$', '', f.name, flags=re.I).replace('.html', '')
+                      if len(titulo_busca) < 3:
+                          continue
+                          
+                      log(f"[{processados}/{LOTE_SIZE}] Buscando no TMDB: '{titulo_busca}'")
                       
-                      # Separa o ano (se houver 4 dígitos no final)
-                      match_ano = re.search(r'_(\d{4})$', nome_base)
-                      ano = match_ano.group(1) if match_ano else None
+                      # Verifica se é série ou filme pela presença de T1E1 no nome original
+                      tipo = "tv" if re.search(r'_t\d+e\d+', f.name, re.I) else "movie"
                       
-                      # Remove o ano do título
-                      titulo_slug = re.sub(r'_\d{4}$', '', nome_base)
-                      titulo = titulo_slug.replace('_', ' ').title()
+                      poster_path = buscar_tmdb(titulo_busca, tipo)
                       
-                      # Define se é filme ou série pelo nome do arquivo
-                      tipo = "tv" if "_t" in f.name.lower() and re.search(r'_t\d+e\d+', f.name, re.I) else "movie"
-                      
-                      poster_path = buscar_tmdb(titulo, ano, tipo)
+                      # Fallback: tenta como filme se falhar como série (e vice-versa)
+                      if not poster_path and tipo == "tv":
+                          poster_path = buscar_tmdb(titulo_busca, "movie")
+                      elif not poster_path and tipo == "movie":
+                          poster_path = buscar_tmdb(titulo_busca, "tv")
                       
                       if poster_path:
                           nova_capa = IMG_BASE + poster_path
                           
-                          # Substitui no HTML
                           novo_html = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', conteudo)
                           novo_html = re.sub(r'<img src="[^"]*"', f'<img src="{nova_capa}"', novo_html)
                           novo_html = re.sub(r'"thumbnailUrl":\s*\[[^\]]*\]', f'"thumbnailUrl": ["{nova_capa}"]', novo_html, flags=re.DOTALL)
@@ -125,17 +138,17 @@ jobs:
                       else:
                           log(f"  [-] Não encontrado no TMDB.")
                           
-                      time.sleep(0.1) # Evita bloqueio da API do TMDB
+                      time.sleep(0.1)
                       
                   except Exception as e:
-                      log(f"  [x] Erro ao processar {f.name}: {e}")
+                      log(f"  [x] Erro em {f.name}: {e}")
 
-              log(f"Finalizado! Analisados: {processados} | Consertados: {consertados}")
+              log(f"Finalizado! Analisados: {processados} | Consertados: {consertados} | Deletados: {deletados}")
 
           if __name__ == "__main__":
               main()
           PYEOF
-          python3 /tmp/consertar_tmdb.py
+          python3 /tmp/consertar_tmdb_v2.py
 
       - name: Salvar arquivos e progresso
         run: |
@@ -146,7 +159,7 @@ jobs:
           git reset .github/ 2>/dev/null || true
           
           if git diff --cached --quiet; then echo "Nenhuma capa precisou ser consertada."; exit 0; fi
-          git commit -m "fix: consertar capas usando TMDB API"
+          git commit -m "fix: consertar capas restantes via TMDB V2"
           
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
@@ -154,6 +167,6 @@ jobs:
             git pull origin main --no-rebase -X ours --no-edit
             git add -A
             git reset .github/ 2>/dev/null || true
-            git commit -m "fix: retry consertar tmdb $i" || true
+            git commit -m "fix: retry consertar tmdb v2 $i" || true
             sleep $((RANDOM % 10 + 5))
           done
