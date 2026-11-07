@@ -112,24 +112,16 @@ jobs:
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
               padrao_site = r'\b(?:vini7x|vini|marcos|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b'
               
-              for _ in range(6):
-                  mudou = False
-                  if ' - ' in titulo:
-                      prefixo, resto = titulo.split(' - ', 1)
-                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
-                  if ':' in titulo:
-                      prefixo, resto = titulo.split(':', 1)
-                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
-                  if ' - ' in titulo:
-                      prefixo, resto = titulo.rsplit(' - ', 1)
-                      if re.search(padrao_site, resto, re.I): titulo = prefixo.strip(); mudou = True
-                  if not mudou: break
-                  
+              # NOVA LÓGICA: remove apenas o termo do site, preservando o resto do prefixo
+              titulo = re.sub(r'\b(?:vini7x|vini|marcos|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b[^\w]*[-:]?\s*', '', titulo, flags=re.I).strip()
+              
+              # Remove sufixos ruins
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -–—')
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip(' -–—')
               titulo = re.sub(r'\s+', ' ', titulo).strip(' -–—')
               
+              # Fallback via URL se o título ficou vazio ou muito curto
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
@@ -492,7 +484,7 @@ jobs:
                               log(f"    [⚠️] Link duplicado na fonte! O link também pertence a: {url_origem}")
                               log(f"    [ℹ️] Criando novo arquivo para '{nome_json}' sem apagar o antigo.")
                               arquivo_existente = None
-                      
+
                       if arquivo_existente:
                           if MODO == 'apenas_baixar':
                               log(f"    (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando conserto.")
@@ -604,7 +596,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: fix link duplicado e melhora no log de retry"
+          git commit -m "feat: mega extracao de filmes (corrige limpeza de titulos com prefixo 'Entre Nos')"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
