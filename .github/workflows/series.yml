@@ -56,7 +56,8 @@ jobs:
       - name: Extrair Series e Retentar Falhas
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
-          APENAS_CONSERTAR: ${{ inputs.apenas_consertar || 'true' }}
+          # Correção: Passa o valor exato, sem o || 'true'
+          APENAS_CONSERTAR: ${{ inputs.apenas_consertar }}
         run: |
           cat > /tmp/mega_series.py << 'PYEOF'
           import asyncio, re, json, requests, sys, unicodedata, os
@@ -74,7 +75,8 @@ jobs:
 
           MAX_TENTATIVAS = 6
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 100))
-          APENAS_CONSERTAR = os.environ.get('APENAS_CONSERTAR', 'true').lower() == 'true'
+          # Se a variável estiver vazia (cron), assume False (extrai). Se for 'false', assume False.
+          APENAS_CONSERTAR = os.environ.get('APENAS_CONSERTAR', 'false').lower() == 'true'
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
@@ -335,7 +337,6 @@ jobs:
 
                       if arquivo_existente:
                           log(f"      (Existente: {arquivo_existente.name})")
-                          # MUDANÇA: Se o nome for diferente do calculado, força a renomeação/conserto
                           if arquivo_existente.name != nome_arquivo_calculado:
                               log(f"      [🔄] Nome incorreto. Renomeando para: {nome_arquivo_calculado}")
                               novo_caminho = Path(nome_arquivo_calculado)
@@ -420,7 +421,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de series (conserto de nomes duplicados)"
+          git commit -m "feat: mega extracao de series (apenas conserto)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
@@ -448,8 +449,8 @@ jobs:
           if [ "$FALTAM" -le 0 ]; then exit 0; fi
           
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
-          RECENTES=$(gh run list --workflow="series.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\") | select(.createdAt > \"$LIMITE_ISO\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
+          RECENTES=$(gh run list --workflow="series.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
           if [ "$RECENTES" -ge 100 ]; then exit 0; fi
           
           sleep 30
-          gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f apenas_consertar=true
+          gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f apenas_consertar=${{ inputs.apenas_consertar || 'false' }}
