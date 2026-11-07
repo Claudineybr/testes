@@ -11,15 +11,19 @@ on:
         default: '100'
         type: string
       reprocessar_tudo:
-        description: 'Reprocessar tudo?'
+        description: 'Limpar fila e começar do zero?'
         required: false
         default: false
         type: boolean
-      apenas_consertar:
-        description: 'Apenas consertar arquivos existentes?'
-        required: false
-        default: true
-        type: boolean
+      modo:
+        description: 'O que o robô deve fazer?'
+        required: true
+        default: 'baixar_e_consertar'
+        type: choice
+        options:
+          - baixar_e_consertar
+          - apenas_consertar
+          - apenas_baixar
       auto_run:
         description: 'Ativar auto-chain?'
         required: false
@@ -56,8 +60,7 @@ jobs:
       - name: Extrair Series e Retentar Falhas
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
-          # Correção: Passa o valor exato, sem o || 'true'
-          APENAS_CONSERTAR: ${{ inputs.apenas_consertar }}
+          MODO_EXECUCAO: ${{ inputs.modo || 'baixar_e_consertar' }}
         run: |
           cat > /tmp/mega_series.py << 'PYEOF'
           import asyncio, re, json, requests, sys, unicodedata, os
@@ -75,8 +78,7 @@ jobs:
 
           MAX_TENTATIVAS = 6
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 100))
-          # Se a variável estiver vazia (cron), assume False (extrai). Se for 'false', assume False.
-          APENAS_CONSERTAR = os.environ.get('APENAS_CONSERTAR', 'false').lower() == 'true'
+          MODO = os.environ.get('MODO_EXECUCAO', 'baixar_e_consertar').lower()
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
@@ -85,12 +87,9 @@ jobs:
               if "http" in titulo.lower() or titulo.lower().endswith(".html"): titulo = ""
               titulo = unicodedata.normalize('NFKD', str(titulo))
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-]?', '', titulo, flags=re.I).strip()
+              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|serie|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -')
-              partes = [p.strip() for p in re.split(r'\s+[-–—]\s+', titulo) if p.strip()]
-              validas = [p for p in partes if not any(x in p.lower() for x in ['vini','marcos','grave','online','blogspot'])]
-              if validas: titulo = max(validas, key=len)
               titulo = titulo.strip()
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
@@ -103,6 +102,12 @@ jobs:
               titulo = re.sub(r'\s*-\s*(?:\d+\s*[ªº]\s*)?(?:temporada|season)\b.*$', '', titulo, flags=re.I).strip()
               return titulo
 
+          def is_icon_url(url):
+              if not url: return True
+              url_lower = url.lower()
+              lixos = ['icon', 'logo', 'favicon', 'avatar', 'banner', 'default', 'profile']
+              return any(x in url_lower for x in lixos)
+
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
               indice = {}
@@ -112,7 +117,6 @@ jobs:
                       m = re.search(r'"contentUrl":\s*"([^"]+)"', texto)
                       if m: indice[m.group(1)] = f
                   except: pass
-              log(f"Encontrados {len(indice)} vídeos já cadastrados.")
               return indice
 
           INDICE_VIDEOS = construir_indice_videos()
@@ -166,7 +170,7 @@ jobs:
           fila = [u for u in todas if u not in feitas]
           lote = fila[:LOTE_SIZE]
 
-          log(f"Fila: {len(todas)} | Faltam: {len(fila)} | Lote: {LOTE_SIZE} | Apenas consertar: {APENAS_CONSERTAR}")
+          log(f"Fila: {len(todas)} | Faltam: {len(fila)} | Lote: {LOTE_SIZE} | Modo: {MODO}")
 
           def eh_serie(soup, url_pagina):
               for script in soup.find_all('script', type='application/ld+json'):
@@ -205,12 +209,17 @@ jobs:
               if script_ld:
                   try: capa = json.loads(script_ld.string).get('thumbnailUrl', [''])[0]
                   except: pass
-              if not capa or capa == 'h' or len(capa) < 5:
+              
+              if not capa or capa == 'h' or len(capa) < 5 or is_icon_url(capa):
                   m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-                  if m: capa = m.group(0)
-              if not capa:
-                  og_img = soup.find('meta', property='og:image')
-                  capa = og_img['content'] if og_img and og_img.get('content') else "https://via.placeholder.com/500x750?text=Sem+Capa"
+                  if m and not is_icon_url(m.group(0)): 
+                      capa = m.group(0)
+                  else:
+                      og_img = soup.find('meta', property='og:image')
+                      if og_img and og_img.get('content') and not is_icon_url(og_img['content']):
+                          capa = og_img['content']
+                      else:
+                          capa = "https://via.placeholder.com/500x750?text=Sem+Capa"
 
               return titulo.strip(), capa
 
@@ -276,7 +285,7 @@ jobs:
                   nome = dados.get('name', '')
                   capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
                   if "inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3: return True
-                  if "placeholder" in capa or "Sem+Capa" in capa or not capa: return True
+                  if "placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa): return True
                   return False
               except: return True
 
@@ -335,8 +344,14 @@ jobs:
                       link = await obter_link_episodio(context, it['url'])
                       arquivo_existente = INDICE_VIDEOS.get(link) if link else None
 
+                      # --- LÓGICA DE MODOS PARA EPISÓDIOS ---
                       if arquivo_existente:
                           log(f"      (Existente: {arquivo_existente.name})")
+                          
+                          if MODO == 'apenas_baixar':
+                              log("      (Modo Apenas Baixar: Ignorando conserto.)")
+                              continue
+                              
                           if arquivo_existente.name != nome_arquivo_calculado:
                               log(f"      [🔄] Nome incorreto. Renomeando para: {nome_arquivo_calculado}")
                               novo_caminho = Path(nome_arquivo_calculado)
@@ -354,6 +369,7 @@ jobs:
                       arquivo_por_nome = Path(nome_arquivo_calculado)
                       if arquivo_por_nome.exists():
                           log(f"      (Existente por nome: {nome_arquivo_calculado})")
+                          if MODO == 'apenas_baixar': continue
                           if arquivo_precisa_conserto(arquivo_por_nome):
                               log(f"      [🔄] Consertando...")
                               salvar_html(arquivo_por_nome, nome_json, link or extrair_video_da_pagina(r.text), capa_url)
@@ -362,10 +378,11 @@ jobs:
                               log(f"      (Já está perfeito)")
                           continue
 
-                      if APENAS_CONSERTAR:
-                          log(f"      (Não existe. Pulando.)")
+                      if MODO == 'apenas_consertar':
+                          log(f"      (Modo Apenas Consertar: Ignorando novo.)")
                           continue
 
+                      # --- BAIXAR NOVO ---
                       log(f"      -> Processando novo T{it['temp']}E{it['ep']}")
                       if not link:
                           if not any(p['arquivo']==nome_arquivo_calculado for p in pendentes):
@@ -397,7 +414,8 @@ jobs:
                               r_ep = await asyncio.to_thread(requests.get, item['url'], headers=HEADERS, timeout=20)
                               soup_ep = BeautifulSoup(r_ep.text, 'html.parser')
                               m_img = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', r_ep.text)
-                              if m_img: capa_ep = m_img.group(0)
+                              if m_img and not is_icon_url(m_img.group(0)): 
+                                  capa_ep = m_img.group(0)
                           except: pass
                           if link:
                               salvar_html(Path(item['arquivo']), item['nome_json'], link, capa_ep)
@@ -421,7 +439,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de series (apenas conserto)"
+          git commit -m "feat: mega extracao de series (modos)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
@@ -453,4 +471,4 @@ jobs:
           if [ "$RECENTES" -ge 100 ]; then exit 0; fi
           
           sleep 30
-          gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f apenas_consertar=${{ inputs.apenas_consertar || 'false' }}
+          gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f modo="${{ inputs.modo || 'baixar_e_consertar' }}"
