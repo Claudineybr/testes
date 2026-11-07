@@ -100,7 +100,9 @@ jobs:
 
           def parece_sujo(titulo):
               t = (titulo or '').strip().lower()
-              prefixos = r'(?:vini7x|vini|marcos|inix|grave|clau|site|rave|filmes\s*e\s*s[eé]ries)'
+              # Adicionado 'sensitive content' para barrar páginas de bloqueio
+              if 'sensitive content' in t: return True
+              prefixos = r'(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s*e\s*s[eé]ries)'
               return bool(re.match(r'^[^\w]*' + prefixos + r'(?:[^a-z]|$)', t))
 
           def limpar_titulo_bruto(titulo, url):
@@ -110,18 +112,32 @@ jobs:
               titulo = decodificar_escapes_unicode(titulo)
               titulo = unicodedata.normalize('NFKD', titulo)
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              padrao_site = r'\b(?:vini7x|vini|marcos|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b'
               
-              # NOVA LÓGICA: remove apenas o termo do site, preservando o resto do prefixo
-              titulo = re.sub(r'\b(?:vini7x|vini|marcos|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b[^\w]*[-:]?\s*', '', titulo, flags=re.I).strip()
+              # Adicionado marc[oø]sx7, arc[oø]x7, arc, e o emoji 👾
+              padrao_site = r'\b(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b'
               
-              # Remove sufixos ruins
+              for _ in range(6):
+                  mudou = False
+                  if ' - ' in titulo:
+                      prefixo, resto = titulo.split(' - ', 1)
+                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
+                  if ':' in titulo:
+                      prefixo, resto = titulo.split(':', 1)
+                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
+                  if ' - ' in titulo:
+                      prefixo, resto = titulo.rsplit(' - ', 1)
+                      if re.search(padrao_site, resto, re.I): titulo = prefixo.strip(); mudou = True
+                  if not mudou: break
+                  
+              # Remove a palavra do site e o emoji
+              titulo = re.sub(r'\b(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b[^\w]*[-:]?\s*', '', titulo, flags=re.I).strip()
+              titulo = titulo.replace('👾', '').strip()
+              
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -–—')
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip(' -–—')
               titulo = re.sub(r'\s+', ' ', titulo).strip(' -–—')
               
-              # Fallback via URL se o título ficou vazio ou muito curto
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
@@ -320,10 +336,12 @@ jobs:
                   except: pass
                   
               if not video:
-                  for a in soup.find_all('a', href=True):
-                      href = a['href']
-                      if 'oneplayer' in href or '.mp4' in href or '.m3u8' in href:
-                          video = href; break
+                  for a in soup.find_all(['a', 'div', 'source', 'video'], True):
+                      for attr in ['href', 'src', 'data-src', 'data-video', 'data-url']:
+                          val = a.get(attr, '')
+                          if val and ('oneplayer' in val or '.mp4' in val or '.m3u8' in val):
+                              video = val; break
+                      if video: break
                           
               if not video:
                   for tag in soup.find_all(['iframe', 'video', 'source']):
@@ -423,7 +441,7 @@ jobs:
                   link = dados.get('contentUrl', '')
                   nome_norm = unicodedata.normalize('NFKD', nome)
                   nome_norm = "".join([c for c in nome_norm if not unicodedata.combining(c)])
-                  n_quebrado = ("inix" in nome_norm.lower() or "http" in nome_norm.lower() or len(nome_norm) < 3 or bool(re.search(r'^(?:[^\w]*)(?:vini7x|vini|marcos|inix|grave|clau|site|rave)', nome_norm, re.I)))
+                  n_quebrado = ("inix" in nome_norm.lower() or "http" in nome_norm.lower() or len(nome_norm) < 3 or bool(re.search(r'^(?:[^\w]*)(?:vini7x|vini|marc[oø]sx7|marcos|arc|inix|grave|clau|site|rave)', nome_norm, re.I)))
                   c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
                   l_quebrado = (not link or link in ("None", "null", "") or not re.search(r'\.(mp4|m3u8|oneplayer\.site|tankie\.tube)', str(link), re.I))
                   return n_quebrado, c_quebrada, l_quebrado
@@ -596,7 +614,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (corrige limpeza de titulos com prefixo 'Entre Nos')"
+          git commit -m "feat: mega extracao de filmes (fix prefix marcøsx7 + sensitive content)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
