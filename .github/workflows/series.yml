@@ -56,7 +56,6 @@ jobs:
       - name: Extrair Series e Retentar Falhas
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
-          # Correção: Passa o valor exato, sem o || 'true'
           APENAS_CONSERTAR: ${{ inputs.apenas_consertar }}
         run: |
           cat > /tmp/mega_series.py << 'PYEOF'
@@ -75,8 +74,9 @@ jobs:
 
           MAX_TENTATIVAS = 6
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 100))
-          # Se a variável estiver vazia (cron), assume False (extrai). Se for 'false', assume False.
-          APENAS_CONSERTAR = os.environ.get('APENAS_CONSERTAR', 'false').lower() == 'true'
+          
+          val_consertar = os.environ.get('APENAS_CONSERTAR', 'false').strip().lower()
+          APENAS_CONSERTAR = (val_consertar == 'true')
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
@@ -85,13 +85,13 @@ jobs:
               if "http" in titulo.lower() or titulo.lower().endswith(".html"): titulo = ""
               titulo = unicodedata.normalize('NFKD', str(titulo))
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-]?', '', titulo, flags=re.I).strip()
+              
+              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|serie|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -')
-              partes = [p.strip() for p in re.split(r'\s+[-–—]\s+', titulo) if p.strip()]
-              validas = [p for p in partes if not any(x in p.lower() for x in ['vini','marcos','grave','online','blogspot'])]
-              if validas: titulo = max(validas, key=len)
+              
               titulo = titulo.strip()
+              
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
@@ -99,9 +99,16 @@ jobs:
                       slug = re.sub(r'^(?:inix|arc|entre-nos)[-_]', '', slug, flags=re.I)
                       slug = re.sub(r'[-_]\d{4}$', '', slug)
                       titulo = slug.replace('-', ' ').replace('_', ' ').title()
+                      
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
               titulo = re.sub(r'\s*-\s*(?:\d+\s*[ªº]\s*)?(?:temporada|season)\b.*$', '', titulo, flags=re.I).strip()
               return titulo
+
+          def is_icon_url(url):
+              if not url: return True
+              url_lower = url.lower()
+              lixos = ['icon', 'logo', 'favicon', 'avatar', 'banner', 'default', 'profile']
+              return any(x in url_lower for x in lixos)
 
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
@@ -112,7 +119,6 @@ jobs:
                       m = re.search(r'"contentUrl":\s*"([^"]+)"', texto)
                       if m: indice[m.group(1)] = f
                   except: pass
-              log(f"Encontrados {len(indice)} vídeos já cadastrados.")
               return indice
 
           INDICE_VIDEOS = construir_indice_videos()
@@ -205,12 +211,17 @@ jobs:
               if script_ld:
                   try: capa = json.loads(script_ld.string).get('thumbnailUrl', [''])[0]
                   except: pass
-              if not capa or capa == 'h' or len(capa) < 5:
+              
+              if not capa or capa == 'h' or len(capa) < 5 or is_icon_url(capa):
                   m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-                  if m: capa = m.group(0)
-              if not capa:
-                  og_img = soup.find('meta', property='og:image')
-                  capa = og_img['content'] if og_img and og_img.get('content') else "https://via.placeholder.com/500x750?text=Sem+Capa"
+                  if m and not is_icon_url(m.group(0)): 
+                      capa = m.group(0)
+                  else:
+                      og_img = soup.find('meta', property='og:image')
+                      if og_img and og_img.get('content') and not is_icon_url(og_img['content']):
+                          capa = og_img['content']
+                      else:
+                          capa = "https://via.placeholder.com/500x750?text=Sem+Capa"
 
               return titulo.strip(), capa
 
@@ -276,7 +287,7 @@ jobs:
                   nome = dados.get('name', '')
                   capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
                   if "inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3: return True
-                  if "placeholder" in capa or "Sem+Capa" in capa or not capa: return True
+                  if "placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa): return True
                   return False
               except: return True
 
@@ -344,7 +355,7 @@ jobs:
                               arquivo_existente.unlink()
                               log(f"      [+] Renomeado e consertado.")
                           elif arquivo_precisa_conserto(arquivo_existente):
-                              log(f"      [🔄] Conteúdo com defeito. Consertando...")
+                              log(f"      [🔄] Conteúdo com defeito/ícone. Consertando...")
                               salvar_html(arquivo_existente, nome_json, link, capa_url)
                               log(f"      [+] Consertado in-place.")
                           else:
@@ -397,7 +408,8 @@ jobs:
                               r_ep = await asyncio.to_thread(requests.get, item['url'], headers=HEADERS, timeout=20)
                               soup_ep = BeautifulSoup(r_ep.text, 'html.parser')
                               m_img = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', r_ep.text)
-                              if m_img: capa_ep = m_img.group(0)
+                              if m_img and not is_icon_url(m_img.group(0)): 
+                                  capa_ep = m_img.group(0)
                           except: pass
                           if link:
                               salvar_html(Path(item['arquivo']), item['nome_json'], link, capa_ep)
@@ -421,7 +433,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de series (apenas conserto)"
+          git commit -m "feat: mega extracao de series (blindado)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
