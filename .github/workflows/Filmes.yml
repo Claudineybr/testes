@@ -100,8 +100,7 @@ jobs:
 
           def parece_sujo(titulo):
               t = (titulo or '').strip().lower()
-              # Adicionado 'sensitive content' para barrar páginas de bloqueio
-              if 'sensitive content' in t: return True
+              if 'sensitive content' in t or 'content warning' in t: return True
               prefixos = r'(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s*e\s*s[eé]ries)'
               return bool(re.match(r'^[^\w]*' + prefixos + r'(?:[^a-z]|$)', t))
 
@@ -113,23 +112,7 @@ jobs:
               titulo = unicodedata.normalize('NFKD', titulo)
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
               
-              # Adicionado marc[oø]sx7, arc[oø]x7, arc, e o emoji 👾
-              padrao_site = r'\b(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b'
-              
-              for _ in range(6):
-                  mudou = False
-                  if ' - ' in titulo:
-                      prefixo, resto = titulo.split(' - ', 1)
-                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
-                  if ':' in titulo:
-                      prefixo, resto = titulo.split(':', 1)
-                      if re.search(padrao_site, prefixo, re.I): titulo = resto.strip(); mudou = True
-                  if ' - ' in titulo:
-                      prefixo, resto = titulo.rsplit(' - ', 1)
-                      if re.search(padrao_site, resto, re.I): titulo = prefixo.strip(); mudou = True
-                  if not mudou: break
-                  
-              # Remove a palavra do site e o emoji
+              # Remove prefixos e emoji
               titulo = re.sub(r'\b(?:vini7x|vini|marc[oø]sx7|marc[oø]s|arc[oø]x7|arc|inix|grave|clau|site|rave|filmes\s+e\s+s[eé]ries)\b[^\w]*[-:]?\s*', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('👾', '').strip()
               
@@ -471,7 +454,9 @@ jobs:
                               await browser.close()
                               return
                           if not capa_url or capa_url == 'h': capa_url = capa_r
-                          if titulo_r and titulo_r != 'h': titulo = titulo_r
+                          # SÓ SOBRESCREVE O TÍTULO SE O DO PLAYWRIGHT FOR LIMPO
+                          if titulo_r and titulo_r != 'h' and not parece_sujo(titulo_r):
+                              titulo = titulo_r
                           await browser.close()
 
                   ano = ""
@@ -614,7 +599,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (fix prefix marcøsx7 + sensitive content)"
+          git commit -m "feat: mega extracao de filmes (bloqueia sensitive content warning do playwright)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
