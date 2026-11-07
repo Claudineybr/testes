@@ -1,26 +1,20 @@
 [
   {
-    "arquivo": "lucifer_t1e1.html",
-    "nome_json": "Lucifer - T1E1 - Piloto - 🍿Clau",
-    "url": "https://marcosx7.blogspot.com/2025/05/arc-lucifer-tp01ep01.html",
-    "tentativas": 6
-  },
-  {
-    "arquivo": "friends_t2e4.html",
-    "nome_json": "Friends - T2E4 - Aquele com o Marido da Phoebe - 🍿Clau",
-    "url": "https://vini7xgseries2.blogspot.com/2025/05/inix-tp2e04_4.html",
-    "tentativas": 6
-  },
-  {
     "arquivo": "star_contra_as_forcas_do_mal_t2e12.html",
     "nome_json": "Star Contra as Forcas do Mal - T2E12 - \"Matemagia\" - 🍿Clau",
     "url": "https://viniraveon.blogspot.com/2025/04/inix-tp2e12_14.html",
-    "tentativas": 5
+    "tentativas": 6
   },
   {
     "arquivo": "cacador_de_demonios_t1e3.html",
     "nome_json": "Cacador de Demonios - T1E3 -  - 🍿Clau",
     "url": "https://viniraveon.blogspot.com/2025/04/inix-tp1e03_6.html",
+    "tentativas": 3
+  },
+  {
+    "arquivo": "reacher_t3e1.html",
+    "nome_json": "Reacher - T3E1 - Acerto de Contas - 🍿Clau",
+    "url": "https://viniraveon.blogspot.com/2025/03/inix-tp3e01_91.html",
     "tentativas": 2
   }
 ]
