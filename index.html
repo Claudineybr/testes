@@ -123,7 +123,6 @@
     <p>© 2025 Clau Flix — Todos os direitos reservados. Feito com 🎬 e ❤️</p>
   </footer>
 
-  <!-- MODAL PLAYER -->
   <div class="modal-player" id="videoModal">
     <div class="modal-content">
       <button class="close-btn" onclick="fecharModal()">✕</button>
@@ -136,7 +135,6 @@
   </div>
 
   <script>
-    // SEU NOVO LINK DO CLOUDFLARE WORKER AQUI
     const CLOUDFLARE_WORKER_URL = "https://proxy-videos.claudineibu12.workers.dev/";
 
     let catalogo = [];
@@ -158,27 +156,34 @@
     const modalTitulo = document.getElementById('modalTitulo');
     const linkOriginal = document.getElementById('linkOriginal');
 
-    const STORAGE_KEY_LINKS = 'clauFlix_destaques_links';
-    const STORAGE_KEY_TIMESTAMP = 'clauFlix_destaques_timestamp';
+    // MUDAMOS A CHAVE PARA 'v2' PARA LIMPAR O CACHE ANTIGO DE 6 FILMES
+    const STORAGE_KEY_LINKS = 'clauFlix_destaques_links_v2';
+    const STORAGE_KEY_TIMESTAMP = 'clauFlix_destaques_timestamp_v2';
     const TRINTA_MINUTOS_MS = 30 * 60 * 1000;
 
     function isMobile() {
       return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     }
 
+    // MELHORIA: Agora aceita T1E01, 1x01, E03 no final do título
     function isSerie(item) {
-      return /_t\d+e\d+/i.test(item.link) || /T\d+E\d+/i.test(item.titulo);
+      const regexLink = /(_t\d+e\d+|_(\d+)x(\d+))/i;
+      const regexTitulo = /(T\d+E\d+|\d+x\d+|\sE\d+$)/i;
+      return regexLink.test(item.link) || regexTitulo.test(item.titulo);
     }
 
+    // MELHORIA: Limpa o nome da série caso ela não tenha a propriedade "serie" correta no JSON
     function agruparSeries(listaOriginal) {
       const agrupado = {};
       listaOriginal.forEach(item => {
-        if (!agrupado[item.serie]) {
-          agrupado[item.serie] = {
-            titulo: item.serie,
-            serie: item.serie,
+        let nomeLimpo = item.serie || item.titulo.replace(/\s*-\s*(T\d+E\d+|\d+x\d+|\sE\d+$).*/i, '').trim();
+        
+        if (!agrupado[nomeLimpo]) {
+          agrupado[nomeLimpo] = {
+            titulo: nomeLimpo,
+            serie: nomeLimpo,
             thumbnailUrl: item.thumbnailUrl,
-            link: `serie.html?nome=${encodeURIComponent(item.serie)}`,
+            link: `serie.html?nome=${encodeURIComponent(nomeLimpo)}`,
             isAgrupado: true
           };
         }
@@ -216,7 +221,7 @@
       if (!forcarNovos && linksSalvos && timestampSalvo && (agora - parseInt(timestampSalvo)) < TRINTA_MINUTOS_MS) {
         const linksArray = JSON.parse(linksSalvos);
         destaquesIniciais = catalogo.filter(item => linksArray.includes(item.link) || linksArray.includes(item.titulo));
-        return; 
+        if(destaquesIniciais.length > 0) return; 
       }
 
       const filmesSoltos = catalogo.filter(item => !isSerie(item));
@@ -224,6 +229,7 @@
       const tudoJunto = [...filmesSoltos, ...seriesAgrupadas];
 
       destaquesIniciais = embaralhar(tudoJunto).slice(0, 20);
+      
       localStorage.setItem(STORAGE_KEY_LINKS, JSON.stringify(destaquesIniciais.map(i => i.isAgrupado ? i.titulo : i.link)));
       localStorage.setItem(STORAGE_KEY_TIMESTAMP, agora.toString());
     }
@@ -348,9 +354,9 @@
     }
 
     window.abrirPlayer = function(event, videoUrl, titulo, linkHtml) {
-      if (isMobile()) return; // No celular, obedece o link normal
+      if (isMobile()) return; 
 
-      event.preventDefault(); // No PC, bloqueia o link e abre o modal
+      event.preventDefault(); 
       
       if (!videoUrl || videoUrl.trim() === '') {
         alert("Link do vídeo não encontrado no catálogo. Abrindo página original.");
@@ -371,8 +377,8 @@
            urlParaTocar = `${CLOUDFLARE_WORKER_URL}?url=${encodeURIComponent(videoUrl)}`;
         }
         playerContainer.innerHTML = `
-          <video id="meuPlayer" controls playsinline autoplay>
-            <source src="${urlParaTocar}" type="video/mp4">
+          <video id="meuPlayer" controls playsinline autoplay preload="metadata" src="${urlParaTocar}">
+            Seu navegador não suporta vídeo HTML5.
           </video>
         `;
       }
