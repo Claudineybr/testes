@@ -1,62 +1,218 @@
 [
   {
-    "arquivo": "bela_e_fera_1991.html",
-    "nome_json": "Bela E Fera (1991) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/11/inix-bela-e-fera-1991.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "bela_adormecida_1959.html",
-    "nome_json": "Bela Adormecida (1959) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2025/03/inix-bela-adormecida-1959.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "pequena_sereia_1989.html",
-    "nome_json": "Pequena Sereia (1989) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/01/inix-pequena-sereia-1989.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "crystal_lake_2026.html",
-    "nome_json": "Crystal Lake (2026) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/10/inix-crystal-lake-2026.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "indiana_jones_e_a_ultima_cruzada_1989.html",
-    "nome_json": "Indiana Jones e a Ultima Cruzada (1989) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2025/06/inix-indiana-jones-e-ultima-cruzada-1989.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "indiana_jones_e_ultima_cruzada_1989.html",
-    "nome_json": "Indiana Jones E Ultima Cruzada (1989) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2025/06/inix-indiana-jones-e-ultima-cruzada-1989.html",
-    "tentativas": 3
-  },
-  {
-    "arquivo": "de_volta_acao_2025.html",
-    "nome_json": "De Volta Acao (2025) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/06/inix-de-volta-acao-2025.html",
+    "arquivo": "apanhador_pesadelos_2020.html",
+    "nome_json": "Apanhador Pesadelos (2020) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/10/inix-apanhador-pesadelos-2020.html",
     "tentativas": 2
   },
   {
-    "arquivo": "dhurandhar_vinganca_2026.html",
-    "nome_json": "Dhurandhar Vinganca (2026) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/06/inix-dhurandhar-vinganca-2026.html",
+    "arquivo": "deadpool_2_2018_acaocomedia.html",
+    "nome_json": "Deadpool 2 2018 Acaocomedia - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/10/inix-deadpool-2-2018-acaocomedia.html",
     "tentativas": 2
   },
   {
-    "arquivo": "camp_rock_2_final_jam_2010.html",
-    "nome_json": "Camp Rock 2 Final Jam (2010) - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2025/08/inix-camp-rock-2-final-jam-2010.html",
+    "arquivo": "maxxxine_2024.html",
+    "nome_json": "Maxxxine (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/10/inix-maxxxine-2024.html",
     "tentativas": 2
   },
   {
-    "arquivo": "o_corcunda_de_notre_dame_ii_o.html",
-    "nome_json": "O Corcunda De Notre Dame Ii O - 🍿Clau",
-    "url": "https://www.vini7xgrave.site/2026/06/inix-o-corcunda-de-notre-dame-ii-o.html",
+    "arquivo": "pets_em_acao_2024_comediaanimacao_30.html",
+    "nome_json": "Pets Em Acao 2024 Comediaanimacao 30 - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/10/inix-pets-em-acao-2024-comediaanimacao_30.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "os_incriveis_2004_infantilacao_12.html",
+    "nome_json": "Os Incriveis 2004 Infantilacao 12 - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/11/inix-os-incriveis-2004-infantilacao_12.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "panico_na_ilha_2009_terrormisterio.html",
+    "nome_json": "Panico Na Ilha 2009 Terrormisterio - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/11/inix-panico-na-ilha-2009-terrormisterio.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_furia_de_becky_2023.html",
+    "nome_json": "A Furia De Becky (2023) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-furia-de-becky-2023.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_maldicao_de_savannah_2021.html",
+    "nome_json": "A Maldicao De Savannah (2021) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-maldicao-de-savannah-2021.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_origem_2010.html",
+    "nome_json": "A Origem (2010) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-origem-2010.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_saga_dr_dolittle.html",
+    "nome_json": "A Saga Dr Dolittle - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-saga-dr-dolittle.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_saga_x_men.html",
+    "nome_json": "A Saga X-Men - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-saga-x-men.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_semente_do_mal_2023.html",
+    "nome_json": "A Semente Do Mal (2023) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-semente-do-mal-2023.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_serie_velozes_e_furiosos.html",
+    "nome_json": "A Serie Velozes E Furiosos - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-serie-velozes-e-furiosos.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "a_vida_secreta_de_zoe_2014.html",
+    "nome_json": "A Vida Secreta De Zoe (2014) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/a-vida-secreta-de-zoe-2014.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "advogado_do_diabo_1997.html",
+    "nome_json": "Advogado Do Diabo (1997) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/advogado-do-diabo-1997.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "apartamento_7a.html",
+    "nome_json": "Apartamento 7A - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/apartamento-7a.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "armadilha_2024.html",
+    "nome_json": "Armadilha (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/armadilha-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "ate_as_ultimas_consequencias_1996.html",
+    "nome_json": "Ate As Ultimas Consequencias (1996) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/ate-as-ultimas-consequencias-1996.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "bolt_o_supercao_2008.html",
+    "nome_json": "Bolt - O Supercao (2008) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/bolt-o-supercao-2008.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "capita_marvel_2019.html",
+    "nome_json": "Capita Marvel (2019) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/capita-marvel-2019.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "capitao_america_admiravel_mundo_novo.html",
+    "nome_json": "Capitao America Admiravel Mundo Novo - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/capitao-america-admiravel-mundo-novo.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "chamada_de_emergencia_2013.html",
+    "nome_json": "Chamada De Emergencia (2013) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/chamada-de-emergencia-2013.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "colecao_tinker_bell.html",
+    "nome_json": "Colecao Tinker Bell - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/colecao-tinker-bell.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "colega_monster_high.html",
+    "nome_json": "Colega Monster High - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/colega-monster-high.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "diabolica_2024.html",
+    "nome_json": "Diabolica (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/diabolica-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "duologia_divertidamente.html",
+    "nome_json": "Duologia Divertidamente - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/duologia-divertidamente.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "duologia_homem_formiga.html",
+    "nome_json": "Duologia Homem Formiga - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/duologia-homem-formiga.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "feios_2024.html",
+    "nome_json": "Feios (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/feios-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "guerreiros_do_basquete_2024.html",
+    "nome_json": "Guerreiros Do Basquete (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/guerreiros-do-basquete-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "hannibal_2001.html",
+    "nome_json": "Hannibal (2001) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/hannibal-2001.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "lobos_2024.html",
+    "nome_json": "Lobos (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/lobos-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "madame_teia_2024.html",
+    "nome_json": "Madame Teia (2024) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/madame-teia-2024.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "na_selva_2017.html",
+    "nome_json": "Na Selva (2017) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/na-selva-2017.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "o_carma_de_um_assassino_2018.html",
+    "nome_json": "O Carma De Um Assassino (2018) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/o-carma-de-um-assassino-2018.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "o_espirito_das_trevas_2022.html",
+    "nome_json": "O Espirito Das Trevas (2022) - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2025/02/o-espirito-das-trevas-2022.html",
+    "tentativas": 2
+  },
+  {
+    "arquivo": "deadpool_2_2018_acao_comedia.html",
+    "nome_json": "Deadpool 2 [2018] ‧ Acao/Comedia - 🍿Clau",
+    "url": "https://www.vini7xgrave.site/2024/10/inix-deadpool-2-2018-acaocomedia.html",
     "tentativas": 2
   }
 ]
