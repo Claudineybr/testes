@@ -34,141 +34,192 @@ jobs:
           LOTE_SIZE: ${{ inputs.lote || '500' }}
         run: |
           cat > /tmp/corrigir_tudo.py << 'PYEOF'
-          import re, os, sys, json, requests
+          import re, os, sys, json, shutil, requests
           from pathlib import Path
           from bs4 import BeautifulSoup
 
-          API_KEY = os.environ.get("TMDB_API_KEY")
-          LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 500))
-          TMDB_API = "https://api.themoviedb.org/3"
-          IMG_BASE = "https://image.tmdb.org/t/p/w500"
+          API_KEY   = os.environ.get("TMDB_API_KEY")
+          LOTE_SIZE = int(os.environ.get("LOTE_SIZE", 500))
+          TMDB_API  = "https://api.themoviedb.org/3"
+          IMG_BASE  = "https://image.tmdb.org/t/p/w500"
+
+          PLACEHOLDERS = {"", "desconhecido", "desconhecida", "desconhecidos",
+                          "desconhecidas", "n/a", "null", "none", "sem titulo", "sem título"}
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          def buscar_tmdb(imdb_id):
+          def extract_candidate(nome):
+              """Extrai o possível título real de um nome quebrado."""
+              if not nome: return ""
+              n = nome.replace("🍿Clau", "").strip()
+              n = re.sub(r'[\s\-]+$', '', n).strip()
+              m = re.match(r'^(.*?)\s+-\s+(?:\(\d{4}\)|-|$)', n)
+              if m: n = m.group(1).strip()
+              n = re.sub(r'[\s\-]+$', '', n).strip()
+              n = re.sub(r'\s*\(\d{4}\)\s*$', '', n).strip()
+              return n
+
+          def is_placeholder(t):
+              return t.lower().strip() in PLACEHOLDERS
+
+          def is_broken(nome):
+              """Só marca como quebrado padrões realmente inválidos."""
+              if not nome or len(nome.strip()) < 2: return True
+              if " - - " in nome: return True                        # separador quebrado
+              if re.search(r'\d{4}\s*-\s*\(\d{4}\)', nome): return True  # "2017 - (2017)"
+              if re.search(r'\(\d{4}\).*\(\d{4}\)', nome): return True   # duplicação de ano
+              if is_placeholder(extract_candidate(nome)): return True    # só "Desconhecido"
+              return False
+
+          def tmdb_get(path, params):
               if not API_KEY: return None
               try:
-                  r = requests.get(f"{TMDB_API}/find/{imdb_id}?external_source=imdb_id&api_key={API_KEY}&language=pt-BR", timeout=10)
-                  dados = r.json()
-                  if dados.get("movie_results"):
-                      m = dados["movie_results"][0]
-                      ano = m.get("release_date", "")[:4]
-                      titulo = m.get("title", "Desconhecido")
-                      if ano: titulo = f"{titulo} ({ano})"
-                      capa = IMG_BASE + m["poster_path"] if m.get("poster_path") else None
-                      return titulo, capa
-                  
-                  if dados.get("tv_results"):
-                      t = dados["tv_results"][0]
-                      ano = t.get("first_air_date", "")[:4]
-                      titulo = t.get("name", "Desconhecido")
-                      if ano: titulo = f"{titulo} ({ano})"
-                      capa = IMG_BASE + t["poster_path"] if t.get("poster_path") else None
-                      return titulo, capa
-              except: pass
+                  p = dict(params); p["api_key"] = API_KEY; p["language"] = "pt-BR"
+                  return requests.get(f"{TMDB_API}{path}", params=p, timeout=10).json()
+              except Exception:
+                  return None
+
+          def tmdb_by_imdb(imdb):
+              d = tmdb_get(f"/find/{imdb}", {"external_source": "imdb_id"})
+              if not d: return None
+              if d.get("movie_results"): return "movie", d["movie_results"][0]
+              if d.get("tv_results"):    return "tv",    d["tv_results"][0]
               return None
 
+          def tmdb_search(query):
+              d = tmdb_get("/search/multi", {"query": query, "include_adult": "false"})
+              if d and d.get("results"): return d["results"][0]
+              return None
+
+          def build_title(kind, item, ep=None):
+              if kind == "movie":
+                  ano = (item.get("release_date") or "")[:4]
+                  titulo = item.get("title") or item.get("original_title") or ""
+              else:
+                  ano = (item.get("first_air_date") or "")[:4]
+                  titulo = item.get("name") or item.get("original_name") or ""
+              if not titulo: return None, None
+              full = f"{titulo} ({ano})" if ano else titulo
+              if ep: full = f"{full} T{ep[0]}E{ep[1]}"
+              poster = IMG_BASE + item["poster_path"] if item.get("poster_path") else None
+              return full, poster
+
           def main():
-              arquivos = list(Path(".").glob("*.html"))
+              arquivos = sorted(Path(".").glob("*.html"))
               log(f"Analisando {len(arquivos)} arquivos HTML...")
-              
-              processados = 0
-              consertados = 0
-              deletados = 0
+
+              rev = Path("_revisar"); rev.mkdir(exist_ok=True)
+              processados = consertados = movidos = ja_ok = 0
 
               for f in arquivos:
                   if processados >= LOTE_SIZE:
-                      log(f"Lote de {LOTE_SIZE} consertos atingido. Parando por hoje.")
+                      log(f"Lote de {LOTE_SIZE} atingido. Parando.")
                       break
-
-                  if f.name in ["catalogo.html", "index.html"]:
-                      continue
+                  if f.name in ("catalogo.html", "index.html"): continue
 
                   try:
                       conteudo = f.read_text(encoding="utf-8")
-                      soup = BeautifulSoup(conteudo, 'html.parser')
-                      script_ld = soup.find('script', type='application/ld+json')
-                      
-                      if not script_ld: continue
-                      
-                      try: dados = json.loads(script_ld.string)
-                      except: continue
-                      
-                      nome_atual = dados.get('name', '')
-                      video_link = dados.get('contentUrl', '')
-                      
-                      # Verifica se o nome está quebrado
-                      is_broken = False
-                      if not nome_atual or len(nome_atual) < 3: is_broken = True
-                      if "http" in nome_atual or "desconhecid" in nome_atual.lower(): is_broken = True
-                      if re.match(r'^\d{4}\s*-', nome_atual): is_broken = True # Ex: "2024 - 🍿Clau"
-                      
-                      if not is_broken:
-                          continue # Pula os que já estão bons
-                          
-                      processados += 1
-                      log(f"[{processados}/{LOTE_SIZE}] Arquivo quebrado encontrado: {f.name} (Nome atual: '{nome_atual}')")
-                      
-                      novo_nome_json = None
-                      nova_capa = None
-                      
-                      # 1. Tenta resgatar via IMDB (TMDB)
-                      match_imdb = re.search(r'(tt\d{7,9})', video_link)
-                      if match_imdb and API_KEY:
-                          imdb_id = match_imdb.group(1)
-                          res = buscar_tmdb(imdb_id)
-                          if res:
-                              titulo_tmdb, capa_tmdb = res
-                              novo_nome_json = f"{titulo_tmdb} - 🍿Clau"
-                              nova_capa = capa_tmdb
-                              log(f"  [+] Resgatado via TMDB: {titulo_tmdb}")
-
-                      # 2. Se não achou no TMDB, tenta usar o nome da URL
-                      if not novo_nome_json:
-                          # Ex: extrai "escolha_de_sofia_1982" de https_www..._inix_escolha_de_sofia_1982_html.html
-                          m_slug = re.search(r'_site_\d{4}_\d{2}_([^/]+)\.html', f.name)
-                          if m_slug:
-                              slug = m_slug.group(1).replace('_', ' ').title()
-                              novo_nome_json = f"{slug} - 🍿Clau"
-                              log(f"  [+] Resgatado via URL: {slug}")
-                          else:
-                              log(f"  [X] Sem salvação. Deletando arquivo lixo.")
-                              f.unlink()
-                              deletados += 1
-                              continue
-
-                      # Aplica as correções
-                      dados['name'] = novo_nome_json
-                      dados['description'] = f"Assista {novo_nome_json}"
-                      if nova_capa:
-                          dados['thumbnailUrl'] = [nova_capa]
-                          
-                      novo_json = json.dumps(dados, ensure_ascii=False, indent=4)
-                      novo_html = conteudo.replace(script_ld.string, novo_json)
-                      novo_html = re.sub(r'<title>.*?</title>', f'<title>{novo_nome_json}</title>', novo_html)
-                      novo_html = re.sub(r'<h1.*?>.*?</h1>', f'<h1 class="post-title">{novo_nome_json}</h1>', novo_html)
-                      
-                      if nova_capa:
-                          novo_html = re.sub(r'poster="[^"]*"', f'poster="{nova_capa}"', novo_html)
-                          novo_html = re.sub(r'<img src="[^"]*"', f'<img src="{nova_capa}"', novo_html)
-
-                      # Renomeia o arquivo
-                      base_titulo = re.sub(r'\s*-\s*🍿Clau', '', novo_nome_json)
-                      novo_slug = re.sub(r'[^a-z0-9]', '_', base_titulo.lower())
-                      novo_slug = re.sub(r'_+', '_', novo_slug).strip('_')
-                      nome_final = f"{novo_slug}.html"
-                      
-                      Path(nome_final).write_text(novo_html, encoding="utf-8")
-                      if f.name != nome_final:
-                          f.unlink()
-                          
-                      log(f"  [+] Salvo como: {nome_final}")
-                      consertados += 1
-                      
+                      soup = BeautifulSoup(conteudo, "html.parser")
+                      tag  = soup.find("script", type="application/ld+json")
+                      if not tag: continue
+                      dados = json.loads(tag.string)
                   except Exception as e:
-                      log(f"  [x] Erro ao processar {f.name}: {e}")
+                      log(f"  [x] Erro lendo {f.name}: {e}"); continue
 
-              log(f"Finalizado! Quebrados analisados: {processados} | Consertados: {consertados} | Deletados: {deletados}")
+                  nome_atual = dados.get("name", "") or ""
+                  video      = dados.get("contentUrl", "") or ""
+
+                  if not is_broken(nome_atual):
+                      ja_ok += 1
+                      continue
+
+                  processados += 1
+                  log(f"[{processados}/{LOTE_SIZE}] Quebrado: {f.name} — '{nome_atual}'")
+
+                  candidate = extract_candidate(nome_atual)
+                  ep = None
+                  em = re.search(r'\bT(\d+)E(\d+)\b', nome_atual)
+                  if em: ep = (em.group(1), em.group(2))
+
+                  novo_full = novo_poster = None
+                  origem = None
+
+                  # Estratégia 1 — IMDB presente no contentUrl
+                  im = re.search(r'(tt\d{7,9})', video)
+                  if im:
+                      res = tmdb_by_imdb(im.group(1))
+                      if res:
+                          novo_full, novo_poster = build_title(res[0], res[1], ep)
+                          if novo_full: origem = "IMDB"
+
+                  # Estratégia 2 — busca por título candidato no TMDB
+                  if not novo_full and candidate and not is_placeholder(candidate):
+                      q = re.sub(r'\s*T\d+E\d+\s*', ' ', candidate).strip() if ep else candidate
+                      item = tmdb_search(q)
+                      if item:
+                          kind = "tv" if (item.get("media_type") == "tv" or "first_air_date" in item) else "movie"
+                          novo_full, novo_poster = build_title(kind, item, ep)
+                          if novo_full: origem = f"TMDB busca '{q}'"
+
+                  # Estratégia 3 — busca pelo nome do arquivo
+                  if not novo_full:
+                      slug = re.sub(r'_\d{4}_\d{4}', '', f.stem)
+                      slug = re.sub(r'_\d{4}$', '', slug)
+                      slug = re.sub(r'_+', ' ', slug).strip()
+                      if slug and not is_placeholder(slug):
+                          item = tmdb_search(slug)
+                          if item:
+                              kind = "tv" if (item.get("media_type") == "tv" or "first_air_date" in item) else "movie"
+                              novo_full, novo_poster = build_title(kind, item, ep)
+                              if novo_full: origem = f"TMDB filename '{slug}'"
+
+                  # Estratégia 4 — mantém nome limpo (NUNCA deleta)
+                  if not novo_full and candidate and not is_placeholder(candidate):
+                      novo_full = candidate
+                      origem = "candidato do nome (sem TMDB)"
+
+                  # Se nem isso resolveu, move para _revisar (não deleta)
+                  if not novo_full:
+                      dest = rev / f.name
+                      n = 1
+                      while dest.exists():
+                          dest = rev / f"{f.stem}_{n}{f.suffix}"; n += 1
+                      shutil.move(str(f), str(dest))
+                      log(f"  [?] Sem solução — movido para _revisar/{dest.name}")
+                      movidos += 1
+                      continue
+
+                  # Aplica correções
+                  full_suffix = novo_full if "🍿Clau" in novo_full else f"{novo_full} - 🍿Clau"
+                  dados["name"]        = full_suffix
+                  dados["description"] = f"Assista {novo_full}"
+                  if novo_poster:
+                      dados["thumbnailUrl"] = [novo_poster]
+
+                  novo_json = json.dumps(dados, ensure_ascii=False, indent=4)
+                  novo_html = conteudo.replace(tag.string, novo_json)
+                  novo_html = re.sub(r'<title>.*?</title>', f'<title>{full_suffix}</title>', novo_html, count=1)
+                  novo_html = re.sub(r'<h1[^>]*>.*?</h1>', f'<h1 class="post-title">{full_suffix}</h1>', novo_html, count=1)
+                  if novo_poster:
+                      novo_html = re.sub(r'poster="[^"]*"',   f'poster="{novo_poster}"', novo_html, count=1)
+                      novo_html = re.sub(r'<img\s+src="[^"]*"', f'<img src="{novo_poster}"', novo_html, count=1)
+
+                  base = re.sub(r'\s*-\s*🍿Clau', '', full_suffix).strip()
+                  slug = re.sub(r'[^a-z0-9]+', '_', base.lower()).strip('_')
+                  dest = Path(f"{slug}.html")
+                  if dest.exists() and dest.name != f.name:
+                      n = 1
+                      while dest.exists():
+                          dest = Path(f"{slug}_{n}.html"); n += 1
+
+                  dest.write_text(novo_html, encoding="utf-8")
+                  if f.name != dest.name: f.unlink()
+
+                  log(f"  [+] ({origem}) → {dest.name}")
+                  consertados += 1
+
+              log(f"Finalizado! Analisados: {processados} | Consertados: {consertados} | "
+                  f"Já OK: {ja_ok} | Movidos p/ _revisar: {movidos}")
 
           if __name__ == "__main__":
               main()
@@ -179,19 +230,15 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
           git add -A
           git reset .github/ 2>/dev/null || true
-          
-          if git diff --cached --quiet; then echo "Nenhum arquivo precisou ser consertado."; exit 0; fi
-          git commit -m "fix: varrer e consertar todos os arquivos quebrados do catalogo"
-          
+          if git diff --cached --quiet; then echo "Nada a consertar."; exit 0; fi
+          git commit -m "fix: consertar arquivos quebrados (sem deletar válidos)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
-            echo "Conflito detectado. Sincronizando de forma segura..."
+            echo "Conflito. Sincronizando..."
             git pull origin main --no-rebase -X ours --no-edit
-            git add -A
-            git reset .github/ 2>/dev/null || true
-            git commit -m "fix: retry corrigir quebrados $i" || true
+            git add -A; git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry $i" || true
             sleep $((RANDOM % 10 + 5))
           done
