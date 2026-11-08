@@ -84,13 +84,19 @@ jobs:
 
           def limpar_titulo_bruto(titulo, url):
               if not titulo: titulo = ""
-              if "http" in titulo.lower() or titulo.lower().endswith(".html"): titulo = ""
+              is_url = "http" in titulo.lower() or titulo.lower().endswith(".html")
+              if is_url: titulo = ""
+              
               titulo = unicodedata.normalize('NFKD', str(titulo))
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
+              
               titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
+              
+              # Remove apenas sufixos conhecidos de site (não corta o nome no meio)
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -')
-              titulo = titulo.strip()
+              
+              # Se não sobrou nada ou é muito pequeno, aí sim usa a URL
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
@@ -98,6 +104,8 @@ jobs:
                       slug = re.sub(r'^(?:inix|arc|entre-nos)[-_]', '', slug, flags=re.I)
                       slug = re.sub(r'[-_]\d{4}$', '', slug)
                       titulo = slug.replace('-', ' ').replace('_', ' ').title()
+              
+              # Remove o ano do final para não duplicar (ex: "Matrix 1999" -> "Matrix")
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
               return titulo
 
@@ -264,20 +272,21 @@ jobs:
               )
               caminho_destino.write_text(html, encoding='utf-8')
 
-          def arquivo_precisa_conserto(arquivo):
+          def checar_defeitos(arquivo):
+              """Retorna (nome_quebrado, capa_quebrada, nome_antigo, capa_antiga)"""
               try:
                   conteudo = arquivo.read_text(encoding="utf-8")
                   soup = BeautifulSoup(conteudo, 'html.parser')
                   script = soup.find('script', type='application/ld+json')
-                  if not script: return True
+                  if not script: return True, True, "", ""
                   dados = json.loads(script.string)
                   nome = dados.get('name', '')
                   capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
                   
-                  if "inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3: return True
-                  if "placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa): return True
-                  return False
-              except: return True
+                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
+                  c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
+                  return n_quebrado, c_quebrada, nome, capa
+              except: return True, True, "", ""
 
           async def processar_item(context, url_pagina):
               log(f"\n--> Verificando: {url_pagina}")
@@ -325,43 +334,58 @@ jobs:
 
                   arquivo_existente = INDICE_VIDEOS.get(link) if link else None
 
-                  # --- LÓGICA DE MODOS ---
+                  # --- LÓGICA DE CONSERTO / CRIAÇÃO COM LOGS DETALHADOS ---
                   if arquivo_existente:
-                      log(f"    (Arquivo existente: {arquivo_existente.name})")
+                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_existente)
+                      renomear = (arquivo_existente.name != nome_arquivo_calculado)
                       
                       if MODO == 'apenas_baixar':
-                          log("    (Modo Apenas Baixar: Ignorando conserto de arquivo antigo.)")
+                          log(f"    (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando conserto.")
                           return
                           
-                      if arquivo_existente.name != nome_arquivo_calculado:
-                          log(f"    [🔄] Nome incorreto. Renomeando para: {nome_arquivo_calculado}")
-                          novo_caminho = Path(nome_arquivo_calculado)
-                          salvar_html(novo_caminho, nome_json, link, capa_url)
+                      if not renomear and not n_quebrado and not c_quebrada:
+                          log(f"    (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
+                          return
+                          
+                      log(f"    (Arquivo existente: {arquivo_existente.name})")
+                      acoes = []
+                      if renomear: acoes.append("Renomeado")
+                      if n_quebrado: acoes.append("Título corrigido")
+                      if c_quebrada: acoes.append("Capa corrigida")
+                      log(f"    [🔄] {', '.join(acoes)}...")
+                      
+                      novo_caminho = Path(nome_arquivo_calculado) if renomear else arquivo_existente
+                      salvar_html(novo_caminho, nome_json, link, capa_url)
+                      
+                      if renomear and arquivo_existente.exists():
                           arquivo_existente.unlink()
-                          log(f"    [+] Renomeado e consertado.")
-                      elif arquivo_precisa_conserto(arquivo_existente):
-                          log(f"    [🔄] Conteúdo com defeito. Consertando in-place...")
-                          salvar_html(arquivo_existente, nome_json, link, capa_url)
-                          log(f"    [+] Consertado in-place.")
+                          log(f"    [+] Salvo como: {novo_caminho.name}")
                       else:
-                          log(f"    (Arquivo já está perfeito).")
+                          log(f"    [+] Arquivo atualizado in-place.")
                       return
 
                   arquivo_por_nome = Path(nome_arquivo_calculado)
                   if arquivo_por_nome.exists():
-                      log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado})")
+                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_por_nome)
+                      
                       if MODO == 'apenas_baixar':
+                          log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). Modo Apenas Baixar: Ignorando.")
                           return
-                      if arquivo_precisa_conserto(arquivo_por_nome):
-                          log(f"    [🔄] Consertando...")
+                          
+                      if n_quebrado or c_quebrada:
+                          acoes = []
+                          if n_quebrado: acoes.append("Título corrigido")
+                          if c_quebrada: acoes.append("Capa corrigida")
+                          log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado})")
+                          log(f"    [🔄] {', '.join(acoes)}...")
                           salvar_html(arquivo_por_nome, nome_json, link, capa_url)
-                          log(f"    [+] Consertado")
+                          log(f"    [+] Arquivo atualizado.")
                       else:
-                          log(f"    (Já está perfeito)")
+                          log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). (Já está perfeito).")
                       return
 
                   if MODO == 'apenas_consertar':
-                      log(f"    (Modo Apenas Consertar: Arquivo não existe. Pulando.)")
+                      log(f"    (Não existe e modo é Apenas Consertar. Pulando.)")
                       return
 
                   # --- BAIXAR NOVO ---
@@ -407,7 +431,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (modos)"
+          git commit -m "feat: mega extracao de filmes (logs detalhados)"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
