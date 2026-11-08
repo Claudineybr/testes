@@ -82,26 +82,39 @@ jobs:
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
+          # ---------- Limpeza de títulos ----------
           def limpar_titulo_bruto(titulo, url):
               if not titulo: titulo = ""
               is_url = "http" in titulo.lower() or titulo.lower().endswith(".html")
               if is_url: titulo = ""
-              
+
               titulo = unicodedata.normalize('NFKD', str(titulo))
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              
-              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
+
+              # FIX #4: loop para remover prefixos encadeados
+              prefixo_re = re.compile(
+                  r'^(?:Marcøsx7|Marcosx7|Marcos|Vini7x|ViNi7x|inix|arc|entre[_-]?nos)[^a-zA-Z0-9]*[-:]?',
+                  re.I
+              )
+              for _ in range(10):
+                  novo = prefixo_re.sub('', titulo).strip()
+                  if novo == titulo: break
+                  titulo = novo
+
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|serie|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -')
-              
+
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
                       slug = m.group(1)
-                      slug = re.sub(r'^(?:inix|arc|entre-nos)[-_]', '', slug, flags=re.I)
+                      for _ in range(10):
+                          novo = re.sub(r'^(?:inix|arc|entre[_-]?nos|vini7x)[-_]', '', slug, flags=re.I)
+                          if novo == slug: break
+                          slug = novo
                       slug = re.sub(r'[-_]\d{4}$', '', slug)
                       titulo = slug.replace('-', ' ').replace('_', ' ').title()
-              
+
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
               titulo = re.sub(r'\s*-\s*(?:\d+\s*[ªº]\s*)?(?:temporada|season)\b.*$', '', titulo, flags=re.I).strip()
               return titulo
@@ -112,6 +125,7 @@ jobs:
               lixos = ['icon', 'logo', 'favicon', 'avatar', 'banner', 'default', 'profile']
               return any(x in url_lower for x in lixos)
 
+          # ---------- Índice ----------
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
               indice = {}
@@ -125,6 +139,69 @@ jobs:
 
           INDICE_VIDEOS = construir_indice_videos()
 
+          # ---------- Helpers ----------
+          def extrair_name_do_arquivo(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if script:
+                      return json.loads(script.string).get('name')
+              except: pass
+              return None
+
+          def extrair_link_do_arquivo(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if script:
+                      return json.loads(script.string).get('contentUrl')
+              except: pass
+              return None
+
+          def classificar_nome_existente_serie(nome_existente, nome_calculado):
+              """Retorna:
+                'quebrado'        -> renomear para nome calculado
+                'episodio_errado' -> contentUrl bate mas T/E divergem (suspeito) -> NÃO renomear
+                'bom'             -> nome já tem _tXeY e não é sujo -> NÃO renomear
+                'outro'           -> não tem _tXeY, renomear para nome calculado
+              """
+              base = nome_existente.replace('.html', '')
+              if 'http' in base.lower():
+                  return 'quebrado'
+              if re.match(r'^(?:inix|arc|entre[_-]?nos)[-_]', base, re.I):
+                  return 'quebrado'
+              if re.search(r'_\d{6,}$', base):
+                  return 'quebrado'
+              if re.search(r'\bvini7x\b', base, re.I):
+                  return 'quebrado'
+
+              m_exist = re.search(r'_t(\d+)e(\d+)$', base, re.I)
+              m_calc  = re.search(r'_t(\d+)e(\d+)$', nome_calculado.replace('.html', ''), re.I)
+              if m_exist and m_calc:
+                  if m_exist.group(1) != m_calc.group(1) or m_exist.group(2) != m_calc.group(2):
+                      return 'episodio_errado'
+                  return 'bom'
+              if m_exist:
+                  return 'bom'
+              return 'outro'
+
+          def checar_defeitos(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if not script: return True, True
+                  dados = json.loads(script.string)
+                  nome = dados.get('name', '') or ''
+                  capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
+                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
+                  c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
+                  return n_quebrado, c_quebrada
+              except: return True, True
+
+          # ---------- Fila ----------
           def construir_fila():
               log("Criando/atualizando fila de series...")
               urls, vistos = [], set()
@@ -159,6 +236,17 @@ jobs:
           if ARQ_FEITAS.exists():
               feitas = set(l.strip() for l in ARQ_FEITAS.read_text(encoding="utf-8").splitlines() if l.strip())
 
+          def marcar_feita(url):
+              """FIX #2: só chamada em sucesso real."""
+              url = url.strip()
+              if not url or url in feitas: return
+              try:
+                  with open(ARQ_FEITAS, "a", encoding="utf-8") as f:
+                      f.write(url + "\n")
+                  feitas.add(url)
+              except Exception as e:
+                  log(f"    [⚠️] Erro ao gravar em FEITAS: {e}")
+
           pendentes_dict = {}
           if ARQ_PENDENTES.exists():
               try:
@@ -166,7 +254,10 @@ jobs:
                       if p['arquivo'] not in pendentes_dict:
                           pendentes_dict[p['arquivo']] = p
                       else:
-                          pendentes_dict[p['arquivo']]['tentativas'] = max(pendentes_dict[p['arquivo']].get('tentativas',1), p.get('tentativas',1))
+                          pendentes_dict[p['arquivo']]['tentativas'] = max(
+                              pendentes_dict[p['arquivo']].get('tentativas',1),
+                              p.get('tentativas',1)
+                          )
               except: pass
           pendentes = list(pendentes_dict.values())
 
@@ -176,6 +267,7 @@ jobs:
 
           log(f"Fila: {len(todas)} | Faltam: {len(fila)} | Lote: {LOTE_SIZE} | Modo: {MODO}")
 
+          # ---------- Detecção de série ----------
           def eh_serie(soup, url_pagina):
               for script in soup.find_all('script', type='application/ld+json'):
                   try:
@@ -213,10 +305,10 @@ jobs:
               if script_ld:
                   try: capa = json.loads(script_ld.string).get('thumbnailUrl', [''])[0]
                   except: pass
-              
+
               if not capa or capa == 'h' or len(capa) < 5 or is_icon_url(capa):
                   m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-                  if m and not is_icon_url(m.group(0)): 
+                  if m and not is_icon_url(m.group(0)):
                       capa = m.group(0)
                   else:
                       og_img = soup.find('meta', property='og:image')
@@ -235,29 +327,37 @@ jobs:
                       dados_ld = json.loads(script_ld.string)
                       if dados_ld.get('contentUrl'): return dados_ld['contentUrl']
                   except: pass
-              matches = re.findall(r'(https?://[^"\'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^"\'\s<>]*)', html_text)
+              matches = re.findall(
+                  r'(https?://[^"\'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^"\'\s<>]*)',
+                  html_text
+              )
               if matches: return matches[0]
               return None
 
+          # ---------- Link do episódio ----------
           async def obter_link_episodio(context, url_ep):
               try:
                   r_ep = await asyncio.to_thread(requests.get, url_ep, headers=HEADERS, timeout=20)
                   link = extrair_video_da_pagina(r_ep.text)
                   if link: return link
               except Exception: pass
+
+              # FIX #5: usa o context compartilhado em vez de abrir novo browser
               try:
                   page = await context.new_page()
-                  await page.goto(url_ep, wait_until="domcontentloaded", timeout=20000)
-                  await asyncio.sleep(5)
-                  html = await page.content()
-                  link = extrair_video_da_pagina(html)
-                  await page.close()
-                  if link: return link
+                  try:
+                      await page.goto(url_ep, wait_until="domcontentloaded", timeout=20000)
+                      await asyncio.sleep(5)
+                      html = await page.content()
+                      link = extrair_video_da_pagina(html)
+                      if link: return link
+                  finally:
+                      await page.close()
               except Exception: pass
               return None
 
+          # ---------- Save ----------
           def salvar_html(caminho_destino, nome_json, link, capa_url):
-              uid = re.sub(r'[^a-zA-Z0-9]', '', caminho_destino.name.replace('.html', ''))
               base_url = "https://api-pobreflix-filmes.pages.dev"
               file_url = f"{base_url}/{caminho_destino.name}"
               dados = {
@@ -279,23 +379,115 @@ jobs:
               )
               caminho_destino.write_text(html, encoding='utf-8')
 
-          def checar_defeitos(arquivo):
-              """Retorna (nome_quebrado, capa_quebrada)"""
-              try:
-                  conteudo = arquivo.read_text(encoding="utf-8")
-                  soup = BeautifulSoup(conteudo, 'html.parser')
-                  script = soup.find('script', type='application/ld+json')
-                  if not script: return True, True
-                  dados = json.loads(script.string)
-                  nome = dados.get('name', '')
-                  capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
-                  
-                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
-                  c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
-                  return n_quebrado, c_quebrada
-              except: return True, True
+          # ---------- Helper de save de episódio ----------
+          def garantir_episodio(link, nome_arquivo_calculado, nome_json, capa_url, url_serie_ref):
+              """Processa 1 episódio. Retorna True se marcou/episódio existe, False se vai para pendentes."""
+              arquivo_existente = INDICE_VIDEOS.get(link) if link else None
 
-          async def processar_serie(context, url_serie):
+              if arquivo_existente:
+                  if MODO == 'apenas_baixar':
+                      log(f"      (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando.")
+                      return True
+
+                  classe = classificar_nome_existente_serie(arquivo_existente.name, nome_arquivo_calculado)
+                  n_quebrado, c_quebrada = checar_defeitos(arquivo_existente)
+
+                  if classe == 'episodio_errado':
+                      log(f"      [⚠️] contentUrl bate mas T/E divergem.")
+                      log(f"      Existente: {arquivo_existente.name} | Calculado: {nome_arquivo_calculado}")
+                      log(f"      Mantendo o arquivo atual (NÃO renomeando para evitar troca).")
+                      return True
+
+                  if classe == 'bom':
+                      if n_quebrado or c_quebrada:
+                          acoes = []
+                          if n_quebrado: acoes.append("Título corrigido")
+                          if c_quebrada: acoes.append("Capa corrigida")
+                          log(f"      (Arquivo existente: {arquivo_existente.name}). Nome já é bom.")
+                          log(f"      [🔄] {', '.join(acoes)} in-place...")
+                          nome_json_salvar = nome_json
+                          if not n_quebrado:
+                              original = extrair_name_do_arquivo(arquivo_existente)
+                              if original and len(original) > 3:
+                                  nome_json_salvar = original
+                          salvar_html(arquivo_existente, nome_json_salvar, link, capa_url)
+                          log(f"      [+] Arquivo atualizado in-place.")
+                      else:
+                          log(f"      (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
+                      return True
+
+                  # classe == 'quebrado' ou 'outro' -> renomear
+                  renomear = (arquivo_existente.name != nome_arquivo_calculado)
+                  acoes = []
+                  if renomear: acoes.append("Renomeado")
+                  if n_quebrado: acoes.append("Título corrigido")
+                  if c_quebrada: acoes.append("Capa corrigida")
+                  log(f"      (Arquivo existente: {arquivo_existente.name})")
+                  if acoes:
+                      log(f"      [🔄] {', '.join(acoes)}...")
+
+                  if renomear:
+                      novo_caminho = Path(nome_arquivo_calculado)
+                      salvar_html(novo_caminho, nome_json, link, capa_url)
+                      if arquivo_existente.exists() and arquivo_existente != novo_caminho:
+                          arquivo_existente.unlink()
+                      INDICE_VIDEOS.pop(link, None)
+                      INDICE_VIDEOS[link] = novo_caminho
+                      log(f"      [+] Salvo como: {novo_caminho.name}")
+                  else:
+                      salvar_html(arquivo_existente, nome_json, link, capa_url)
+                      log(f"      [+] Arquivo atualizado in-place.")
+                  return True
+
+              # sem contentUrl batendo -> checa pelo nome
+              arquivo_por_nome = Path(nome_arquivo_calculado)
+              if arquivo_por_nome.exists():
+                  if MODO == 'apenas_baixar':
+                      log(f"      (Arquivo existe pelo nome: {nome_arquivo_calculado}). Modo Apenas Baixar: Ignorando.")
+                      return True
+
+                  n_quebrado, c_quebrada = checar_defeitos(arquivo_por_nome)
+                  if n_quebrado or c_quebrada:
+                      link_efetivo = link or extrair_link_do_arquivo(arquivo_por_nome)
+                      if not link_efetivo:
+                          log(f"      [⚠️] Arquivo existe mas link não recuperável. Mantendo.")
+                          return True
+                      acoes = []
+                      if n_quebrado: acoes.append("Título corrigido")
+                      if c_quebrada: acoes.append("Capa corrigida")
+                      log(f"      (Arquivo existe pelo nome: {nome_arquivo_calculado})")
+                      log(f"      [🔄] {', '.join(acoes)}...")
+                      salvar_html(arquivo_por_nome, nome_json, link_efetivo, capa_url)
+                      log(f"      [+] Arquivo atualizado.")
+                  else:
+                      log(f"      (Arquivo existe pelo nome: {nome_arquivo_calculado}). (Já está perfeito).")
+                  return True
+
+              # novo episódio
+              if MODO == 'apenas_consertar':
+                  log(f"      (Não existe e modo é Apenas Consertar. Pulando.)")
+                  return True
+
+              if not link:
+                  if not any(p['arquivo']==nome_arquivo_calculado for p in pendentes):
+                      pendentes.append({
+                          "arquivo": nome_arquivo_calculado,
+                          "nome_json": nome_json,
+                          "url": url_serie_ref,
+                          "tentativas": 1
+                      })
+                      log(f"      [⏳] Sem link. Vai para retry.")
+                  else:
+                      log(f"      [⏳] Sem link. Já está na fila de retry.")
+                  return False
+
+              salvar_html(Path(nome_arquivo_calculado), nome_json, link, capa_url)
+              INDICE_VIDEOS[link] = Path(nome_arquivo_calculado)
+              log(f"      [+] Salvo: {nome_arquivo_calculado}")
+              return True
+
+          # ---------- Processar 1 série ----------
+          async def processar_serie(ctx, url_serie):
               log(f"\n--> Verificando serie: {url_serie}")
               try:
                   r = await asyncio.to_thread(requests.get, url_serie, headers=HEADERS, timeout=20)
@@ -303,25 +495,26 @@ jobs:
                   html_final = r.text
 
                   if not eh_serie(soup, url_serie):
-                      async with async_playwright() as pw:
-                          browser = await pw.chromium.launch(headless=True)
-                          page = await browser.new_page()
+                      # FIX #5: usa ctx compartilhado, não abre browser novo
+                      page = await ctx.new_page()
+                      try:
                           await page.goto(url_serie, wait_until="domcontentloaded", timeout=20000)
                           await asyncio.sleep(5)
                           html_render = await page.content()
-                          soup_render = BeautifulSoup(html_render, 'html.parser')
-                          if not eh_serie(soup_render, url_serie):
-                              log("    (É FILME. Pulando...)")
-                              with open(ARQ_FEITAS,"a",encoding="utf-8") as f: f.write(url_serie.strip()+"\n")
-                              await browser.close()
-                              return
-                          html_final = html_render
-                          soup = soup_render
-                          await browser.close()
+                      finally:
+                          await page.close()
+                      soup_render = BeautifulSoup(html_render, 'html.parser')
+                      if not eh_serie(soup_render, url_serie):
+                          log("    (É FILME. Pulando...)")
+                          marcar_feita(url_serie)
+                          return
+                      html_final = html_render
+                      soup = soup_render
 
                   titulo, capa_url = extrair_dados_pagina(html_final, url_serie)
-                  slug = re.sub(r'[^a-z0-9]', '_', titulo.lower())
+                  slug = re.sub(r'[^a-z0-9]', '_', (titulo or "").lower())
                   slug = re.sub(r'_+', '_', slug).strip('_')
+                  if not slug: slug = "sem_titulo"
 
                   temporada, eps = 1, []
                   for tag in soup.find_all(['b', 'h2', 'h3', 'p', 'a', 'div']):
@@ -338,113 +531,82 @@ jobs:
                           titulo_ep = re.sub(r'Episódio\s*\d+\s*-?\s*', '', texto, flags=re.I).strip()
                           eps.append({'temp': temporada, 'ep': num, 'titulo': titulo_ep, 'url': href})
 
-                  with open(ARQ_FEITAS,"a",encoding="utf-8") as f: f.write(url_serie.strip()+"\n")
+                  # FIX #2: marca feita só APÓS identificação confirmada como série
+                  marcar_feita(url_serie)
+
                   if not eps:
-                      log("    (Nenhum episódio encontrado. Pulando...)"); return
+                      log("    (Nenhum episódio encontrado. Pulando...)")
+                      return
+
                   log(f"    Série '{titulo}' ({slug}) - {len(eps)} eps.")
 
                   for it in eps:
                       nome_arquivo_calculado = f"{slug}_t{it['temp']}e{it['ep']}.html"
                       nome_json = f"{titulo} - T{it['temp']}E{it['ep']} - {it['titulo']} - 🍿Clau"
 
-                      link = await obter_link_episodio(context, it['url'])
-                      arquivo_existente = INDICE_VIDEOS.get(link) if link else None
-
-                      # --- LÓGICA DE CONSERTO / CRIAÇÃO COM LOGS DETALHADOS ---
-                      if arquivo_existente:
-                          n_quebrado, c_quebrada = checar_defeitos(arquivo_existente)
-                          renomear = (arquivo_existente.name != nome_arquivo_calculado)
-                          
-                          if MODO == 'apenas_baixar':
-                              log(f"      (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando.")
-                              continue
-                              
-                          if not renomear and not n_quebrado and not c_quebrada:
-                              log(f"      (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
-                              continue
-                              
-                          log(f"      (Arquivo existente: {arquivo_existente.name})")
-                          acoes = []
-                          if renomear: acoes.append("Renomeado")
-                          if n_quebrado: acoes.append("Título corrigido")
-                          if c_quebrada: acoes.append("Capa corrigida")
-                          log(f"      [🔄] {', '.join(acoes)}...")
-                          
-                          novo_caminho = Path(nome_arquivo_calculado) if renomear else arquivo_existente
-                          salvar_html(novo_caminho, nome_json, link, capa_url)
-                          
-                          if renomear and arquivo_existente.exists():
-                              arquivo_existente.unlink()
-                              log(f"      [+] Salvo como: {novo_caminho.name}")
-                          else:
-                              log(f"      [+] Arquivo atualizado in-place.")
-                          continue
-
-                      arquivo_por_nome = Path(nome_arquivo_calculado)
-                      if arquivo_por_nome.exists():
-                          n_quebrado, c_quebrada = checar_defeitos(arquivo_por_nome)
-                          
-                          if MODO == 'apenas_baixar': continue
-                              
-                          if n_quebrado or c_quebrada:
-                              acoes = []
-                              if n_quebrado: acoes.append("Título corrigido")
-                              if c_quebrada: acoes.append("Capa corrigida")
-                              log(f"      (Arquivo existe pelo nome: {nome_arquivo_calculado})")
-                              log(f"      [🔄] {', '.join(acoes)}...")
-                              salvar_html(arquivo_por_nome, nome_json, link or extrair_video_da_pagina(r.text), capa_url)
-                              log(f"      [+] Arquivo atualizado.")
-                          else:
-                              log(f"      (Arquivo existe pelo nome: {nome_arquivo_calculado}). (Já está perfeito).")
-                          continue
-
-                      if MODO == 'apenas_consertar':
-                          log(f"      (Não existe e modo é Apenas Consertar. Pulando.)")
-                          continue
-
-                      # --- BAIXAR NOVO ---
-                      log(f"      -> Processando novo T{it['temp']}E{it['ep']}")
-                      if not link:
+                      # per-episode try/except para não perder os demais
+                      try:
+                          link = await obter_link_episodio(ctx, it['url'])
+                          garantir_episodio(link, nome_arquivo_calculado, nome_json, capa_url, it['url'])
+                      except Exception as ep_err:
+                          log(f"      [❌] Erro no episódio T{it['temp']}E{it['ep']}: {ep_err}")
                           if not any(p['arquivo']==nome_arquivo_calculado for p in pendentes):
-                              pendentes.append({"arquivo": nome_arquivo_calculado, "nome_json": nome_json, "url": it['url'], "tentativas": 1})
-                          continue
-                      salvar_html(Path(nome_arquivo_calculado), nome_json, link, capa_url)
-                      log(f"      [+] Salvo: {nome_arquivo_calculado}")
+                              pendentes.append({
+                                  "arquivo": nome_arquivo_calculado,
+                                  "nome_json": nome_json,
+                                  "url": it['url'],
+                                  "tentativas": 1
+                              })
+
               except Exception as e:
                   log(f"    Erro na serie {url_serie}: {e}")
+                  # NÃO marca feita — volta na próxima run
 
+          # ---------- Main ----------
           async def main():
               async with async_playwright() as pw:
                   browser = await pw.chromium.launch(headless=True)
                   ctx = await browser.new_context(user_agent=HEADERS["User-Agent"])
-                  for i, url in enumerate(lote, 1):
-                      log(f"[{i}/{len(lote)}]")
-                      await processar_serie(ctx, url)
+                  try:
+                      for i, url in enumerate(lote, 1):
+                          log(f"[{i}/{len(lote)}]")
+                          await processar_serie(ctx, url)
 
-                  if pendentes:
-                      log(f"\n=== RETENTANDO {len(pendentes)} EPISODIOS ===")
-                      ainda = []
-                      for item in pendentes:
-                          if Path(item['arquivo']).exists(): continue
-                          if item.get("tentativas",0) >= MAX_TENTATIVAS: continue
-                          log(f"--> Tentativa {item['tentativas']+1}/{MAX_TENTATIVAS}: {item['arquivo']}")
-                          link = await obter_link_episodio(ctx, item['url'])
-                          capa_ep = "https://via.placeholder.com/500x750?text=Sem+Capa"
-                          try:
-                              r_ep = await asyncio.to_thread(requests.get, item['url'], headers=HEADERS, timeout=20)
-                              soup_ep = BeautifulSoup(r_ep.text, 'html.parser')
-                              m_img = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', r_ep.text)
-                              if m_img and not is_icon_url(m_img.group(0)): 
-                                  capa_ep = m_img.group(0)
-                          except: pass
-                          if link:
-                              salvar_html(Path(item['arquivo']), item['nome_json'], link, capa_ep)
-                              log("    [+] SUCESSO")
-                          else:
-                              item["tentativas"] = item.get("tentativas",1) + 1
-                              ainda.append(item)
-                      pendentes.clear(); pendentes.extend(ainda)
-                  await browser.close()
+                      # FIX #3: retry real com incremento de tentativas
+                      if pendentes:
+                          log(f"\n=== RETENTANDO {len(pendentes)} EPISODIOS ===")
+                          ainda = []
+                          for item in pendentes:
+                              if Path(item['arquivo']).exists():
+                                  continue
+                              if item.get("tentativas",0) >= MAX_TENTATIVAS:
+                                  log(f"    [❌ DESCARTADO após {MAX_TENTATIVAS} tentativas] {item['arquivo']}")
+                                  continue
+                              log(f"--> Tentativa {item['tentativas']+1}/{MAX_TENTATIVAS}: {item['arquivo']}")
+                              try:
+                                  link = await obter_link_episodio(ctx, item['url'])
+                                  capa_ep = "https://via.placeholder.com/500x750?text=Sem+Capa"
+                                  try:
+                                      r_ep = await asyncio.to_thread(requests.get, item['url'], headers=HEADERS, timeout=20)
+                                      m_img = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', r_ep.text)
+                                      if m_img and not is_icon_url(m_img.group(0)):
+                                          capa_ep = m_img.group(0)
+                                  except: pass
+                                  if link:
+                                      salvar_html(Path(item['arquivo']), item['nome_json'], link, capa_ep)
+                                      INDICE_VIDEOS[link] = Path(item['arquivo'])
+                                      log("    [+] SUCESSO")
+                                  else:
+                                      item["tentativas"] = item.get("tentativas",1) + 1
+                                      ainda.append(item)
+                              except Exception as e:
+                                  log(f"    [❌] Erro no retry: {e}")
+                                  item["tentativas"] = item.get("tentativas",1) + 1
+                                  ainda.append(item)
+                          pendentes.clear()
+                          pendentes.extend(ainda)
+                  finally:
+                      await browser.close()
 
           if __name__ == "__main__":
               asyncio.run(main())
@@ -485,10 +647,10 @@ jobs:
           FALTAM=$((TOTAL - FEITOS))
           echo "Faltam: $FALTAM"
           if [ "$FALTAM" -le 0 ]; then exit 0; fi
-          
+
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list --workflow="series.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
           if [ "$RECENTES" -ge 100 ]; then exit 0; fi
-          
+
           sleep 30
           gh workflow run "series.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f modo="${{ inputs.modo || 'baixar_e_consertar' }}"
