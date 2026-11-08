@@ -49,7 +49,7 @@ jobs:
       - name: Limpar arquivos de controle (Opcional)
         if: ${{ inputs.reprocessar_tudo == true || inputs.reprocessar_tudo == 'true' }}
         run: |
-          rm -f filmes_fila.txt filmes_feitos.txt filmes_pendentes.json filmes_descartados.txt
+          rm -f filmes_fila.txt filmes_feitas.txt filmes_pendentes.json filmes_descartados.txt
 
       - name: Instalar Python e Playwright
         run: |
@@ -72,7 +72,7 @@ jobs:
           HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
           ARQ_FILA        = Path("filmes_fila.txt")
-          ARQ_FEITAS      = Path("filmes_feitos.txt")
+          ARQ_FEITAS      = Path("filmes_feitas.txt")
           ARQ_PENDENTES   = Path("filmes_pendentes.json")
           ARQ_DESCARTADOS = Path("filmes_descartados.txt")
 
@@ -82,30 +82,39 @@ jobs:
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
+          # ---------- Limpeza de títulos ----------
           def limpar_titulo_bruto(titulo, url):
               if not titulo: titulo = ""
               is_url = "http" in titulo.lower() or titulo.lower().endswith(".html")
               if is_url: titulo = ""
-              
+
               titulo = unicodedata.normalize('NFKD', str(titulo))
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              
-              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
-              
-              # Remove apenas sufixos conhecidos de site (não corta o nome no meio)
+
+              # FIX #4: loop para remover prefixos encadeados (inix, arc, vini7x, entre_nos, ...)
+              prefixo_re = re.compile(
+                  r'^(?:Marcøsx7|Marcosx7|Marcos|Vini7x|ViNi7x|inix|arc|entre[_-]?nos)[^a-zA-Z0-9]*[-:]?',
+                  re.I
+              )
+              for _ in range(10):
+                  novo = prefixo_re.sub('', titulo).strip()
+                  if novo == titulo: break
+                  titulo = novo
+
               titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
               titulo = titulo.replace('🍿Clau', '').strip(' -')
-              
-              # Se não sobrou nada ou é muito pequeno, aí sim usa a URL
+
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
                       slug = m.group(1)
-                      slug = re.sub(r'^(?:inix|arc|entre-nos)[-_]', '', slug, flags=re.I)
+                      for _ in range(10):
+                          novo = re.sub(r'^(?:inix|arc|entre[_-]?nos|vini7x)[-_]', '', slug, flags=re.I)
+                          if novo == slug: break
+                          slug = novo
                       slug = re.sub(r'[-_]\d{4}$', '', slug)
                       titulo = slug.replace('-', ' ').replace('_', ' ').title()
-              
-              # Remove o ano do final para não duplicar (ex: "Matrix 1999" -> "Matrix")
+
               titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
               return titulo
 
@@ -115,6 +124,7 @@ jobs:
               lixos = ['icon', 'logo', 'favicon', 'avatar', 'banner', 'default', 'profile']
               return any(x in url_lower for x in lixos)
 
+          # ---------- Índice de vídeos já salvos ----------
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
               indice = {}
@@ -128,6 +138,61 @@ jobs:
 
           INDICE_VIDEOS = construir_indice_videos()
 
+          # ---------- Helpers de inspeção ----------
+          def extrair_name_do_arquivo(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if script:
+                      dados = json.loads(script.string)
+                      return dados.get('name')
+              except: pass
+              return None
+
+          def extrair_link_do_arquivo(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if script:
+                      dados = json.loads(script.string)
+                      return dados.get('contentUrl')
+              except: pass
+              return None
+
+          def classificar_nome_existente(nome_existente):
+              """Retorna: 'quebrado', 'ano_dup' ou 'bom'.
+              'quebrado'  -> renomear para nome calculado.
+              'ano_dup'   -> só remover ano duplicado (ex: _2024_2024), manter resto.
+              'bom'       -> NÃO renomear. Só consertar título/capa in-place.
+              """
+              base = nome_existente.replace('.html', '')
+              if 'http' in base.lower():
+                  return 'quebrado'
+              if re.match(r'^(?:inix|arc|entre[_-]?nos)[-_]', base, re.I):
+                  return 'quebrado'
+              if re.search(r'_\d{6,}$', base):
+                  return 'quebrado'
+              if re.search(r'(\d{4})_\1$', base):
+                  return 'ano_dup'
+              return 'bom'
+
+          def checar_defeitos(arquivo):
+              try:
+                  conteudo = arquivo.read_text(encoding="utf-8")
+                  soup = BeautifulSoup(conteudo, 'html.parser')
+                  script = soup.find('script', type='application/ld+json')
+                  if not script: return True, True
+                  dados = json.loads(script.string)
+                  nome = dados.get('name', '') or ''
+                  capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
+                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
+                  c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
+                  return n_quebrado, c_quebrada
+              except: return True, True
+
+          # ---------- Fila ----------
           def construir_fila():
               log("Criando/atualizando fila de filmes...")
               urls, vistos = [], set()
@@ -162,6 +227,18 @@ jobs:
           if ARQ_FEITAS.exists():
               feitas = set(l.strip() for l in ARQ_FEITAS.read_text(encoding="utf-8").splitlines() if l.strip())
 
+          def marcar_feita(url):
+              """FIX #2: só chamada em sucesso real."""
+              url = url.strip()
+              if not url or url in feitas: return
+              try:
+                  with open(ARQ_FEITAS, "a", encoding="utf-8") as f:
+                      f.write(url + "\n")
+                  feitas.add(url)
+              except Exception as e:
+                  log(f"    [⚠️] Erro ao gravar em FEITAS: {e}")
+
+          # ---------- Pendentes ----------
           pendentes_dict = {}
           if ARQ_PENDENTES.exists():
               try:
@@ -169,7 +246,10 @@ jobs:
                       if p['arquivo'] not in pendentes_dict:
                           pendentes_dict[p['arquivo']] = p
                       else:
-                          pendentes_dict[p['arquivo']]['tentativas'] = max(pendentes_dict[p['arquivo']].get('tentativas',1), p.get('tentativas',1))
+                          pendentes_dict[p['arquivo']]['tentativas'] = max(
+                              pendentes_dict[p['arquivo']].get('tentativas',1),
+                              p.get('tentativas',1)
+                          )
               except: pass
           pendentes = list(pendentes_dict.values())
 
@@ -179,34 +259,7 @@ jobs:
 
           log(f"Fila: {len(todas)} | Faltam: {len(fila)} | Lote: {LOTE_SIZE} | Modo: {MODO}")
 
-          async def extrair_video_playwright(context, url_ep):
-              page = await context.new_page()
-              capturados = []
-              def on_response(res):
-                  u = res.url
-                  if re.search(r"[.](mp4|m3u8)([?]|$)", u, re.I) or 'tankie' in u or 'oneplayer' in u:
-                      capturados.append(u)
-              page.on("response", on_response)
-              try:
-                  await page.goto(url_ep, wait_until="domcontentloaded", timeout=20000)
-                  await asyncio.sleep(4.0)
-                  if not capturados:
-                      html = await page.content()
-                      soup = BeautifulSoup(html, 'html.parser')
-                      for iframe in soup.find_all('iframe'):
-                          src = iframe.get('src', '')
-                          if src and 'google' not in src.lower() and 'ads' not in src.lower():
-                              capturados.append(src)
-                      if not capturados:
-                          m = re.search(r'(https?://[^"\']+(?:tankie|oneplayer)[^"\']+)', html)
-                          if m: capturados.append(m.group(1))
-              except Exception: pass
-              finally: await page.close()
-              diretos = [u for u in capturados if re.search(r"[.](mp4|m3u8)([?]|$)", u, re.I)]
-              if diretos: return diretos[0]
-              if capturados: return capturados[0]
-              return None
-
+          # ---------- Extração da página ----------
           def extrair_dados_pagina(html_text, url_pagina):
               soup = BeautifulSoup(html_text, 'html.parser')
               for a in soup.find_all('a', href=True):
@@ -227,10 +280,10 @@ jobs:
               if script_ld:
                   try: capa = json.loads(script_ld.string).get('thumbnailUrl', [''])[0]
                   except: pass
-              
+
               if not capa or capa == 'h' or len(capa) < 5 or is_icon_url(capa):
                   m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-                  if m and not is_icon_url(m.group(0)): 
+                  if m and not is_icon_url(m.group(0)):
                       capa = m.group(0)
                   else:
                       og_img = soup.find('meta', property='og:image')
@@ -244,13 +297,16 @@ jobs:
                   try: video = json.loads(script_ld.string).get('contentUrl')
                   except: pass
               if not video:
-                  matches = re.findall(r'(https?://[^"\'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^"\'\s<>]*)', html_text)
+                  matches = re.findall(
+                      r'(https?://[^"\'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^"\'\s<>]*)',
+                      html_text
+                  )
                   if matches: video = matches[0]
 
               return titulo.strip(), capa, video
 
+          # ---------- Save ----------
           def salvar_html(caminho_destino, nome_json, link, capa_url):
-              uid = re.sub(r'[^a-zA-Z0-9]', '', caminho_destino.name.replace('.html', ''))
               base_url = "https://api-pobreflix-filmes.pages.dev"
               file_url = f"{base_url}/{caminho_destino.name}"
               dados = {
@@ -272,23 +328,8 @@ jobs:
               )
               caminho_destino.write_text(html, encoding='utf-8')
 
-          def checar_defeitos(arquivo):
-              """Retorna (nome_quebrado, capa_quebrada, nome_antigo, capa_antiga)"""
-              try:
-                  conteudo = arquivo.read_text(encoding="utf-8")
-                  soup = BeautifulSoup(conteudo, 'html.parser')
-                  script = soup.find('script', type='application/ld+json')
-                  if not script: return True, True, "", ""
-                  dados = json.loads(script.string)
-                  nome = dados.get('name', '')
-                  capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
-                  
-                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
-                  c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
-                  return n_quebrado, c_quebrada, nome, capa
-              except: return True, True, "", ""
-
-          async def processar_item(context, url_pagina):
+          # ---------- Processamento de 1 item ----------
+          async def processar_item(ctx, url_pagina):
               log(f"\n--> Verificando: {url_pagina}")
               try:
                   r = await asyncio.to_thread(requests.get, url_pagina, headers=HEADERS, timeout=20)
@@ -296,23 +337,31 @@ jobs:
 
                   if link == "SÉRIE":
                       log("    (É SÉRIE. Pulando...)")
-                      with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                      marcar_feita(url_pagina)
                       return
 
+                  # FIX #5: Playwright reutiliza ctx do main
                   if not link:
-                      async with async_playwright() as pw:
-                          browser = await pw.chromium.launch(headless=True)
-                          page = await browser.new_page()
+                      page = await ctx.new_page()
+                      try:
                           await page.goto(url_pagina, wait_until="domcontentloaded", timeout=20000)
                           await asyncio.sleep(5)
                           html_render = await page.content()
-                          titulo_r, capa_r, link = extrair_dados_pagina(html_render, url_pagina)
-                          if link == "SÉRIE":
-                              with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
-                              await browser.close()
+                          titulo_r, capa_r, link_r = extrair_dados_pagina(html_render, url_pagina)
+                          if link_r == "SÉRIE":
+                              log("    (É SÉRIE. Pulando...)")
+                              marcar_feita(url_pagina)
                               return
-                          if not capa_url or capa_url == 'h': capa_url = capa_r
-                          await browser.close()
+                          if (not capa_url or capa_url == 'h' or is_icon_url(capa_url)) and capa_r:
+                              capa_url = capa_r
+                          if titulo_r and (not titulo or len(titulo) < 3):
+                              titulo = titulo_r
+                          if link_r: link = link_r
+                      finally:
+                          await page.close()
+
+                  if not titulo or len(titulo) < 3:
+                      titulo = limpar_titulo_bruto(titulo, url_pagina)
 
                   ano = ""
                   m = re.search(r'/([^/]+)\.html', url_pagina)
@@ -320,103 +369,192 @@ jobs:
                       anos = re.findall(r'(?<!\d)(?:19|20)\d{2}(?!\d)', m.group(1))
                       if anos: ano = anos[-1]
 
-                  slug = re.sub(r'[^a-z0-9]', '_', titulo.lower())
+                  slug = re.sub(r'[^a-z0-9]', '_', (titulo or "").lower())
                   slug = re.sub(r'_+', '_', slug).strip('_')
+                  if not slug: slug = "sem_titulo"
 
-                  if ano and not re.search(r'\d{4}', titulo):
+                  if ano and not re.search(r'\d{4}', titulo or ""):
                       nome_arquivo_calculado = f"{slug}_{ano}.html"
                       nome_json = f"{titulo} ({ano}) - 🍿Clau"
                   else:
                       nome_arquivo_calculado = f"{slug}.html"
                       nome_json = f"{titulo} - 🍿Clau"
 
-                  with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
-
+                  # ============ Branch 1: contentUrl já existe ============
                   arquivo_existente = INDICE_VIDEOS.get(link) if link else None
-
-                  # --- LÓGICA DE CONSERTO / CRIAÇÃO COM LOGS DETALHADOS ---
                   if arquivo_existente:
-                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_existente)
-                      renomear = (arquivo_existente.name != nome_arquivo_calculado)
-                      
                       if MODO == 'apenas_baixar':
-                          log(f"    (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando conserto.")
+                          log(f"    (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando.")
+                          marcar_feita(url_pagina)
                           return
-                          
-                      if not renomear and not n_quebrado and not c_quebrada:
+
+                      classe = classificar_nome_existente(arquivo_existente.name)
+                      n_quebrado, c_quebrada = checar_defeitos(arquivo_existente)
+
+                      # FIX #1: nome 'bom' -> NÃO renomeia
+                      if classe == 'bom':
+                          if n_quebrado or c_quebrada:
+                              acoes = []
+                              if n_quebrado: acoes.append("Título corrigido")
+                              if c_quebrada: acoes.append("Capa corrigida")
+                              log(f"    (Arquivo existente: {arquivo_existente.name}). Nome já é bom.")
+                              log(f"    [🔄] {', '.join(acoes)} in-place...")
+                              # Preserva título original se ele é bom
+                              nome_json_salvar = nome_json
+                              if not n_quebrado:
+                                  original = extrair_name_do_arquivo(arquivo_existente)
+                                  if original and len(original) > 3:
+                                      nome_json_salvar = original
+                              salvar_html(arquivo_existente, nome_json_salvar, link, capa_url)
+                              log(f"    [+] Arquivo atualizado in-place.")
+                          else:
+                              log(f"    (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
+                          marcar_feita(url_pagina)
+                          return
+
+                      # FIX #1: ano_dup -> só limpa o ano duplicado, NÃO recalcula do zero
+                      if classe == 'ano_dup':
+                          nome_limpo = re.sub(r'(\d{4})_\1\.html$', r'\1.html', arquivo_existente.name)
+                          if nome_limpo == arquivo_existente.name:
+                              nome_limpo = nome_arquivo_calculado
+
+                          # Preserva JSON name se já é bom
+                          nome_json_salvar = nome_json
+                          if not n_quebrado:
+                              original = extrair_name_do_arquivo(arquivo_existente)
+                              if original and len(original) > 3:
+                                  nome_json_salvar = original
+
+                          log(f"    (Arquivo existente: {arquivo_existente.name})")
+                          log(f"    [🔄] Removendo ano duplicado...")
+                          novo_caminho = Path(nome_limpo)
+                          salvar_html(novo_caminho, nome_json_salvar, link, capa_url)
+                          if arquivo_existente.exists() and arquivo_existente != novo_caminho:
+                              arquivo_existente.unlink()
+                          INDICE_VIDEOS.pop(link, None)
+                          INDICE_VIDEOS[link] = novo_caminho
+                          log(f"    [+] Salvo como: {nome_limpo}")
+                          marcar_feita(url_pagina)
+                          return
+
+                      # classe == 'quebrado' -> renomear para nome calculado
+                      if arquivo_existente.name == nome_arquivo_calculado and not n_quebrado and not c_quebrada:
                           log(f"    (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
+                          marcar_feita(url_pagina)
                           return
-                          
-                      log(f"    (Arquivo existente: {arquivo_existente.name})")
+
+                      renomear = (arquivo_existente.name != nome_arquivo_calculado)
                       acoes = []
                       if renomear: acoes.append("Renomeado")
                       if n_quebrado: acoes.append("Título corrigido")
                       if c_quebrada: acoes.append("Capa corrigida")
+                      log(f"    (Arquivo existente: {arquivo_existente.name})")
                       log(f"    [🔄] {', '.join(acoes)}...")
-                      
-                      novo_caminho = Path(nome_arquivo_calculado) if renomear else arquivo_existente
-                      salvar_html(novo_caminho, nome_json, link, capa_url)
-                      
-                      if renomear and arquivo_existente.exists():
-                          arquivo_existente.unlink()
+
+                      if renomear:
+                          # FIX #6: destino claro, sem 'in-place' ambíguo
+                          novo_caminho = Path(nome_arquivo_calculado)
+                          salvar_html(novo_caminho, nome_json, link, capa_url)
+                          if arquivo_existente.exists() and arquivo_existente != novo_caminho:
+                              arquivo_existente.unlink()
+                          INDICE_VIDEOS.pop(link, None)
+                          INDICE_VIDEOS[link] = novo_caminho
                           log(f"    [+] Salvo como: {novo_caminho.name}")
                       else:
+                          salvar_html(arquivo_existente, nome_json, link, capa_url)
                           log(f"    [+] Arquivo atualizado in-place.")
+                      marcar_feita(url_pagina)
                       return
 
+                  # ============ Branch 2: mesmo nome de arquivo existe ============
                   arquivo_por_nome = Path(nome_arquivo_calculado)
                   if arquivo_por_nome.exists():
-                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_por_nome)
-                      
                       if MODO == 'apenas_baixar':
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). Modo Apenas Baixar: Ignorando.")
+                          marcar_feita(url_pagina)
                           return
-                          
+
+                      n_quebrado, c_quebrada = checar_defeitos(arquivo_por_nome)
+
                       if n_quebrado or c_quebrada:
+                          # Recupera link do JSON-LD existente se o da página falhou
+                          link_efetivo = link or extrair_link_do_arquivo(arquivo_por_nome)
+                          if not link_efetivo:
+                              log(f"    [⚠️] Arquivo existe mas link não recuperável. Mantendo como está.")
+                              marcar_feita(url_pagina)
+                              return
+
                           acoes = []
                           if n_quebrado: acoes.append("Título corrigido")
                           if c_quebrada: acoes.append("Capa corrigida")
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado})")
                           log(f"    [🔄] {', '.join(acoes)}...")
-                          salvar_html(arquivo_por_nome, nome_json, link, capa_url)
+                          salvar_html(arquivo_por_nome, nome_json, link_efetivo, capa_url)
                           log(f"    [+] Arquivo atualizado.")
                       else:
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). (Já está perfeito).")
+                      marcar_feita(url_pagina)
                       return
 
+                  # ============ Branch 3: novo arquivo ============
                   if MODO == 'apenas_consertar':
                       log(f"    (Não existe e modo é Apenas Consertar. Pulando.)")
+                      marcar_feita(url_pagina)
                       return
 
-                  # --- BAIXAR NOVO ---
                   log(f"    Filme: '{nome_json}'")
                   if not link:
                       if not any(p['arquivo']==nome_arquivo_calculado for p in pendentes):
-                          pendentes.append({"arquivo": nome_arquivo_calculado, "nome_json": nome_json, "url": url_pagina, "tentativas": 1})
+                          pendentes.append({
+                              "arquivo": nome_arquivo_calculado,
+                              "nome_json": nome_json,
+                              "url": url_pagina,
+                              "tentativas": 1
+                          })
+                          log(f"    [⏳] Sem link. Vai para retry.")
+                      else:
+                          log(f"    [⏳] Sem link. Já está na fila de retry.")
                       return
+
                   salvar_html(Path(nome_arquivo_calculado), nome_json, link, capa_url)
+                  INDICE_VIDEOS[link] = Path(nome_arquivo_calculado)
                   log(f"      [+] Salvo: {nome_arquivo_calculado}")
+                  marcar_feita(url_pagina)
+
               except Exception as e:
                   log(f"    Erro em {url_pagina}: {e}")
+                  # NÃO marca como feita — vai para retry na próxima run
 
+          # ---------- Main ----------
           async def main():
               async with async_playwright() as pw:
                   browser = await pw.chromium.launch(headless=True)
                   ctx = await browser.new_context(user_agent=HEADERS["User-Agent"])
-                  for i, url in enumerate(lote, 1):
-                      log(f"[{i}/{len(lote)}]")
-                      await processar_item(ctx, url)
+                  try:
+                      for i, url in enumerate(lote, 1):
+                          log(f"[{i}/{len(lote)}]")
+                          await processar_item(ctx, url)
 
-                  if pendentes:
-                      log(f"\n=== RETENTANDO {len(pendentes)} FILMES ===")
-                      ainda = []
-                      for item in pendentes:
-                          if Path(item['arquivo']).exists(): continue
-                          if item.get("tentativas",0) >= MAX_TENTATIVAS: continue
-                          log(f"--> Tentativa {item['tentativas']+1}/{MAX_TENTATIVAS}: {item['arquivo']}")
-                          await processar_item(ctx, item['url'])
-                      pendentes.clear()
-                  await browser.close()
+                      # FIX #3: retry REAL com incremento de tentativas
+                      if pendentes:
+                          log(f"\n=== RETENTANDO {len(pendentes)} FILMES ===")
+                          ainda = []
+                          for item in pendentes:
+                              url_limpa = item['url'].strip()
+                              if url_limpa in feitas:
+                                  continue
+                              if item.get("tentativas",0) >= MAX_TENTATIVAS:
+                                  log(f"    [❌ DESCARTADO após {MAX_TENTATIVAS} tentativas] {item['arquivo']}")
+                                  continue
+                              log(f"--> Tentativa {item['tentativas']+1}/{MAX_TENTATIVAS}: {item['arquivo']}")
+                              await processar_item(ctx, url_limpa)
+                              if url_limpa not in feitas:
+                                  item["tentativas"] = item.get("tentativas",1) + 1
+                                  ainda.append(item)
+                          pendentes.clear()
+                          pendentes.extend(ainda)
+                  finally:
+                      await browser.close()
 
           if __name__ == "__main__":
               asyncio.run(main())
@@ -453,14 +591,14 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           TOTAL=$(wc -l < filmes_fila.txt)
-          FEITOS=$(sort -u filmes_feitos.txt | wc -l)
+          FEITOS=$(sort -u filmes_feitas.txt | wc -l)
           FALTAM=$((TOTAL - FEITOS))
           echo "Faltam: $FALTAM"
           if [ "$FALTAM" -le 0 ]; then exit 0; fi
-          
+
           LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list --workflow="Filmes.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
           if [ "$RECENTES" -ge 100 ]; then exit 0; fi
-          
+
           sleep 30
           gh workflow run "Filmes.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f modo="${{ inputs.modo || 'baixar_e_consertar' }}"
