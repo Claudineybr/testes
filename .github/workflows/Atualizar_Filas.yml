@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       apagar_filas:
-        description: '⚠️ PERIGO: apagar filmes_fila.txt e series_fila.txt e reconstruir do zero (classifica TODAS as URLs pelo feed, ~1-2 min)'
+        description: '⚠️ APAGAR e reconstruir filas do zero (classifica TODAS as URLs com labels + TMDB)'
         required: false
         default: false
         type: boolean
@@ -33,41 +33,118 @@ jobs:
       - name: Atualizar filas
         env:
           APAGAR_FILAS: ${{ inputs.apagar_filas || 'false' }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: |
           cat > /tmp/atualizar_filas.py << 'PYEOF'
-          import requests, sys, os, json
+          import requests, sys, os, re, json, time
           from pathlib import Path
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+          TMDB_BASE = "https://api.themoviedb.org/3"
+          TMDB_KEY = os.environ.get("TMDB_API_KEY", "").strip()
 
           ARQ_FILA_FILMES = Path("filmes_fila.txt")
           ARQ_FILA_SERIES = Path("series_fila.txt")
+          ARQ_TMDB_CACHE  = Path("tmdb_cache.json")
 
           APAGAR_FILAS = os.environ.get("APAGAR_FILAS", "false").lower() == "true"
 
-          # Labels que indicam SÉRIE no feed do Blogger
           SERIES_LABELS = {
               "séries", "série", "series", "seriados",
               "animes", "anime", "doramas", "episódios",
+              "temporada", "season",
           }
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
+          # ---------- TMDB cache ----------
+          cache = {}
+          if ARQ_TMDB_CACHE.exists():
+              try:
+                  cache = json.loads(ARQ_TMDB_CACHE.read_text(encoding="utf-8"))
+              except: pass
+
+          def salvar_cache():
+              try:
+                  ARQ_TMDB_CACHE.write_text(
+                      json.dumps(cache, ensure_ascii=False, indent=2),
+                      encoding="utf-8"
+                  )
+              except: pass
+
+          def extrair_titulo_da_url(url):
+              """Ex: .../inix-bridgerton.html -> 'Bridgerton'"""
+              m = re.search(r'/([^/]+)\.html', url)
+              if not m: return None
+              slug = m.group(1)
+              for _ in range(10):
+                  novo = re.sub(
+                      r'^(?:inix|arc|entre[_-]?nos|vini7x|marcos)[-_]',
+                      '', slug, flags=re.I
+                  )
+                  if novo == slug: break
+                  slug = novo
+              slug = re.sub(r'[-_]\d{4}$', '', slug)
+              slug = re.sub(r'_\d{5,}$', '', slug)
+              if len(slug) < 3: return None
+              return slug.replace('-', ' ').replace('_', ' ').strip()
+
+          def tmdb_classificar(titulo):
+              """Retorna 'tv', 'movie' ou None (não encontrado/erro)."""
+              if not TMDB_KEY or not titulo:
+                  return None
+              chave = titulo.lower().strip()
+              if chave in cache:
+                  return cache[chave]
+
+              try:
+                  r = requests.get(
+                      f"{TMDB_BASE}/search/multi",
+                      params={
+                          "api_key": TMDB_KEY,
+                          "query": titulo,
+                          "language": "pt-BR",
+                          "include_adult": "false",
+                      },
+                      timeout=15,
+                  )
+                  if r.status_code != 200:
+                      cache[chave] = None
+                      return None
+                  data = r.json()
+                  resultados = data.get("results", [])
+                  # Filtra apenas movie/tv (ignora person)
+                  resultados = [
+                      x for x in resultados
+                      if x.get("media_type") in ("movie", "tv")
+                  ]
+                  if not resultados:
+                      cache[chave] = None
+                      return None
+                  # Pega o primeiro resultado (TMDB ordena por relevância)
+                  tipo = resultados[0].get("media_type")
+                  cache[chave] = tipo
+                  return tipo
+              except Exception:
+                  cache[chave] = None
+                  return None
+
+          # ---------- Feed ----------
           def get_all_entries():
-              """Retorna dict {url: set(labels)} de TODOS os posts do feed."""
               entries = {}
               start = 1
               while True:
-                  url_feed = (f"{BASE_URL}/feeds/posts/default?alt=json"
-                              f"&max-results=150&start-index={start}")
+                  url_feed = (
+                      f"{BASE_URL}/feeds/posts/default?alt=json"
+                      f"&max-results=150&start-index={start}"
+                  )
                   try:
                       r = requests.get(url_feed, headers=HEADERS, timeout=20)
                       if r.status_code != 200:
-                          log(f"  ⚠️ Feed retornou {r.status_code} em start={start}")
+                          log(f"  ⚠️ Feed {r.status_code} em start={start}")
                           break
-                      data = r.json()
-                      feed_entries = data.get("feed", {}).get("entry", [])
+                      feed_entries = r.json().get("feed", {}).get("entry", [])
                       if not feed_entries:
                           break
                       for e in feed_entries:
@@ -89,23 +166,40 @@ jobs:
                       if len(feed_entries) < 150:
                           break
                   except Exception as e:
-                      log(f"  ❌ Erro no feed start={start}: {e}")
+                      log(f"  ❌ Erro feed start={start}: {e}")
                       break
               return entries
 
-          def classificar_por_labels(labels):
-              """Retorna 'serie', 'filme' ou 'ambos'."""
-              if not labels:
-                  return 'ambos'
+          # ---------- Classificação em camadas ----------
+          def classificar_url(url, labels):
+              """
+              Retorna 'serie', 'filme' ou 'ambos'.
+              Camada 1: labels do feed.
+              Camada 2: TMDB multi search.
+              Camada 3: ambos (segurança).
+              """
+              # Camada 1
               if labels & SERIES_LABELS:
                   return 'serie'
-              return 'filme'
+
+              # Camada 2
+              titulo = extrair_titulo_da_url(url)
+              tipo = tmdb_classificar(titulo) if titulo else None
+              if tipo == 'tv':
+                  return 'serie'
+              if tipo == 'movie':
+                  return 'filme'
+
+              # Camada 3
+              return 'ambos'
 
           def carregar_lista(arquivo):
               if arquivo.exists():
-                  return [l.strip() for l in
-                          arquivo.read_text(encoding="utf-8").splitlines()
-                          if l.strip()]
+                  return [
+                      l.strip() for l in
+                      arquivo.read_text(encoding="utf-8").splitlines()
+                      if l.strip()
+                  ]
               return []
 
           def ordenar_lista(original, adicoes_set):
@@ -121,38 +215,20 @@ jobs:
                       vistos.add(u)
               return resultado
 
+          # ---------- Main ----------
           def main():
-              log("Buscando feed completo (com labels)...")
+              log("Buscando feed completo...")
               feed = get_all_entries()
-              log(f"📥 {len(feed)} posts encontrados no feed.")
+              log(f"📥 {len(feed)} posts no feed.")
 
               if not feed:
                   log("❌ Feed vazio. NÃO vou sobrescrever as filas (segurança).")
                   return
 
-              # Classificação
-              classificados = {}
-              for url, labels in feed.items():
-                  classificados[url] = classificar_por_labels(labels)
+              if not TMDB_KEY:
+                  log("⚠️ TMDB_API_KEY não configurada. Ambíguos ficarão em ambas as filas.")
 
-              contagem = {'filme': 0, 'serie': 0, 'ambos': 0}
-              for c in classificados.values():
-                  contagem[c] += 1
-
-              log("📊 Classificação pelo feed:")
-              log(f"   🎬 Filmes:  {contagem['filme']}")
-              log(f"   📺 Séries:  {contagem['serie']}")
-              log(f"   ❓ Ambíguos: {contagem['ambos']}")
-
-              # Exemplos
-              ex_filmes = [u for u, c in classificados.items() if c == 'filme'][:3]
-              ex_series = [u for u, c in classificados.items() if c == 'serie'][:3]
-              if ex_filmes:
-                  log(f"   Exemplos filmes: {ex_filmes}")
-              if ex_series:
-                  log(f"   Exemplos séries: {ex_series}")
-
-              # Carregar filas atuais
+              # Decide o que classificar
               if APAGAR_FILAS:
                   log("⚠️ MODO APAGAR: filas serão reconstruídas do zero.")
                   fila_filmes_old = []
@@ -160,13 +236,60 @@ jobs:
               else:
                   fila_filmes_old = carregar_lista(ARQ_FILA_FILMES)
                   fila_series_old = carregar_lista(ARQ_FILA_SERIES)
-                  log(f"Filmes fila atual: {len(fila_filmes_old)} | "
-                      f"Séries fila atual: {len(fila_series_old)}")
+                  log(
+                      f"Filmes fila atual: {len(fila_filmes_old)} | "
+                      f"Séries fila atual: {len(fila_series_old)}"
+                  )
 
               set_filmes_old = set(fila_filmes_old)
               set_series_old = set(fila_series_old)
 
-              # Aplicar
+              if APAGAR_FILAS:
+                  a_classificar = set(feed.keys())
+              else:
+                  a_classificar = {
+                      u for u in feed
+                      if u not in set_filmes_old and u not in set_series_old
+                  }
+
+              if not a_classificar and not APAGAR_FILAS:
+                  log("✅ Nenhuma URL nova. Filas já atualizadas.")
+                  return
+
+              log(f"🔍 Classificando {len(a_classificar)} URLs...")
+
+              contagem = {'filme': 0, 'serie': 0, 'ambos': 0}
+              resultado = {}
+              total = len(a_classificar)
+
+              for i, url in enumerate(sorted(a_classificar), 1):
+                  labels = feed.get(url, set())
+                  classe = classificar_url(url, labels)
+                  resultado[url] = classe
+                  contagem[classe] += 1
+
+                  if i % 100 == 0 or i == total:
+                      log(
+                          f"  [{i}/{total}] "
+                          f"(🎬 {contagem['filme']} | "
+                          f"📺 {contagem['serie']} | "
+                          f"❓ {contagem['ambos']})"
+                      )
+                      salvar_cache()
+
+              log("📊 Resultado final:")
+              log(f"   🎬 Filmes:  {contagem['filme']}")
+              log(f"   📺 Séries:  {contagem['serie']}")
+              log(f"   ❓ Ambíguos: {contagem['ambos']}")
+
+              ex_filmes = [u for u, c in resultado.items() if c == 'filme'][:3]
+              ex_series = [u for u, c in resultado.items() if c == 'serie'][:3]
+              if ex_filmes:
+                  log(f"   Exemplos filmes: {ex_filmes}")
+              if ex_series:
+                  log(f"   Exemplos séries: {ex_series}")
+
+              # Aplicar nas filas
               if APAGAR_FILAS:
                   novas_filmes = set()
                   novas_series = set()
@@ -174,23 +297,35 @@ jobs:
                   novas_filmes = set(fila_filmes_old)
                   novas_series = set(fila_series_old)
 
-              for url, classe in classificados.items():
+              for url, classe in resultado.items():
                   if classe == 'filme':
                       novas_filmes.add(url)
                   elif classe == 'serie':
                       novas_series.add(url)
-                  else:  # ambos
+                  else:
                       novas_filmes.add(url)
                       novas_series.add(url)
 
-              filme_final = ordenar_lista(fila_filmes_old, novas_filmes - set(fila_filmes_old))
-              series_final = ordenar_lista(fila_series_old, novas_series - set(fila_series_old))
+              filme_final = ordenar_lista(
+                  fila_filmes_old,
+                  novas_filmes - set(fila_filmes_old)
+              )
+              series_final = ordenar_lista(
+                  fila_series_old,
+                  novas_series - set(fila_series_old)
+              )
 
-              ARQ_FILA_FILMES.write_text("\n".join(filme_final), encoding="utf-8")
-              ARQ_FILA_SERIES.write_text("\n".join(series_final), encoding="utf-8")
+              ARQ_FILA_FILMES.write_text(
+                  "\n".join(filme_final), encoding="utf-8"
+              )
+              ARQ_FILA_SERIES.write_text(
+                  "\n".join(series_final), encoding="utf-8"
+              )
 
-              log(f"✅ Filmes fila agora tem: {len(filme_final)} URLs")
-              log(f"✅ Séries fila agora tem: {len(series_final)} URLs")
+              log(f"✅ Filmes fila: {len(filme_final)} URLs")
+              log(f"✅ Séries fila: {len(series_final)} URLs")
+
+              salvar_cache()
 
           if __name__ == "__main__":
               main()
@@ -209,7 +344,7 @@ jobs:
             echo "Nada novo nas filas."
             exit 0
           fi
-          git commit -m "chore: atualizar filas (classificação via labels do feed)"
+          git commit -m "chore: atualizar filas (labels + TMDB)"
 
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
