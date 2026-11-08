@@ -6,7 +6,7 @@ on:
       lote:
         description: 'Quantos arquivos quebrados verificar por run'
         required: false
-        default: '500'
+        default: '20'
         type: string
 
 permissions:
@@ -31,15 +31,15 @@ jobs:
       - name: Verificar e consertar todos
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          LOTE_SIZE: ${{ inputs.lote || '500' }}
+          LOTE_SIZE: ${{ inputs.lote || '20' }}
         run: |
           cat > /tmp/corrigir_tudo.py << 'PYEOF'
-          import re, os, sys, json, shutil, requests
+          import re, os, sys, json, shutil, unicodedata, requests
           from pathlib import Path
           from bs4 import BeautifulSoup
 
           API_KEY   = os.environ.get("TMDB_API_KEY")
-          LOTE_SIZE = int(os.environ.get("LOTE_SIZE", 500))
+          LOTE_SIZE = int(os.environ.get("LOTE_SIZE", 20))
           TMDB_API  = "https://api.themoviedb.org/3"
           IMG_BASE  = "https://image.tmdb.org/t/p/w500"
 
@@ -48,29 +48,23 @@ jobs:
 
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          def extract_candidate(nome):
-              """Extrai o possível título real de um nome quebrado."""
-              if not nome: return ""
-              n = nome.replace("🍿Clau", "").strip()
-              n = re.sub(r'[\s\-]+$', '', n).strip()
-              m = re.match(r'^(.*?)\s+-\s+(?:\(\d{4}\)|-|$)', n)
-              if m: n = m.group(1).strip()
-              n = re.sub(r'[\s\-]+$', '', n).strip()
-              n = re.sub(r'\s*\(\d{4}\)\s*$', '', n).strip()
-              return n
+          # ---------- FIX 1: acentuação ----------
+          def slugify(s):
+              s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
+              s = s.lower()
+              s = re.sub(r'[^a-z0-9]+', '_', s)
+              return re.sub(r'_+', '_', s).strip('_')
 
-          def is_placeholder(t):
-              return t.lower().strip() in PLACEHOLDERS
+          # ---------- FIX 2: extrair ano do nome do arquivo ----------
+          def year_from_filename(fname):
+              years = re.findall(r'_((?:19|20)\d{2})(?=_)', fname.rsplit('.', 1)[0] + "_")
+              return years[-1] if years else None
 
-          def is_broken(nome):
-              """Só marca como quebrado padrões realmente inválidos."""
-              if not nome or len(nome.strip()) < 2: return True
-              if " - - " in nome: return True                        # separador quebrado
-              if re.search(r'\d{4}\s*-\s*\(\d{4}\)', nome): return True  # "2017 - (2017)"
-              if re.search(r'\(\d{4}\).*\(\d{4}\)', nome): return True   # duplicação de ano
-              if is_placeholder(extract_candidate(nome)): return True    # só "Desconhecido"
-              return False
+          def year_from_text(t):
+              m = re.search(r'\b((?:19|20)\d{2})\b', t or "")
+              return m.group(1) if m else None
 
+          # ---------- FIX 3: busca TMDB com ano e preferência por ano exato ----------
           def tmdb_get(path, params):
               if not API_KEY: return None
               try:
@@ -86,10 +80,32 @@ jobs:
               if d.get("tv_results"):    return "tv",    d["tv_results"][0]
               return None
 
-          def tmdb_search(query):
-              d = tmdb_get("/search/multi", {"query": query, "include_adult": "false"})
-              if d and d.get("results"): return d["results"][0]
-              return None
+          def tmdb_search(query, year=None):
+              out = []
+              p = {"query": query, "include_adult": "false"}
+              if year: p["year"] = year
+              d = tmdb_get("/search/movie", p)
+              if d:
+                  for r in d.get("results", []):
+                      r["media_type"] = "movie"; out.append(r)
+              p = {"query": query, "include_adult": "false"}
+              if year: p["first_air_date_year"] = year
+              d = tmdb_get("/search/tv", p)
+              if d:
+                  for r in d.get("results", []):
+                      r["media_type"] = "tv"; out.append(r)
+
+              if not out:
+                  return None
+
+              if year:
+                  for r in out:
+                      dt = r.get("release_date") or r.get("first_air_date") or ""
+                      if dt.startswith(year): return r
+                  return None
+
+              out.sort(key=lambda r: r.get("release_date") or r.get("first_air_date") or "9999")
+              return out[0]
 
           def build_title(kind, item, ep=None):
               if kind == "movie":
@@ -98,23 +114,72 @@ jobs:
               else:
                   ano = (item.get("first_air_date") or "")[:4]
                   titulo = item.get("name") or item.get("original_name") or ""
-              if not titulo: return None, None
+              if not titulo: return None, None, None
               full = f"{titulo} ({ano})" if ano else titulo
               if ep: full = f"{full} T{ep[0]}E{ep[1]}"
               poster = IMG_BASE + item["poster_path"] if item.get("poster_path") else None
-              return full, poster
+              return titulo, ano, (full, poster)
 
+          # ---------- Verificação de coerência ----------
+          def titles_similar(a, b):
+              a, b = slugify(a or ""), slugify(b or "")
+              if not a or not b: return False
+              return a in b or b in a
+
+          def imdb_plausible(broken_name, file_year, tmdb_title, tmdb_year):
+              if file_year and tmdb_year and file_year != tmdb_year:
+                  return False
+              candidate = extract_candidate(broken_name)
+              if candidate and not titles_similar(candidate, tmdb_title):
+                  return False
+              return True
+
+          # ---------- Extração e detecção ----------
+          def extract_candidate(nome):
+              if not nome: return ""
+              n = nome.replace("🍿Clau", "").strip()
+              n = re.sub(r'[\s\-]+$', '', n).strip()
+              m = re.match(r'^(.*?)\s+-\s+(?:\(\d{4}\)|-|$)', n)
+              if m: n = m.group(1).strip()
+              n = re.sub(r'[\s\-]+$', '', n).strip()
+              n = re.sub(r'\s*\(\d{4}\)\s*$', '', n).strip()
+              return n
+
+          def is_placeholder(t): return slugify(t) in {slugify(p) for p in PLACEHOLDERS}
+
+          def is_broken(nome):
+              if not nome or len(nome.strip()) < 2: return True
+              if " - - " in nome: return True
+              if re.search(r'\d{4}\s*-\s*\(\d{4}\)', nome): return True
+              if re.search(r'\(\d{4}\).*\(\d{4}\)', nome): return True
+              if is_placeholder(extract_candidate(nome)): return True
+              return False
+
+          # ---------- Nome do destino ----------
+          def unique_dest(base_slug, year, imdb_id):
+              base = f"{base_slug}_{year}" if year else base_slug
+              p = Path(f"{base}.html")
+              if not p.exists(): return p
+              if imdb_id:
+                  try:
+                      old = p.read_text(encoding="utf-8")
+                      if imdb_id in old: return None
+                  except: pass
+              if year:
+                  return Path(f"{base_slug}_{year}_{imdb_id or 'x'}.html")
+              return Path(f"{base_slug}_{imdb_id or 'x'}.html")
+
+          # ---------- Main ----------
           def main():
               arquivos = sorted(Path(".").glob("*.html"))
               log(f"Analisando {len(arquivos)} arquivos HTML...")
 
               rev = Path("_revisar"); rev.mkdir(exist_ok=True)
-              processados = consertados = movidos = ja_ok = 0
+              processados = consertados = movidos = ja_ok = duplicatas = 0
 
               for f in arquivos:
                   if processados >= LOTE_SIZE:
-                      log(f"Lote de {LOTE_SIZE} atingido. Parando.")
-                      break
+                      log(f"Lote de {LOTE_SIZE} atingido. Parando."); break
                   if f.name in ("catalogo.html", "index.html"): continue
 
                   try:
@@ -130,66 +195,70 @@ jobs:
                   video      = dados.get("contentUrl", "") or ""
 
                   if not is_broken(nome_atual):
-                      ja_ok += 1
-                      continue
+                      ja_ok += 1; continue
 
                   processados += 1
                   log(f"[{processados}/{LOTE_SIZE}] Quebrado: {f.name} — '{nome_atual}'")
 
                   candidate = extract_candidate(nome_atual)
+                  file_year = year_from_filename(f.name) or year_from_text(nome_atual)
                   ep = None
                   em = re.search(r'\bT(\d+)E(\d+)\b', nome_atual)
                   if em: ep = (em.group(1), em.group(2))
 
+                  im = re.search(r'(tt\d{7,9})', video)
+                  imdb_id = im.group(1) if im else None
+
                   novo_full = novo_poster = None
                   origem = None
 
-                  # Estratégia 1 — IMDB presente no contentUrl
-                  im = re.search(r'(tt\d{7,9})', video)
-                  if im:
-                      res = tmdb_by_imdb(im.group(1))
+                  # Estratégia 1: IMDB (só se coerente com nome/ano do arquivo)
+                  if imdb_id:
+                      res = tmdb_by_imdb(imdb_id)
                       if res:
-                          novo_full, novo_poster = build_title(res[0], res[1], ep)
-                          if novo_full: origem = "IMDB"
+                          kind, item = res
+                          t, y, built = build_title(kind, item, ep)
+                          if built and imdb_plausible(nome_atual, file_year, t, y):
+                              novo_full, novo_poster = built
+                              origem = "IMDB"
 
-                  # Estratégia 2 — busca por título candidato no TMDB
+                  # Estratégia 2: busca TMDB por título, com filtro de ano
                   if not novo_full and candidate and not is_placeholder(candidate):
                       q = re.sub(r'\s*T\d+E\d+\s*', ' ', candidate).strip() if ep else candidate
-                      item = tmdb_search(q)
+                      item = tmdb_search(q, year=file_year)
                       if item:
                           kind = "tv" if (item.get("media_type") == "tv" or "first_air_date" in item) else "movie"
-                          novo_full, novo_poster = build_title(kind, item, ep)
-                          if novo_full: origem = f"TMDB busca '{q}'"
+                          t, y, built = build_title(kind, item, ep)
+                          if built:
+                              novo_full, novo_poster = built
+                              origem = f"TMDB busca '{q}' ({file_year or 'sem ano'})"
 
-                  # Estratégia 3 — busca pelo nome do arquivo
+                  # Estratégia 3: busca pelo slug do arquivo (com ano)
                   if not novo_full:
-                      slug = re.sub(r'_\d{4}_\d{4}', '', f.stem)
-                      slug = re.sub(r'_\d{4}$', '', slug)
-                      slug = re.sub(r'_+', ' ', slug).strip()
-                      if slug and not is_placeholder(slug):
-                          item = tmdb_search(slug)
+                      slug_q = re.sub(r'_\d{4}_\d{4}', '', f.stem)
+                      slug_q = re.sub(r'_\d{4}$', '', slug_q)
+                      slug_q = re.sub(r'_+', ' ', slug_q).strip()
+                      if slug_q and not is_placeholder(slug_q):
+                          item = tmdb_search(slug_q, year=file_year)
                           if item:
                               kind = "tv" if (item.get("media_type") == "tv" or "first_air_date" in item) else "movie"
-                              novo_full, novo_poster = build_title(kind, item, ep)
-                              if novo_full: origem = f"TMDB filename '{slug}'"
+                              t, y, built = build_title(kind, item, ep)
+                              if built:
+                                  novo_full, novo_poster = built
+                                  origem = f"TMDB filename '{slug_q}'"
 
-                  # Estratégia 4 — mantém nome limpo (NUNCA deleta)
-                  if not novo_full and candidate and not is_placeholder(candidate):
-                      novo_full = candidate
-                      origem = "candidato do nome (sem TMDB)"
-
-                  # Se nem isso resolveu, move para _revisar (não deleta)
+                  # Sem solução: move para _revisar
                   if not novo_full:
                       dest = rev / f.name
                       n = 1
                       while dest.exists():
                           dest = rev / f"{f.stem}_{n}{f.suffix}"; n += 1
                       shutil.move(str(f), str(dest))
-                      log(f"  [?] Sem solução — movido para _revisar/{dest.name}")
+                      log(f"  [?] Sem solução → _revisar/{dest.name}")
                       movidos += 1
                       continue
 
-                  # Aplica correções
+                  # Aplicar no HTML
                   full_suffix = novo_full if "🍿Clau" in novo_full else f"{novo_full} - 🍿Clau"
                   dados["name"]        = full_suffix
                   dados["description"] = f"Assista {novo_full}"
@@ -201,25 +270,27 @@ jobs:
                   novo_html = re.sub(r'<title>.*?</title>', f'<title>{full_suffix}</title>', novo_html, count=1)
                   novo_html = re.sub(r'<h1[^>]*>.*?</h1>', f'<h1 class="post-title">{full_suffix}</h1>', novo_html, count=1)
                   if novo_poster:
-                      novo_html = re.sub(r'poster="[^"]*"',   f'poster="{novo_poster}"', novo_html, count=1)
+                      novo_html = re.sub(r'poster="[^"]*"', f'poster="{novo_poster}"', novo_html, count=1)
                       novo_html = re.sub(r'<img\s+src="[^"]*"', f'<img src="{novo_poster}"', novo_html, count=1)
 
+                  # FIX 1+4: slugify correto + sem _1/_2
                   base = re.sub(r'\s*-\s*🍿Clau', '', full_suffix).strip()
-                  slug = re.sub(r'[^a-z0-9]+', '_', base.lower()).strip('_')
-                  dest = Path(f"{slug}.html")
-                  if dest.exists() and dest.name != f.name:
-                      n = 1
-                      while dest.exists():
-                          dest = Path(f"{slug}_{n}.html"); n += 1
+                  base_slug = slugify(base)
+                  dest = unique_dest(base_slug, file_year, imdb_id)
+
+                  if dest is None:
+                      log(f"  [=] Duplicata (mesmo IMDB já existe) → deletando quebrado")
+                      f.unlink()
+                      duplicatas += 1
+                      continue
 
                   dest.write_text(novo_html, encoding="utf-8")
                   if f.name != dest.name: f.unlink()
-
                   log(f"  [+] ({origem}) → {dest.name}")
                   consertados += 1
 
-              log(f"Finalizado! Analisados: {processados} | Consertados: {consertados} | "
-                  f"Já OK: {ja_ok} | Movidos p/ _revisar: {movidos}")
+              log(f"Analisados: {processados} | Consertados: {consertados} | "
+                  f"Já OK: {ja_ok} | _revisar: {movidos} | Duplicatas removidas: {duplicatas}")
 
           if __name__ == "__main__":
               main()
@@ -230,15 +301,19 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add -A
           git reset .github/ 2>/dev/null || true
-          if git diff --cached --quiet; then echo "Nada a consertar."; exit 0; fi
-          git commit -m "fix: consertar arquivos quebrados (sem deletar válidos)"
+
+          if git diff --cached --quiet; then echo "Nenhum arquivo precisou ser consertado."; exit 0; fi
+          git commit -m "fix: consertar arquivos quebrados (sem deletar validos, com slugify e busca por ano)"
+
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
-            echo "Conflito. Sincronizando..."
+            echo "Conflito detectado. Sincronizando de forma segura..."
             git pull origin main --no-rebase -X ours --no-edit
-            git add -A; git reset .github/ 2>/dev/null || true
-            git commit -m "fix: retry $i" || true
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "fix: retry corrigir quebrados $i" || true
             sleep $((RANDOM % 10 + 5))
           done
