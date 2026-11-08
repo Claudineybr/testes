@@ -1,0 +1,271 @@
+name: Atualizar Filas com Novos Posts
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      apagar_filas:
+        description: '⚠️ PERIGO: apagar filmes_fila.txt e series_fila.txt e reconstruir do zero (classifica TODAS as URLs, 3-5 min)'
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: atualizar-filas
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar repositório
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Atualizar filas
+        env:
+          APAGAR_FILAS: ${{ inputs.apagar_filas || 'false' }}
+        run: |
+          cat > /tmp/atualizar_filas.py << 'PYEOF'
+          import requests, sys, re, json, os
+          from pathlib import Path
+          from bs4 import BeautifulSoup
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+
+          BASE_URL = "https://www.vini7xgrave.site"
+          HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+
+          ARQ_FILA_FILMES = Path("filmes_fila.txt")
+          ARQ_FILA_SERIES = Path("series_fila.txt")
+
+          APAGAR_FILAS = os.environ.get("APAGAR_FILAS", "false").lower() == "true"
+
+          def log(*a): print(*a, flush=True); sys.stdout.flush()
+
+          def get_all_urls():
+              urls = []
+              start = 1
+              while True:
+                  url_feed = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
+                  try:
+                      r = requests.get(url_feed, headers=HEADERS, timeout=15)
+                      if r.status_code != 200: break
+                      entries = r.json().get("feed", {}).get("entry", [])
+                      if not entries: break
+                      for e in entries:
+                          link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
+                          if link:
+                              urls.append(link.split("?")[0].strip())
+                      start += 150
+                      if len(entries) < 150: break
+                  except Exception as e:
+                      log(f"Erro ao buscar feed: {e}")
+                      break
+              return urls
+
+          def classificar_url(url):
+              """Retorna 'filme', 'serie' ou 'ambos'."""
+              try:
+                  r = requests.get(url, headers=HEADERS, timeout=15)
+                  if r.status_code != 200:
+                      return 'ambos'
+                  soup = BeautifulSoup(r.text, 'html.parser')
+
+                  # 1) JSON-LD explícito
+                  for script in soup.find_all('script', type='application/ld+json'):
+                      try:
+                          dados = json.loads(script.string)
+                          types = []
+                          if isinstance(dados, list):
+                              types = [d.get('@type') for d in dados if isinstance(d, dict)]
+                          elif isinstance(dados, dict):
+                              types = [dados.get('@type')]
+                          if any(t in ('TVSeries','TVSeason','TVEpisode') for t in types if t):
+                              return 'serie'
+                          if any(t == 'Movie' for t in types if t):
+                              return 'filme'
+                      except: pass
+
+                  # 2) Texto da página
+                  texto = soup.get_text(" ", strip=True).lower()
+                  texto = re.sub(r'\s+', ' ', texto)
+                  for p in [r'lista\s+de\s+epis[oó]dios',
+                            r'\b\d+\s*[ªº]?\s*temporada\b',
+                            r'\btemporada\s*\d+',
+                            r'\bseason\s*\d+',
+                            r'\bepis[oó]dio\s*\d+',
+                            r'\bs\d{1,2}\s*e\d{1,2}\b']:
+                      if re.search(p, texto):
+                          return 'serie'
+
+                  # 3) Links com padrão de episódio
+                  for a in soup.find_all('a', href=True):
+                      href = a['href'].lower()
+                      if re.search(r'epis[oó]dio[-_/]?\d+', href):
+                          return 'serie'
+                      if 'episodio' in href or 'episódio' in href:
+                          return 'serie'
+
+                  # 4) Classes/IDs sugestivos
+                  for tag in soup.find_all(True):
+                      attrs = ' '.join([' '.join(tag.get('class', [])), tag.get('id', '')]).lower()
+                      if re.search(r'epis[oó]dio|episode|temporada|season|ep-list', attrs):
+                          return 'serie'
+
+                  # 5) Vídeo presente sem sinais de série -> 'filme' (agressivo)
+                  if soup.find('video') and len(r.text) > 5000:
+                      return 'filme'
+
+                  # 6) Default seguro
+                  return 'ambos'
+              except Exception:
+                  return 'ambos'
+
+          def classificar_lote(urls, max_workers=10):
+              if not urls: return {}
+              resultados = {}
+              total = len(urls)
+              with ThreadPoolExecutor(max_workers=max_workers) as executor:
+                  futures = {executor.submit(classificar_url, u): u for u in urls}
+                  for i, future in enumerate(as_completed(futures), 1):
+                      url = futures[future]
+                      try: resultados[url] = future.result()
+                      except: resultados[url] = 'ambos'
+                      if i % 100 == 0 or i == total:
+                          log(f"  Classificando... [{i}/{total}]")
+              return resultados
+
+          def carregar_lista(arquivo):
+              if arquivo.exists():
+                  return [l.strip() for l in arquivo.read_text(encoding="utf-8").splitlines() if l.strip()]
+              return []
+
+          def ordenar_lista(original, adicoes_set):
+              """Mantém ordem original e adiciona novas em ordem alfabética no final."""
+              vistos = set()
+              resultado = []
+              for u in original:
+                  if u not in vistos:
+                      resultado.append(u)
+                      vistos.add(u)
+              for u in sorted(adicoes_set):
+                  if u not in vistos:
+                      resultado.append(u)
+                      vistos.add(u)
+              return resultado
+
+          def main():
+              log("Buscando URLs do feed...")
+              todas = get_all_urls()
+              log(f"Encontradas {len(todas)} URLs no site.")
+
+              if not todas:
+                  log("❌ Feed retornou vazio. NÃO vou sobrescrever as filas (segurança).")
+                  return
+
+              if len(todas) < 100:
+                  log(f"⚠️ Apenas {len(todas)} URLs — possível feed parcial. Prosseguindo mesmo assim.")
+
+              if APAGAR_FILAS:
+                  log("⚠️ MODO APAGAR ATIVADO: filas serão reconstruídas do zero com classificação completa.")
+                  fila_filmes_old = []
+                  fila_series_old = []
+              else:
+                  fila_filmes_old = carregar_lista(ARQ_FILA_FILMES)
+                  fila_series_old = carregar_lista(ARQ_FILA_SERIES)
+                  log(f"Filmes fila atual: {len(fila_filmes_old)} | Séries fila atual: {len(fila_series_old)}")
+
+              set_filmes_old = set(fila_filmes_old)
+              set_series_old = set(fila_series_old)
+
+              if APAGAR_FILAS:
+                  a_classificar = list(todas)
+              else:
+                  a_classificar = [u for u in todas if u not in set_filmes_old and u not in set_series_old]
+
+              if not a_classificar and not APAGAR_FILAS:
+                  log("✅ Nenhuma URL nova encontrada. As filas já estão 100% atualizadas.")
+                  return
+
+              log(f"🔍 Classificando {len(a_classificar)} URLs (filme/série)...")
+              resultados = classificar_lote(a_classificar, max_workers=10)
+
+              contagem = {'filme': 0, 'serie': 0, 'ambos': 0}
+              for u, c in resultados.items():
+                  contagem[c] += 1
+
+              log(f"📊 Resultado da classificação:")
+              log(f"   🎬 Filmes: {contagem['filme']}")
+              log(f"   📺 Séries: {contagem['serie']}")
+              log(f"   ❓ Ambíguos (vão para ambas): {contagem['ambos']}")
+
+              # Exemplos (útil para conferir)
+              ex_filmes = [u for u in a_classificar if resultados.get(u) == 'filme'][:3]
+              ex_series = [u for u in a_classificar if resultados.get(u) == 'serie'][:3]
+              if ex_filmes:
+                  log(f"   Exemplos filmes: {ex_filmes}")
+              if ex_series:
+                  log(f"   Exemplos séries: {ex_series}")
+
+              # Aplicar nas filas
+              if APAGAR_FILAS:
+                  novas_filmes = set()
+                  novas_series = set()
+              else:
+                  novas_filmes = set(fila_filmes_old)
+                  novas_series = set(fila_series_old)
+
+              for url, classe in resultados.items():
+                  if classe == 'filme':
+                      novas_filmes.add(url)
+                  elif classe == 'serie':
+                      novas_series.add(url)
+                  else:  # ambos
+                      novas_filmes.add(url)
+                      novas_series.add(url)
+
+              filme_final = ordenar_lista(fila_filmes_old, novas_filmes - set(fila_filmes_old))
+              series_final = ordenar_lista(fila_series_old, novas_series - set(fila_series_old))
+
+              ARQ_FILA_FILMES.write_text("\n".join(filme_final), encoding="utf-8")
+              ARQ_FILA_SERIES.write_text("\n".join(series_final), encoding="utf-8")
+
+              log(f"✅ Filmes fila agora tem: {len(filme_final)} URLs")
+              log(f"✅ Séries fila agora tem: {len(series_final)} URLs")
+
+          if __name__ == "__main__":
+              main()
+          PYEOF
+          python3 /tmp/atualizar_filas.py
+
+      - name: Salvar arquivos e progresso
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+          git reset .github/ 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "Nada novo nas filas."
+            exit 0
+          fi
+          git commit -m "chore: atualizar filas (classificação filme/série)"
+
+          for i in $(seq 1 5); do
+            if git push origin HEAD:main; then break; fi
+            echo "Conflito detectado. Sincronizando..."
+            git pull origin main --no-rebase -X ours --no-edit
+            git add -A
+            git reset .github/ 2>/dev/null || true
+            git commit -m "chore: retry atualizar filas $i" || true
+            sleep $((RANDOM % 10 + 5))
+          done
