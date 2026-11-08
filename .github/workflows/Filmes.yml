@@ -49,7 +49,7 @@ jobs:
       - name: Limpar arquivos de controle (Opcional)
         if: ${{ inputs.reprocessar_tudo == true || inputs.reprocessar_tudo == 'true' }}
         run: |
-          rm -f filmes_fila.txt filmes_feitos.txt filmes_pendentes.json filmes_descartados.txt
+          rm -f filmes_fila.txt filmes_feitos.txt filmes_pendentes.json filmes_descartados.txt filmes_attempts.json
 
       - name: Instalar Python e Playwright
         run: |
@@ -63,49 +63,258 @@ jobs:
           MODO_EXECUCAO: ${{ inputs.modo || 'baixar_e_consertar' }}
         run: |
           cat > /tmp/mega_filmes.py << 'PYEOF'
-          import asyncio, re, json, requests, sys, unicodedata, os
+          import asyncio, re, json, requests, sys, unicodedata, os, html, random
+          from collections import Counter
+          from difflib import SequenceMatcher
           from bs4 import BeautifulSoup
           from pathlib import Path
           from playwright.async_api import async_playwright
 
           BASE_URL = "https://www.vini7xgrave.site"
-          HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+          HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
 
           ARQ_FILA        = Path("filmes_fila.txt")
           ARQ_FEITAS      = Path("filmes_feitos.txt")
           ARQ_PENDENTES   = Path("filmes_pendentes.json")
           ARQ_DESCARTADOS = Path("filmes_descartados.txt")
+          ARQ_REPROCESSAR = Path("reprocessar.txt")
+          ARQ_ATTEMPTS    = Path("filmes_attempts.json")
 
           MAX_TENTATIVAS = 6
+          MAX_TENTATIVAS_CAPTCHA = 4
           LOTE_SIZE = int(os.environ.get('LOTE_SIZE', 100))
           MODO = os.environ.get('MODO_EXECUCAO', 'baixar_e_consertar').lower()
 
-          def log(*a): print(*a, flush=True); sys.stdout.flush()
+          MIN_FONTES_CONFIAVEL = 3
+          WARMUP_DELAY = 3
+          SIMILARIDADE_MIN = 0.85
+          PREFIXO_MIN_RATIO = 0.70
+          SLUG_OVERLAP_MIN = 0.50
+
+          # ✅ NOVO: Regex de prefixo atualizado com marc_sx7
+          PADRAO_SITE = r'(?:vini7x|vini|marc[_-]sx7|marcos|inix|grave|clau|site|rave|filmes\s*e\s*s[eé]ries)'
+          PADRAO_PREFIXO_CURTO = r'(?:Marcøsx7|Marc[_-]sx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)'
+
+          STOPWORDS_SLUG = {'a','o','e','de','da','do','das','dos','em','no','na',
+                            'nos','nas','um','uma','uns','umas','para','por','com',
+                            'the','and','of','in','to','at','on','for','by','from'}
+
+          def log(*a):
+              print(*a, flush=True); sys.stdout.flush()
+
+          def remover_surrogates(texto):
+              if not texto: return texto
+              return ''.join(c for c in texto if not (0xD800 <= ord(c) <= 0xDFFF))
+
+          def decodificar_escapes_unicode(texto):
+              if not texto or '\\u' not in texto: return texto
+              try:
+                  return json.loads('"' + texto.replace('"', '\\"') + '"')
+              except Exception:
+                  pass
+              def _repl(m):
+                  code = int(m.group(1), 16)
+                  if 0xD800 <= code <= 0xDFFF: return ''
+                  return chr(code)
+              return re.sub(r'\\u([0-9a-fA-F]{4})', _repl, texto)
+
+          def parece_sujo(titulo):
+              t = (titulo or '').strip().lower()
+              return bool(re.match(r'^[^\w]*' + PADRAO_SITE + r'(?:[^a-z]|$)', t))
 
           def limpar_titulo_bruto(titulo, url):
               if not titulo: titulo = ""
-              is_url = "http" in titulo.lower() or titulo.lower().endswith(".html")
-              if is_url: titulo = ""
-              titulo = unicodedata.normalize('NFKD', str(titulo))
+              if "http" in str(titulo).lower() or str(titulo).lower().endswith(".html"): titulo = ""
+              titulo = html.unescape(str(titulo))
+              titulo = decodificar_escapes_unicode(titulo)
+              titulo = unicodedata.normalize('NFKD', titulo)
               titulo = "".join([c for c in titulo if not unicodedata.combining(c)])
-              titulo = re.sub(r'^(?:Marcøsx7|Marcos|Vini7x|ViNi7x|inix|arc|entre_nos)[^a-zA-Z0-9]*[-:]?', '', titulo, flags=re.I).strip()
-              titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
-              titulo = titulo.replace('🍿Clau', '').strip(' -')
+
+              # Limpa o prefixo inicial (ex: marc_sx7 - )
+              titulo = re.sub(rf'^{PADRAO_PREFIXO_CURTO}\b[^a-zA-Z0-9]*[-:]\s*', '', titulo, flags=re.I).strip()
+
+              if ':' in titulo:
+                  prefixo, resto = titulo.split(':', 1)
+                  if re.search(r'\b' + PADRAO_SITE + r'\b', prefixo, re.I):
+                      titulo = resto.strip()
+
+              if ' - ' in titulo:
+                  prefixo, resto = titulo.split(' - ', 1)
+                  if re.search(r'\b' + PADRAO_SITE + r'\b', prefixo, re.I):
+                      titulo = resto.strip()
+
+              if ' - ' in titulo:
+                  prefixo, resto = titulo.rsplit(' - ', 1)
+                  if re.search(r'\b' + PADRAO_SITE + r'\b', resto, re.I):
+                      titulo = prefixo.strip()
+
+              titulo = re.sub(r'\s*[-–—]\s*(?:assistir|online|filme|serie|completo|dublado|legendado|hd|temporada).*$', '', titulo, flags=re.I).strip()
+              titulo = titulo.replace('🍿Clau', '').strip(' -–—')
+              titulo = re.sub(r'\s*[-–—]?\s*\d+\s*[ªº]\s*temporada.*$', '', titulo, flags=re.I).strip(' -–—')
+              titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip(' -–—')
+              titulo = re.sub(r'\s+', ' ', titulo).strip(' -–—')
+
               if len(titulo) < 3:
                   m = re.search(r'/([^/]+)\.html', url)
                   if m:
                       slug = m.group(1)
-                      slug = re.sub(r'^(?:inix|arc|entre-nos)[-_]', '', slug, flags=re.I)
-                      slug = re.sub(r'[-_]\d{4}$', '', slug)
+                      slug = re.sub(r'^(?:inix|arc|entre-nos|vini|marcos|marc[_-]sx7)[-_]', '', slug, flags=re.I)
+                      slug = re.sub(r'[-_]\d{4}(?:_.*)?$', '', slug)
                       titulo = slug.replace('-', ' ').replace('_', ' ').title()
-              titulo = re.sub(r'\s*\(?\d{4}\)?\s*$', '', titulo).strip()
-              return titulo
+
+              return remover_surrogates(titulo)
+
+          def slug_para_titulo(url):
+              m = re.search(r'/([^/]+)\.html', url)
+              if not m: return ""
+              slug = m.group(1)
+              slug = re.sub(r'^(?:inix|arc|entre-nos|vini|marcos|marc[_-]sx7)[-_]', '', slug, flags=re.I)
+              slug = re.sub(r'[-_]\d{4}(?:_.*)?$', '', slug)
+              return slug.replace('-', ' ').replace('_', ' ').title()
+
+          def titulo_bate_com_slug(titulo, url):
+              m = re.search(r'/([^/]+)\.html', url)
+              if not m: return True
+              slug = m.group(1)
+              slug = re.sub(r'^(?:inix|arc|entre-nos|vini|marcos|marc[_-]sx7)[-_]', '', slug, flags=re.I)
+              slug = re.sub(r'[-_]\d{4}(?:_.*)?$', '', slug)
+
+              slug_words = set(re.findall(r'\w+', slug.lower()))
+              tit_words = set(re.findall(r'\w+', norm_nome(titulo)))
+
+              slug_sig = slug_words - STOPWORDS_SLUG
+              tit_sig = tit_words - STOPWORDS_SLUG
+
+              if not slug_sig or not tit_sig:
+                  return True
+
+              overlap = len(slug_sig & tit_sig)
+              return overlap / min(len(slug_sig), len(tit_sig)) >= SLUG_OVERLAP_MIN
 
           def is_icon_url(url):
               if not url: return True
               url_lower = url.lower()
               lixos = ['icon', 'logo', 'favicon', 'avatar', 'banner', 'default', 'profile']
               return any(x in url_lower for x in lixos)
+
+          def norm_nome(nome):
+              if not nome: return ""
+              n = re.sub(r'\s*-?\s*🍿Clau', '', nome, flags=re.I)
+              # ✅ NOVO: Limpa prefixos no norm_nome para comparação
+              n = re.sub(r'^' + PADRAO_PREFIXO_CURTO + r'\b[-_\s:]*', '', n, flags=re.I)
+              n = re.sub(r'\s*\(\d{4}\)', '', n)
+              n = re.sub(r'[^\w\s]', '', n)
+              n = re.sub(r'\s+', ' ', n)
+              n = re.sub(r'^(a|o|as|os|an|the)\s+', '', n, flags=re.I)
+              return n.lower().strip()
+
+          def nomes_compativeis(nome_a, nome_b, arquivo_a=None, arquivo_b=None):
+              if arquivo_a and arquivo_b and arquivo_a == arquivo_b: return True
+              na = norm_nome(nome_a); nb = norm_nome(nome_b)
+              if not na or not nb: return False
+              if na == nb: return True
+              menor, maior = (na, nb) if len(na) <= len(nb) else (nb, na)
+              if maior.startswith(menor) and len(menor) / len(maior) >= PREFIXO_MIN_RATIO:
+                  return True
+              return SequenceMatcher(None, na, nb).ratio() >= SIMILARIDADE_MIN
+
+          def eh_serie(soup, url_pagina):
+              for script in soup.find_all('script', type='application/ld+json'):
+                  try:
+                      dados = json.loads(script.string)
+                      if isinstance(dados, list):
+                          for d in dados:
+                              if d.get('@type') in ['TVSeries','TVSeason','TVEpisode']: return True
+                      elif isinstance(dados, dict):
+                          if dados.get('@type') in ['TVSeries','TVSeason','TVEpisode']: return True
+                  except: pass
+              for script in soup.find_all('script', type='application/ld+json'):
+                  texto_ld = script.string or ''
+                  if not texto_ld: continue
+                  if re.search(r'lista\s+de\s+epis[oó]dios', texto_ld, re.I): return True
+                  if re.search(r'\d+\s*[ªº]\s*temporada', texto_ld, re.I): return True
+                  if len(re.findall(r'epis[oó]dio\s+\d+', texto_ld, re.I)) >= 2: return True
+              for a in soup.find_all('a', href=True):
+                  if re.search(r'epis[oó]dio[-_/]\d+', a['href'], re.I): return True
+                  if re.search(r'\bepis[oó]dio\s+\d+', a.get_text(strip=True), re.I): return True
+                  if re.search(r'/episode[-_/]?\d+', a['href'], re.I): return True
+              texto_pagina = soup.get_text(" ", strip=True).lower()
+              for p in [r'lista\s+de\s+epis[oó]dios', r'\b\d+\s*[ªº]\s*temporada', r'\btemporada\s+\d+',
+                        r'\b\d+\s+temporadas\b', r'\bseason\s+\d+', r'\bepis[oó]dios?\b',
+                        r'\bepisodes?\b', r'\bS\d{1,2}\s*E\d{1,3}\b', r'\bT\d{1,2}\s*E\d{1,3}\b',
+                        r'\b\d{1,2}\s*x\s*\d{1,3}\b', r'\bcap[ií]tulo\s+\d+']:
+                  if re.search(p, texto_pagina, re.I): return True
+              return False
+
+          def extrair_titulos_fontes(soup, html_text):
+              fontes = {}
+              h1 = soup.find('h1', class_='post-title') or soup.find('h1')
+              if h1 and h1.text.strip(): fontes['h1'] = h1.text.strip()
+              if soup.title and soup.title.string: fontes['title_tag'] = soup.title.string
+              for prop, key in [('og:title', 'og_title'), ('og:description', 'og_desc')]:
+                  tag = soup.find('meta', property=prop)
+                  if tag and tag.get('content'): fontes[key] = tag['content']
+              for name, key in [('twitter:title', 'tw_title'), ('description', 'meta_desc')]:
+                  tag = soup.find('meta', attrs={'name': name})
+                  if tag and tag.get('content'): fontes[key] = tag['content']
+              bm = soup.find(attrs={'data-bm-title': True})
+              if bm: fontes['bm_title'] = bm['data-bm-title']
+              for script in soup.find_all('script', type='application/ld+json'):
+                  try:
+                      d = json.loads(script.string)
+                      if isinstance(d, dict):
+                          if d.get('headline'): fontes['ld_headline'] = d['headline']
+                          if d.get('name') and d.get('@type') == 'VideoObject': fontes['ld_video'] = d['name']
+                  except Exception: pass
+              json_data = soup.find('script', id='json:data')
+              if json_data:
+                  try:
+                      d = json.loads(json_data.string)
+                      bg = d.get('bg', {}); vw = d.get('vw', {})
+                      if bg.get('pgNm'): fontes['pgNm'] = bg['pgNm']
+                      if bg.get('pgTtl'): fontes['pgTtl'] = bg['pgTtl']
+                      if vw.get('ttl'): fontes['vw_ttl'] = vw['ttl']
+                  except Exception: pass
+              json_posts = soup.find('script', id='json:blogposts')
+              if json_posts:
+                  try:
+                      d = json.loads(json_posts.string)
+                      for _, v in d.items():
+                          if isinstance(v, dict) and v.get('ttl'):
+                              fontes['blogposts_ttl'] = v['ttl']; break
+                  except Exception: pass
+              sh = soup.find('div', class_='shPt')
+              if sh and sh.get('data-text'): fontes['share'] = sh['data-text']
+              m = re.search(r"'pageName':\s*'([^']+)'", html_text)
+              if m: fontes['pageName'] = m.group(1)
+              return fontes
+
+          def votar_titulos(fontes, url):
+              if not fontes: return limpar_titulo_bruto("", url), 0, 0
+              limpos = {}
+              for nome, valor in fontes.items():
+                  if not valor or str(valor).strip() == 'h' or len(str(valor).strip()) < 2: continue
+                  limpo = limpar_titulo_bruto(str(valor), url)
+                  if limpo and len(limpo) >= 2: limpos[nome] = limpo
+              if not limpos: return limpar_titulo_bruto("", url), 0, 0
+              limpos_bons = {k: v for k, v in limpos.items() if not parece_sujo(v)}
+              if limpos_bons: limpos = limpos_bons
+              contagem = Counter(); original = {}
+              for nome, valor in limpos.items():
+                  chave = valor.lower().strip()
+                  contagem[chave] += 1
+                  if chave not in original: original[chave] = valor
+              mais_votado, votos = contagem.most_common(1)[0]
+              titulo_final = original[mais_votado]
+              total = len(limpos)
+              if votos < total:
+                  log(f"    [🗳️] Votação: {votos}/{total} -> '{titulo_final}'")
+                  for chave, cnt in contagem.items():
+                      if chave != mais_votado:
+                          log(f"        ⚠️  Divergência ({cnt}x): '{original[chave]}'")
+              else:
+                  log(f"    [🗳️] Consenso total ({votos}/{total}): '{titulo_final}'")
+              return remover_surrogates(titulo_final), votos, total
 
           def construir_indice_videos():
               log("Mapeando arquivos existentes...")
@@ -114,11 +323,23 @@ jobs:
                   try:
                       texto = f.read_text(encoding="utf-8")
                       m = re.search(r'"contentUrl":\s*"([^"]+)"', texto)
-                      if m: indice[m.group(1)] = f
+                      if m: indice.setdefault(m.group(1), []).append(f)
                   except: pass
               return indice
 
           INDICE_VIDEOS = construir_indice_videos()
+
+          def carregar_attempts():
+              if ARQ_ATTEMPTS.exists():
+                  try: return json.loads(ARQ_ATTEMPTS.read_text(encoding="utf-8"))
+                  except Exception: return {}
+              return {}
+
+          def salvar_attempts(data):
+              try: ARQ_ATTEMPTS.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+              except Exception: pass
+
+          ATTEMPTS = carregar_attempts()
 
           def construir_fila():
               log("Criando/atualizando fila de filmes...")
@@ -126,8 +347,7 @@ jobs:
               if ARQ_FILA.exists():
                   for u in ARQ_FILA.read_text(encoding="utf-8").splitlines():
                       u = u.strip()
-                      if u and u not in vistos:
-                          urls.append(u); vistos.add(u)
+                      if u and u not in vistos: urls.append(u); vistos.add(u)
               start = 1
               while True:
                   url_feed = f"{BASE_URL}/feeds/posts/default?alt=json&max-results=150&start-index={start}"
@@ -140,40 +360,89 @@ jobs:
                           link = next((l["href"] for l in e.get("link", []) if l.get("rel") == "alternate"), None)
                           if link:
                               u = link.split("?")[0].strip()
-                              if u and u not in vistos:
-                                  urls.append(u); vistos.add(u)
+                              if u and u not in vistos: urls.append(u); vistos.add(u)
                       start += 150
                       if len(entries) < 150: break
                   except: break
               ARQ_FILA.write_text("\n".join(urls), encoding="utf-8")
 
-          if not ARQ_FILA.exists():
-              construir_fila()
+          if not ARQ_FILA.exists(): construir_fila()
 
           feitas = set()
           if ARQ_FEITAS.exists():
               feitas = set(l.strip() for l in ARQ_FEITAS.read_text(encoding="utf-8").splitlines() if l.strip())
 
+          descartados = set()
+          if ARQ_DESCARTADOS.exists():
+              descartados = set(l.strip() for l in ARQ_DESCARTADOS.read_text(encoding="utf-8").splitlines() if l.strip())
+
           pendentes_dict = {}
           if ARQ_PENDENTES.exists():
               try:
                   for p in json.loads(ARQ_PENDENTES.read_text(encoding="utf-8")):
-                      if p['arquivo'] not in pendentes_dict:
-                          pendentes_dict[p['arquivo']] = p
-                      else:
-                          pendentes_dict[p['arquivo']]['tentativas'] = max(pendentes_dict[p['arquivo']].get('tentativas',1), p.get('tentativas',1))
+                      if p['arquivo'] not in pendentes_dict: pendentes_dict[p['arquivo']] = p
+                      else: pendentes_dict[p['arquivo']]['tentativas'] = max(pendentes_dict[p['arquivo']].get('tentativas',1), p.get('tentativas',1))
               except: pass
           pendentes = list(pendentes_dict.values())
 
+          reprocessar_urls = []
+          if ARQ_REPROCESSAR.exists():
+              for linha in ARQ_REPROCESSAR.read_text(encoding="utf-8").splitlines():
+                  u = linha.strip()
+                  if u and not u.startswith("#"): reprocessar_urls.append(u)
+          if reprocessar_urls:
+              log(f"Reprocessar.txt: {len(reprocessar_urls)} URL(s) forçada(s)")
+              for u in reprocessar_urls:
+                  if u in feitas:
+                      feitas.discard(u)
+                      log(f"    [🔁] Retirada de 'feitas': {u}")
+                  if u in descartados:
+                      descartados.discard(u)
+                      log(f"    [🔁] Retirada de 'descartados': {u}")
+                  if u in ATTEMPTS:
+                      del ATTEMPTS[u]
+              ARQ_REPROCESSAR.write_text("", encoding="utf-8")
+              ARQ_DESCARTADOS.write_text("\n".join(sorted(descartados)), encoding="utf-8")
+
           todas = [u.strip() for u in ARQ_FILA.read_text(encoding="utf-8").splitlines() if u.strip()]
-          fila = [u for u in todas if u not in feitas]
+          fila_normal = [u for u in todas if u not in feitas and u not in reprocessar_urls and u not in descartados]
+          fila = reprocessar_urls + fila_normal
           lote = fila[:LOTE_SIZE]
 
-          log(f"Fila: {len(todas)} | Faltam: {len(fila)} | Lote: {LOTE_SIZE} | Modo: {MODO}")
+          log(f"Fila: {len(todas)} | Faltam: {len(fila_normal)} | Descartados: {len(descartados)} | Lote: {LOTE_SIZE} | Modo: {MODO}")
 
-          # ============================================================
-          # LÓGICA DE CAPTURA DE VÍDEO ATUALIZADA (vinda dos YAMLs novos)
-          # ============================================================
+          async def fetch_raw_seguro(url, context):
+              try:
+                  r = await asyncio.to_thread(requests.get, url, headers=HEADERS, timeout=25, allow_redirects=True)
+                  if 'google.com/sorry' in r.url or '/sorry/index' in r.url:
+                      log(f"    [🚫] requests → CAPTCHA Google")
+                  elif r.status_code == 200:
+                      return r.text, r.url
+                  else:
+                      log(f"    [⚠️] requests HTTP {r.status_code}")
+              except Exception as e:
+                  log(f"    [⚠️] requests falhou: {type(e).__name__}")
+
+              log(f"    [🔄] Tentando Playwright...")
+              page = await context.new_page()
+              try:
+                  await page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                  await asyncio.sleep(3)
+                  if 'google.com/sorry' in page.url or '/sorry/index' in page.url:
+                      return None, "captcha"
+                  try:
+                      await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                      await asyncio.sleep(2)
+                  except Exception:
+                      pass
+                  html_r = await page.content()
+                  return html_r, page.url
+              except Exception as e:
+                  return None, f"erro: {type(e).__name__}"
+              finally:
+                  try: await page.close()
+                  except: pass
+
           async def extrair_video_playwright(context, url_ep):
               page = await context.new_page()
               capturados = []
@@ -184,38 +453,31 @@ jobs:
               page.on("response", on_response)
               try:
                   await page.goto(url_ep, wait_until="domcontentloaded", timeout=20000)
-                  try: await page.wait_for_selector("iframe", timeout=10000)
-                  except: pass
-                  await asyncio.sleep(3.0)
-                  html = await page.content()
+                  await asyncio.sleep(4.0)
                   if not capturados:
-                      soup = BeautifulSoup(html, 'html.parser')
+                      html_r = await page.content()
+                      soup = BeautifulSoup(html_r, 'html.parser')
                       for iframe in soup.find_all('iframe'):
                           src = iframe.get('src', '')
-                          if 'google' not in src.lower() and 'ads' not in src.lower():
+                          if src and 'google' not in src.lower() and 'ads' not in src.lower():
                               capturados.append(src)
-                  if not capturados:
-                      match = re.search(r'(https?://[^"\']+(?:tankie|oneplayer)[^"\']+)', html)
-                      if match: capturados.append(match.group(1))
+                      if not capturados:
+                          m = re.search(r'(https?://[^"\']+(?:tankie|oneplayer)[^"\']+)', html_r)
+                          if m: capturados.append(m.group(1))
               except Exception: pass
               finally: await page.close()
-              if capturados: return list(dict.fromkeys(capturados))[0]
+              diretos = [u for u in capturados if re.search(r"[.](mp4|m3u8)([?]|$)", u, re.I)]
+              if diretos: return diretos[0]
+              if capturados: return capturados[0]
               return None
 
           def extrair_dados_pagina(html_text, url_pagina):
               soup = BeautifulSoup(html_text, 'html.parser')
-              for a in soup.find_all('a', href=True):
-                  if re.search(r'epis[oó]dio[-_/]\d+', a['href'], re.I): return None, None, "SÉRIE"
-                  if re.search(r'\bepis[oó]dio\s+\d+', a.get_text(strip=True), re.I): return None, None, "SÉRIE"
+              if eh_serie(soup, url_pagina):
+                  return None, None, None, "SÉRIE", 0
 
-              titulo = ""
-              h1 = soup.find('h1', class_='post-title') or soup.find('h1')
-              if h1: titulo = h1.text.strip()
-              if not titulo:
-                  og = soup.find('meta', property='og:title')
-                  if og and og.get('content'): titulo = og['content']
-              if not titulo and soup.title: titulo = soup.title.string
-              titulo = limpar_titulo_bruto(titulo, url_pagina)
+              fontes = extrair_titulos_fontes(soup, html_text)
+              titulo, votos, total = votar_titulos(fontes, url_pagina)
 
               capa = ""
               script_ld = soup.find('script', type='application/ld+json')
@@ -224,8 +486,7 @@ jobs:
                   except: pass
               if not capa or capa == 'h' or len(capa) < 5 or is_icon_url(capa):
                   m = re.search(r'https://blogger\.googleusercontent\.com/img/[^"\'\s<>]+', html_text)
-                  if m and not is_icon_url(m.group(0)):
-                      capa = m.group(0)
+                  if m and not is_icon_url(m.group(0)): capa = m.group(0)
                   else:
                       og_img = soup.find('meta', property='og:image')
                       if og_img and og_img.get('content') and not is_icon_url(og_img['content']):
@@ -241,10 +502,18 @@ jobs:
                   matches = re.findall(r'(https?://[^"\'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^"\'\s<>]*)', html_text)
                   if matches: video = matches[0]
 
-              return titulo.strip(), capa, video
+              duracao = "PT01H30M00S"
+              if script_ld:
+                  try:
+                      dados_ld = json.loads(script_ld.string)
+                      if dados_ld.get('duration'): duracao = dados_ld['duration']
+                  except: pass
 
-          def salvar_html(caminho_destino, nome_json, link, capa_url):
-              uid = re.sub(r'[^a-zA-Z0-9]', '', caminho_destino.name.replace('.html', ''))
+              return titulo.strip(), capa, video, duracao, total
+
+          def salvar_html(caminho_destino, nome_json, link, capa_url, duracao="PT01H30M00S"):
+              nome_json = remover_surrogates(nome_json)
+              capa_url = remover_surrogates(capa_url) if capa_url else capa_url
               base_url = "https://api-pobreflix-filmes.pages.dev"
               file_url = f"{base_url}/{caminho_destino.name}"
               dados = {
@@ -253,48 +522,166 @@ jobs:
                   "name": nome_json, "description": f"Assista {nome_json}",
                   "thumbnailUrl": [capa_url],
                   "uploadDate": "2020-01-01T00:00:00+00:00", "inLanguage": "pt",
-                  "contentUrl": link, "embedUrl": link
+                  "contentUrl": link, "embedUrl": link,
+                  "supportPlatform": ["https://schema.org/IOSPlatform", "https://schema.org/AndroidPlatform"],
+                  "duration": duracao,
+                  "interactionStatistic": {"@type": "InteractionCounter",
+                      "interactionType": {"@type": "WatchAction"},
+                      "userInteractionCount": 9458}
               }
               js = json.dumps(dados, ensure_ascii=False, indent=4)
-              html = (
-                  f'<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n<meta charset="UTF-8">\n'
+              title_attr = html.escape(nome_json, quote=True)
+              html_out = (
+                  f'<!DOCTYPE html>\n<html lang="pt-BR">\n<head>\n'
+                  f'<meta charset="UTF-8">\n'
                   f'<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
-                  f'<script type="application/ld+json">\n{js}\n</script>\n<title>{nome_json}</title>\n'
+                  f'<link rel="icon" href="data:,">\n'
+                  f'<script type="application/ld+json">\n{js}\n</script>\n'
+                  f'<title>{nome_json}</title>\n'
                   f'<style>\nbody, html {{ margin: 0; padding: 0; background-color: #000; height: 100%; width: 100%; overflow: hidden; }}\n'
                   f'video {{ width: 100%; height: 100%; outline: none; }}\n</style>\n</head>\n<body>\n'
-                  f'<video src="{link}" poster="{capa_url}" controls autoplay playsinline></video>\n</body>\n</html>'
+                  f'<video id="player-video" title="{title_attr}" poster="{capa_url}" src="{link}" controls autoplay playsinline></video>\n'
+                  f'</body>\n</html>'
               )
-              caminho_destino.write_text(html, encoding='utf-8')
+              caminho_destino.write_text(html_out, encoding='utf-8', errors='replace')
 
           def checar_defeitos(arquivo):
               try:
                   conteudo = arquivo.read_text(encoding="utf-8")
                   soup = BeautifulSoup(conteudo, 'html.parser')
                   script = soup.find('script', type='application/ld+json')
-                  if not script: return True, True
+                  if not script: return True, True, "", ""
                   dados = json.loads(script.string)
-                  nome = dados.get('name', '')
+                  nome = dados.get('name', '') or ''
                   capa = dados.get('thumbnailUrl', [''])[0] if dados.get('thumbnailUrl') else ''
-                  n_quebrado = ("inix" in nome.lower() or "http" in nome.lower() or len(nome) < 3)
+                  nome_norm = unicodedata.normalize('NFKD', nome)
+                  nome_norm = "".join([c for c in nome_norm if not unicodedata.combining(c)])
+                  has_surrogates = any(0xD800 <= ord(c) <= 0xDFFF for c in nome)
+                  
+                  # ✅ NOVO: Verifica se o nome do arquivo está poluído com marc_sx7
+                  n_quebrado = (
+                      len(nome_norm) < 3 or
+                      bool(re.match(r'^(?:[^\w]*)' + PADRAO_SITE + r'\b', nome_norm, re.I)) or
+                      "http" in nome_norm.lower() or has_surrogates
+                  )
                   c_quebrada = ("placeholder" in capa or "Sem+Capa" in capa or not capa or is_icon_url(capa))
-                  return n_quebrado, c_quebrada
-              except: return True, True
+                  return n_quebrado, c_quebrada, nome, capa
+              except: return True, True, "", ""
 
           async def processar_item(context, url_pagina):
               log(f"\n--> Verificando: {url_pagina}")
+              tentativas = ATTEMPTS.get(url_pagina, 0)
               try:
-                  r = await asyncio.to_thread(requests.get, url_pagina, headers=HEADERS, timeout=20)
-                  titulo, capa_url, link_ou_serie = extrair_dados_pagina(r.text, url_pagina)
+                  html_raw, final_url = await fetch_raw_seguro(url_pagina, context)
 
-                  if link_ou_serie == "SÉRIE":
-                      log("    (É SÉRIE. Pulando...)")
-                      with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                  if html_raw is None:
+                      ATTEMPTS[url_pagina] = tentativas + 1
+                      if tentativas + 1 >= MAX_TENTATIVAS_CAPTCHA:
+                          log(f"    [🚨] {MAX_TENTATIVAS_CAPTCHA}x bloqueado ({final_url}). Descartando.")
+                          with open(ARQ_DESCARTADOS, "a", encoding="utf-8") as f:
+                              f.write(url_pagina.strip()+"\n")
+                      else:
+                          log(f"    [🚫] Bloqueado ({final_url}). Tentativa {tentativas+1}/{MAX_TENTATIVAS_CAPTCHA}. Pulando (retry próximo run).")
                       return
 
-                  # ============================================================
-                  # NOVA LÓGICA: sempre captura o vídeo via Playwright
-                  # ============================================================
-                  link = await extrair_video_playwright(context, url_pagina)
+                  if final_url != url_pagina:
+                      log(f"    [ℹ️] URL final: {final_url}")
+                      url_pagina = final_url
+
+                  titulo, capa_url, link, duracao, total = extrair_dados_pagina(html_raw, url_pagina)
+
+                  if duracao == "SÉRIE":
+                      log("    (É SÉRIE. Pulando...)")
+                      with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                      if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
+                      return
+
+                  if total < MIN_FONTES_CONFIAVEL:
+                      log(f"    [🔄] Warmup: raw tem {total} fonte(s). Retry em {WARMUP_DELAY}s...")
+                      await asyncio.sleep(WARMUP_DELAY)
+                      try:
+                          r2 = await asyncio.to_thread(requests.get, url_pagina, headers=HEADERS, timeout=20, allow_redirects=True)
+                          if 'google.com/sorry' not in r2.url and '/sorry/index' not in r2.url:
+                              html_raw2 = r2.text
+                              titulo2, capa2, link2, dur2, total2 = extrair_dados_pagina(html_raw2, url_pagina)
+                              if dur2 == "SÉRIE":
+                                  log("    (É SÉRIE. Pulando...)")
+                                  with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                                  if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
+                                  return
+                              if total2 > total:
+                                  log(f"    [🔄] Warmup OK: {total} → {total2} fontes")
+                                  titulo, capa_url, link, duracao, total = titulo2, capa2, link2, dur2, total2
+                      except Exception:
+                          pass
+
+                  precisa_renderizar = (not link) or (not titulo) or (total < MIN_FONTES_CONFIAVEL)
+
+                  if precisa_renderizar:
+                      if total > 0 and total < MIN_FONTES_CONFIAVEL:
+                          log(f"    [🔄] Renderizando (raw ainda com {total} fonte(s))...")
+                      async with async_playwright() as pw:
+                          browser = await pw.chromium.launch(headless=True)
+                          page = await browser.new_page()
+                          html_render = html_raw
+                          try:
+                              await page.goto(url_pagina, wait_until="domcontentloaded", timeout=30000)
+                              if 'google.com/sorry' in page.url or '/sorry/index' in page.url:
+                                  log(f"    [🚫] Render também bloqueado. Tentativa {tentativas+1}/{MAX_TENTATIVAS_CAPTCHA}.")
+                                  await browser.close()
+                                  ATTEMPTS[url_pagina] = tentativas + 1
+                                  if tentativas + 1 >= MAX_TENTATIVAS_CAPTCHA:
+                                      log(f"    [🚨] Descartando.")
+                                      with open(ARQ_DESCARTADOS, "a", encoding="utf-8") as f:
+                                          f.write(url_pagina.strip()+"\n")
+                                  return
+                              await asyncio.sleep(8)
+                              await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                              await asyncio.sleep(2)
+                              html_render = await page.content()
+                          except Exception as e:
+                              log(f"    [⚠️] Render falhou: {e}")
+                          await browser.close()
+
+                          titulo_r, capa_r, link_r, duracao_r, total_r = extrair_dados_pagina(html_render, url_pagina)
+
+                          if duracao_r == "SÉRIE":
+                              log("    (É SÉRIE. Pulando...)")
+                              with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                              if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
+                              return
+
+                          if titulo_r and (not titulo or total_r > total):
+                              if titulo and titulo_r != titulo:
+                                  log(f"    [🔄] Título atualizado via render: '{titulo}' → '{titulo_r}'")
+                              titulo = titulo_r
+                              total = total_r
+                          if not capa_url or capa_url == 'h': capa_url = capa_r
+                          if not link: link = link_r
+                          if duracao_r and duracao_r != "SÉRIE": duracao = duracao_r
+
+                  if total < MIN_FONTES_CONFIAVEL:
+                      slug_titulo = slug_para_titulo(url_pagina)
+                      if slug_titulo and len(slug_titulo) > len(titulo or ""):
+                          log(f"    [🔄] Fallback via slug: '{titulo}' → '{slug_titulo}'")
+                          titulo = slug_titulo
+                  elif not titulo_bate_com_slug(titulo, url_pagina):
+                      slug_titulo = slug_para_titulo(url_pagina)
+                      if slug_titulo and len(slug_titulo) > 3:
+                          log(f"    [⚠️] Título '{titulo}' não bate com URL. Usando slug: '{slug_titulo}'")
+                          titulo = slug_titulo
+
+                  if not link:
+                      log(f"    [🔄] Link não encontrado. Tentando interceptação de rede...")
+                      link = await extrair_video_playwright(context, url_pagina)
+                      if link:
+                          log(f"    [🔄] Link via interceptação: {link[:60]}...")
+
+                  if duracao == "SÉRIE" or not titulo:
+                      log("    (É SÉRIE. Pulando...)")
+                      with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
+                      if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
+                      return
 
                   ano = ""
                   m = re.search(r'/([^/]+)\.html', url_pagina)
@@ -314,52 +701,83 @@ jobs:
 
                   with open(ARQ_FEITAS, "a", encoding="utf-8") as f: f.write(url_pagina.strip()+"\n")
 
-                  arquivo_existente = INDICE_VIDEOS.get(link) if link else None
+                  candidatos = INDICE_VIDEOS.get(link, []) if link else []
+                  arquivo_existente = None
+                  for cand in candidatos:
+                      if not cand.exists(): continue
+                      _, _, nome_cand, _ = checar_defeitos(cand)
+                      if nomes_compativeis(nome_cand, nome_json, cand.name, nome_arquivo_calculado):
+                          arquivo_existente = cand
+                          break
+
+                  if arquivo_existente is None and candidatos:
+                      nomes_outros = []
+                      for c in candidatos:
+                          if c.exists():
+                              _, _, n_outro, _ = checar_defeitos(c)
+                              if n_outro: nomes_outros.append(f"'{c.name}' ({n_outro})")
+                      if nomes_outros:
+                          log(f"    [⚠️] URL compartilhada com outro(s) filme(s): {', '.join(nomes_outros)} — criando arquivo separado")
 
                   if arquivo_existente:
-                      n_quebrado, c_quebrada = checar_defeitos(arquivo_existente)
+                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_existente)
                       renomear = (arquivo_existente.name != nome_arquivo_calculado)
+
                       if MODO == 'apenas_baixar':
                           log(f"    (Arquivo existente: {arquivo_existente.name}). Modo Apenas Baixar: Ignorando conserto.")
+                          if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                           return
+
                       if not renomear and not n_quebrado and not c_quebrada:
                           log(f"    (Arquivo existente: {arquivo_existente.name}). (Já está perfeito).")
+                          if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                           return
+
                       log(f"    (Arquivo existente: {arquivo_existente.name})")
                       acoes = []
-                      if renomear: acoes.append("Renomeado")
-                      if n_quebrado: acoes.append("Título corrigido")
+                      if renomear: acoes.append(f"Renomeado ({arquivo_existente.name} → {nome_arquivo_calculado})")
+                      if n_quebrado: acoes.append(f"Título corrigido ('{nome_antigo}' → '{nome_json}')")
                       if c_quebrada: acoes.append("Capa corrigida")
                       log(f"    [🔄] {', '.join(acoes)}...")
+
                       novo_caminho = Path(nome_arquivo_calculado) if renomear else arquivo_existente
-                      salvar_html(novo_caminho, nome_json, link, capa_url)
+                      salvar_html(novo_caminho, nome_json, link, capa_url, duracao)
+
                       if renomear and arquivo_existente.exists():
                           arquivo_existente.unlink()
                           log(f"    [+] Salvo como: {novo_caminho.name}")
                       else:
                           log(f"    [+] Arquivo atualizado in-place.")
+                      if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                       return
 
                   arquivo_por_nome = Path(nome_arquivo_calculado)
                   if arquivo_por_nome.exists():
-                      n_quebrado, c_quebrada = checar_defeitos(arquivo_por_nome)
+                      n_quebrado, c_quebrada, nome_antigo, capa_antiga = checar_defeitos(arquivo_por_nome)
+                      nome_nao_bate_url = not titulo_bate_com_slug(nome_antigo, url_pagina)
+
                       if MODO == 'apenas_baixar':
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). Modo Apenas Baixar: Ignorando.")
+                          if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                           return
-                      if n_quebrado or c_quebrada:
+
+                      if n_quebrado or c_quebrada or nome_nao_bate_url:
                           acoes = []
+                          if nome_nao_bate_url: acoes.append(f"Título não bate com URL")
                           if n_quebrado: acoes.append("Título corrigido")
                           if c_quebrada: acoes.append("Capa corrigida")
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado})")
                           log(f"    [🔄] {', '.join(acoes)}...")
-                          salvar_html(arquivo_por_nome, nome_json, link, capa_url)
+                          salvar_html(arquivo_por_nome, nome_json, link, capa_url, duracao)
                           log(f"    [+] Arquivo atualizado.")
                       else:
                           log(f"    (Arquivo existe pelo nome: {nome_arquivo_calculado}). (Já está perfeito).")
+                      if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                       return
 
                   if MODO == 'apenas_consertar':
                       log(f"    (Não existe e modo é Apenas Consertar. Pulando.)")
+                      if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
                       return
 
                   log(f"    Filme: '{nome_json}'")
@@ -367,33 +785,48 @@ jobs:
                       if not any(p['arquivo']==nome_arquivo_calculado for p in pendentes):
                           pendentes.append({"arquivo": nome_arquivo_calculado, "nome_json": nome_json, "url": url_pagina, "tentativas": 1})
                       return
-                  salvar_html(Path(nome_arquivo_calculado), nome_json, link, capa_url)
+                  salvar_html(Path(nome_arquivo_calculado), nome_json, link, capa_url, duracao)
                   log(f"      [+] Salvo: {nome_arquivo_calculado}")
+                  if url_pagina in ATTEMPTS: del ATTEMPTS[url_pagina]
               except Exception as e:
                   log(f"    Erro em {url_pagina}: {e}")
 
           async def main():
               async with async_playwright() as pw:
                   browser = await pw.chromium.launch(headless=True)
-                  ctx = await browser.new_context(user_agent=HEADERS["User-Agent"])
+                  ctx = await browser.new_context(
+                      user_agent=HEADERS["User-Agent"],
+                      viewport={"width": 1366, "height": 768},
+                      locale="pt-BR",
+                  )
                   for i, url in enumerate(lote, 1):
                       log(f"[{i}/{len(lote)}]")
                       await processar_item(ctx, url)
+                      if i < len(lote):
+                          delay = random.uniform(1.5, 3.5)
+                          await asyncio.sleep(delay)
 
                   if pendentes:
                       log(f"\n=== RETENTANDO {len(pendentes)} FILMES ===")
                       ainda = []
                       for item in pendentes:
                           if Path(item['arquivo']).exists(): continue
-                          if item.get("tentativas",0) >= MAX_TENTATIVAS: continue
+                          if item.get("tentativas", 0) >= MAX_TENTATIVAS:
+                              log(f"--> Descartado (max tentativas): {item['arquivo']}")
+                              continue
                           log(f"--> Tentativa {item['tentativas']+1}/{MAX_TENTATIVAS}: {item['arquivo']}")
                           await processar_item(ctx, item['url'])
+                          if not Path(item['arquivo']).exists():
+                              item["tentativas"] = item.get("tentativas", 1) + 1
+                              ainda.append(item)
                       pendentes.clear()
+                      pendentes.extend(ainda)
                   await browser.close()
 
           if __name__ == "__main__":
               asyncio.run(main())
-              ARQ_PENDENTES.write_text(json.dumps(pendentes, ensure_ascii=False, indent=2), encoding="utf-8")
+              ARQ_PENDENTES.write_text(json.dumps(pendentes, ensure_ascii=False, indent=2), encoding="utf-8", errors="replace")
+              salvar_attempts(ATTEMPTS)
           PYEOF
           python3 /tmp/mega_filmes.py
 
@@ -404,7 +837,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (logs detalhados)"
+          git commit -m "fix: remove prefixo marc_sx7 + CAPTCHA detection"
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
             git pull origin main --no-rebase -X ours --no-edit
@@ -430,10 +863,7 @@ jobs:
           FALTAM=$((TOTAL - FEITOS))
           echo "Faltam: $FALTAM"
           if [ "$FALTAM" -le 0 ]; then exit 0; fi
-          
-          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
           RECENTES=$(gh run list --workflow="Filmes.yml" --limit 100 --json event,createdAt --jq "[.[] | select(.event == \"workflow_dispatch\")] | length" --repo "$REPO" 2>/dev/null || echo 0)
           if [ "$RECENTES" -ge 100 ]; then exit 0; fi
-          
           sleep 30
           gh workflow run "Filmes.yml" --repo "$REPO" --ref main -f auto_run=true -f lote="${{ inputs.lote || '100' }}" -f reprocessar_tudo=false -f modo="${{ inputs.modo || 'baixar_e_consertar' }}"
