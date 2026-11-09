@@ -61,7 +61,7 @@ jobs:
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
           MODO_EXECUCAO: ${{ inputs.modo || 'baixar_e_consertar' }}
-          INTERVALO_MIN_SEG: '6'      # NOVO: 10 req/min
+          INTERVALO_MIN_SEG: '8'
           DELAY_ENTRE_SEG: '12'
           DELAY_JITTER_SEG: '3'
         run: |
@@ -78,23 +78,20 @@ jobs:
               "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
           }
 
-          PROXIES_CORS = [
-              "https://api.allorigins.win/raw?url=",
-              "https://corsproxy.io/?url=",
-              "https://api.codetabs.com/v1/proxy?quest=",
-          ]
+          # Proxies gratuitos mortos (allorigins/codetabs = 522, corsproxy = 401 pago)
+          PROXIES_CORS = []
 
           DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 12)
           DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 3)
           RETRY_429_BASE  = float(os.environ.get("RETRY_429_SEG") or 60)
           RETRY_TETO      = float(os.environ.get("RETRY_TETO_SEG") or 300)
           HTTP_TENTATIVAS = int(os.environ.get("HTTP_TENTATIVAS") or 4)
-          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 6)
+          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 8)
 
           METRICAS = {"requisicoes": 0, "ok": 0, "429": 0, "5xx": 0, "retries": 0,
                       "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0,
                       "conflitos": 0, "proxy_fallback": 0, "proxy_hit": 0,
-                      "pausas_evitadas": 0, "http_realizados": 0}
+                      "pausas_evitadas": 0, "http_realizados": 0, "playwright_skip": 0}
           EVENTOS = []
           _estado = {"ultima": 0.0, "intervalo": INTERVALO_MIN}
 
@@ -200,22 +197,8 @@ jobs:
 
 
           def http_get_via_proxy(url, timeout=45):
-              for i, base in enumerate(PROXIES_CORS):
-                  try:
-                      proxy_url = base + quote(url, safe="")
-                      host = base.split("//")[-1].split("/")[0]
-                      log(f"    [PROXY {i+1}/{len(PROXIES_CORS)}] {host}")
-                      t0 = time.time()
-                      r = requests.get(proxy_url, headers={"User-Agent": HEADERS["User-Agent"]}, timeout=timeout)
-                      dt = time.time() - t0
-                      if r.status_code == 200 and len(r.text) > 2000:
-                          log(f"    [PROXY] OK em {dt:.1f}s ({len(r.text)} bytes)")
-                          return 200, r.text
-                      log(f"    [PROXY] {r.status_code} em {dt:.1f}s ({len(r.text)} bytes)")
-                  except Exception as e:
-                      log(f"    [PROXY] ERRO: {type(e).__name__}: {str(e)[:80]}")
-                  time.sleep(random.uniform(1, 3))
-              return None, "todos os proxies falharam"
+              # Desabilitado — todos os proxies gratuitos estão mortos
+              return None, "proxies desabilitados"
 
 
           _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site", re.I)
@@ -390,24 +373,8 @@ jobs:
 
 
           async def renderizar(context, url, espera=5.0):
-              page = await context.new_page()
-              html = ""
-              try:
-                  await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-                  await asyncio.sleep(espera)
-                  html = await page.content()
-              except Exception as e:
-                  log(f"    (Falha ao renderizar: {str(e)[:120]})")
-                  try:
-                      html = await page.content()
-                  except Exception:
-                      html = ""
-              finally:
-                  try:
-                      await page.close()
-                  except Exception:
-                      pass
-              return html
+              # Playwright desligado no Azure (faz burst de requests, toma 429 em massa)
+              return ""
 
 
           def carregar_json(arq, padrao):
@@ -1059,12 +1026,7 @@ jobs:
               if soup is None:
                   status, texto = await asyncio.to_thread(http_get, url, timeout=25, tentativas=1)
                   if status == 429:
-                      METRICAS["proxy_fallback"] += 1
-                      log(f"    [PROXY-FB] 429 direto; tentando proxies...")
-                      status, texto = await asyncio.to_thread(http_get_via_proxy, url)
-                      if status == 200:
-                          METRICAS["proxy_hit"] += 1
-                  if status == 429:
+                      log(f"    [429] HTTP direto tomou 429; pulando (proxies desabilitados).")
                       return "rate_limit", None
                   if status is None:
                       log(f"    Falha de rede: {texto}")
@@ -1087,15 +1049,8 @@ jobs:
                   link = extrair_link_estatico(texto, soup)
                   soup_capa, html_capa = soup, texto
                   if not link:
-                      log("    (Sem link no HTML estático; tentando Playwright...)")
-                      html_r = await renderizar(ctx, url)
-                      if html_r and validar_html(html_r, url):
-                          soup_r = BeautifulSoup(html_r, "html.parser")
-                          if eh_serie_estrito(soup_r):
-                              log("    (É SÉRIE. Pulando...)")
-                              return "serie", None
-                          link = extrair_link_estatico(html_r, soup_r)
-                          soup_capa, html_capa = soup_r, html_r
+                      METRICAS["playwright_skip"] += 1
+                      log("    (Sem link no HTML estático; Playwright desligado no Azure — vai para retentativa.)")
 
               titulo, ano = escolher_titulo(soup, url)
               capa = escolher_capa(soup, texto)
@@ -1127,6 +1082,12 @@ jobs:
           async def main():
               construir_indice()
               FEED_POSTS.update(indice_do_feed())
+
+              # COOLDOWN: esvazia janela de 60s do rate limit do Blogger
+              log("\n⏳ Feed carregado. Aguardando 60s para esvaziar janela de rate limit...")
+              time.sleep(60)
+              log("✅ Cooldown concluído. Iniciando processamento de filmes.\n")
+
               if not ARQ_FILA.exists():
                   log("Criando fila de filmes...")
                   urls, _ = buscar_urls_feed()
@@ -1177,7 +1138,7 @@ jobs:
                           seguidos_429 += 1
                           evento("rate_limit", url, seguidos=seguidos_429)
                           if seguidos_429 >= 5:
-                              log("\n🚫 5 URLs seguidas com 429 mesmo após os proxies: o site está bloqueando. Encerrando.")
+                              log("\n🚫 5 URLs seguidas com 429: o site está bloqueando. Encerrando.")
                               bloqueado = True
                               break
                           log("    ⏸️ rate-limit: pausa extra.")
@@ -1255,7 +1216,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (rate limit ajustado)"
+          git commit -m "feat: mega extracao de filmes (cooldown + sem proxies/playwright)"
           ok=0
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then ok=1; break; fi
