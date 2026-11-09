@@ -54,22 +54,21 @@ jobs:
 
       - name: Instalar Python e Playwright
         run: |
-          pip install playwright beautifulsoup4 requests
+          pip install playwright beautifulsoup4 requests proxmint
           playwright install --with-deps chromium
 
       - name: Extrair Filmes e Retentar Falhas
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
           MODO_EXECUCAO: ${{ inputs.modo || 'baixar_e_consertar' }}
-          INTERVALO_MIN_SEG: '8'
-          DELAY_ENTRE_SEG: '12'
-          DELAY_JITTER_SEG: '3'
+          INTERVALO_MIN_SEG: '15'
+          DELAY_ENTRE_SEG: '20'
+          DELAY_JITTER_SEG: '5'
         run: |
           cat > /tmp/mega_filmes.py << 'PYEOF'
           import requests, sys, os, json, time, re, random, datetime, email.utils
           from pathlib import Path
           from html import escape as _esc
-          from urllib.parse import quote
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {
@@ -78,20 +77,38 @@ jobs:
               "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
           }
 
-          # Proxies gratuitos mortos (allorigins/codetabs = 522, corsproxy = 401 pago)
-          PROXIES_CORS = []
-
-          DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 12)
-          DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 3)
+          DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 20)
+          DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 5)
           RETRY_429_BASE  = float(os.environ.get("RETRY_429_SEG") or 60)
           RETRY_TETO      = float(os.environ.get("RETRY_TETO_SEG") or 300)
           HTTP_TENTATIVAS = int(os.environ.get("HTTP_TENTATIVAS") or 4)
-          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 8)
+          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 15)
+
+          # Proxmint: proxies públicos validados
+          PROXY_CACHE = []
+          PROXY_CACHE_TIME = 0
+          PROXY_CACHE_TTL = 300  # 5 min
+
+          def obter_proxies():
+              global PROXY_CACHE, PROXY_CACHE_TIME
+              if PROXY_CACHE and (time.time() - PROXY_CACHE_TIME) < PROXY_CACHE_TTL:
+                  return PROXY_CACHE
+              try:
+                  from proxmint import proxy_urls
+                  PROXY_CACHE = proxy_urls(protocol="http", limit=20)
+                  PROXY_CACHE_TIME = time.time()
+                  log(f"🔄 Proxmint: {len(PROXY_CACHE)} proxies carregados.")
+              except Exception as e:
+                  log(f"⚠️ Proxmint indisponível: {str(e)[:100]}")
+                  PROXY_CACHE = []
+                  PROXY_CACHE_TIME = time.time()
+              return PROXY_CACHE
 
           METRICAS = {"requisicoes": 0, "ok": 0, "429": 0, "5xx": 0, "retries": 0,
                       "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0,
                       "conflitos": 0, "proxy_fallback": 0, "proxy_hit": 0,
-                      "pausas_evitadas": 0, "http_realizados": 0, "playwright_skip": 0}
+                      "pausas_evitadas": 0, "http_realizados": 0, "playwright_skip": 0,
+                      "proxmint_listas": 0}
           EVENTOS = []
           _estado = {"ultima": 0.0, "intervalo": INTERVALO_MIN}
 
@@ -196,9 +213,42 @@ jobs:
               return None, ultimo
 
 
-          def http_get_via_proxy(url, timeout=45):
-              # Desabilitado — todos os proxies gratuitos estão mortos
-              return None, "proxies desabilitados"
+          def http_get_com_proxy(url, timeout=25):
+              """Tenta direto. Se 429, tenta via Proxmint. Retorna (status, texto)."""
+              # 1) Tentativa direta (1 tentativa, sem backoff longo)
+              status, texto = http_get(url, timeout=timeout, tentativas=1)
+              if status != 429:
+                  return status, texto
+
+              # 2) Fallback via Proxmint
+              proxies = obter_proxies()
+              if not proxies:
+                  log(f"    [PROXY] Sem proxies disponíveis; desistindo.")
+                  return 429, ""
+
+              METRICAS["proxy_fallback"] += 1
+              METRICAS["proxmint_listas"] += 1
+              log(f"    [429] Direto bloqueado. Testando {len(proxies)} proxies do Proxmint...")
+
+              for i, proxy in enumerate(proxies):
+                  try:
+                      _esperar_vez()
+                      METRICAS["requisicoes"] += 1
+                      t0 = time.time()
+                      r = requests.get(url, headers=HEADERS, timeout=timeout,
+                                       proxies={"http": proxy, "https": proxy})
+                      dt = time.time() - t0
+                      if r.status_code == 200 and len(r.text) > 2000:
+                          METRICAS["ok"] += 1
+                          METRICAS["proxy_hit"] += 1
+                          log(f"    [PROXY {i+1}/{len(proxies)}] OK em {dt:.1f}s ({len(r.text)} bytes)")
+                          return 200, r.text
+                      log(f"    [PROXY {i+1}/{len(proxies)}] {r.status_code} em {dt:.1f}s - próxima")
+                  except Exception as e:
+                      log(f"    [PROXY {i+1}/{len(proxies)}] Erro: {str(e)[:60]}")
+
+              log(f"    [PROXY] Todos falharam.")
+              return 429, ""
 
 
           _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site", re.I)
@@ -373,7 +423,6 @@ jobs:
 
 
           async def renderizar(context, url, espera=5.0):
-              # Playwright desligado no Azure (faz burst de requests, toma 429 em massa)
               return ""
 
 
@@ -1024,9 +1073,9 @@ jobs:
                       soup = link = None
 
               if soup is None:
-                  status, texto = await asyncio.to_thread(http_get, url, timeout=25, tentativas=1)
+                  status, texto = await asyncio.to_thread(http_get_com_proxy, url, timeout=25)
                   if status == 429:
-                      log(f"    [429] HTTP direto tomou 429; pulando (proxies desabilitados).")
+                      log(f"    [429] Direto + Proxmint esgotados; pulando para retentativa.")
                       return "rate_limit", None
                   if status is None:
                       log(f"    Falha de rede: {texto}")
@@ -1083,7 +1132,6 @@ jobs:
               construir_indice()
               FEED_POSTS.update(indice_do_feed())
 
-              # COOLDOWN: esvazia janela de 60s do rate limit do Blogger
               log("\n⏳ Feed carregado. Aguardando 60s para esvaziar janela de rate limit...")
               time.sleep(60)
               log("✅ Cooldown concluído. Iniciando processamento de filmes.\n")
@@ -1216,7 +1264,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (cooldown + sem proxies/playwright)"
+          git commit -m "feat: mega extracao de filmes (proxmint fallback)"
           ok=0
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then ok=1; break; fi
