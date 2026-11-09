@@ -84,10 +84,9 @@ jobs:
           HTTP_TENTATIVAS = int(os.environ.get("HTTP_TENTATIVAS") or 4)
           INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 15)
 
-          # Proxmint: proxies públicos validados
           PROXY_CACHE = []
           PROXY_CACHE_TIME = 0
-          PROXY_CACHE_TTL = 300  # 5 min
+          PROXY_CACHE_TTL = 300
 
           def obter_proxies():
               global PROXY_CACHE, PROXY_CACHE_TIME
@@ -108,7 +107,7 @@ jobs:
                       "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0,
                       "conflitos": 0, "proxy_fallback": 0, "proxy_hit": 0,
                       "pausas_evitadas": 0, "http_realizados": 0, "playwright_skip": 0,
-                      "proxmint_listas": 0}
+                      "proxmint_listas": 0, "link_em_a_href": 0, "link_convertido_w2embed": 0}
           EVENTOS = []
           _estado = {"ultima": 0.0, "intervalo": INTERVALO_MIN}
 
@@ -214,22 +213,15 @@ jobs:
 
 
           def http_get_com_proxy(url, timeout=25):
-              """Tenta direto. Se 429, tenta via Proxmint. Retorna (status, texto)."""
-              # 1) Tentativa direta (1 tentativa, sem backoff longo)
               status, texto = http_get(url, timeout=timeout, tentativas=1)
               if status != 429:
                   return status, texto
-
-              # 2) Fallback via Proxmint
               proxies = obter_proxies()
               if not proxies:
-                  log(f"    [PROXY] Sem proxies disponíveis; desistindo.")
                   return 429, ""
-
               METRICAS["proxy_fallback"] += 1
               METRICAS["proxmint_listas"] += 1
               log(f"    [429] Direto bloqueado. Testando {len(proxies)} proxies do Proxmint...")
-
               for i, proxy in enumerate(proxies):
                   try:
                       _esperar_vez()
@@ -246,17 +238,43 @@ jobs:
                       log(f"    [PROXY {i+1}/{len(proxies)}] {r.status_code} em {dt:.1f}s - próxima")
                   except Exception as e:
                       log(f"    [PROXY {i+1}/{len(proxies)}] Erro: {str(e)[:60]}")
-
               log(f"    [PROXY] Todos falharam.")
               return 429, ""
 
 
-          _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site", re.I)
+          _VIDEO_RE_HREF = re.compile(
+              r"tankie\.tube/(?:w|v|videos/embed)/"
+              r"|oneplayer\.site/"
+              r"|\.mp4(?:\?|$)"
+              r"|\.m3u8(?:\?|$)",
+              re.I
+          )
+
+          _VIDEO_RE_HTML = re.compile(
+              r"https?://[^\"'\s<>]*(?:"
+              r"tankie\.tube/(?:videos/embed|w|v)/[^\"'\s<>]+"
+              r"|oneplayer\.site/[^\"'\s<>]+"
+              r"|[^\"'\s<>]+\.(?:mp4|m3u8)(?:\?[^\"'\s<>]*)?"
+              r")",
+              re.I
+          )
+
+          _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube|oneplayer\.site", re.I)
           _EP_LISTA_RE = re.compile(
               r"epis[oó]dio[-_/]\d+|\bepis[oó]dio\s+\d+|lista de epis[oó]dios|\b\d+\s*[ªº°]\s*temporada", re.I)
           _CAT_SERIE_RE = re.compile(r"s[eé]rie|temporada|season|novela|anime|doram|epis[oó]dio", re.I)
           _CAT_FILME_RE = re.compile(r"filme|movie", re.I)
           CONTEUDO_MIN = 150
+
+
+          def normalizar_link_video(link):
+              if not link:
+                  return link
+              m = re.match(r"https?://tankie\.tube/w/([a-zA-Z0-9]+)", link)
+              if m:
+                  METRICAS["link_convertido_w2embed"] += 1
+                  return f"https://tankie.tube/videos/embed/{m.group(1)}"
+              return link
 
 
           def classificar_entrada(entry):
@@ -654,19 +672,31 @@ jobs:
 
           def extrair_link_estatico(html_text, soup=None):
               soup = soup or BeautifulSoup(html_text, "html.parser")
+
+              # 1) JSON-LD contentUrl (mais confiável)
               for ld in ler_ld(soup):
                   v = ld.get("contentUrl")
                   if isinstance(v, str) and v.startswith("http"):
-                      return v
-              m = re.findall(
-                  r"(https?://[^\"'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^\"'\s<>]*)",
-                  html_text)
+                      return normalizar_link_video(v)
+
+              # 2) <a href> com padrão de vídeo (o site põe o link num <a> "Filme")
+              for a in soup.find_all("a", href=True):
+                  href = a["href"].strip()
+                  if _VIDEO_RE_HREF.search(href):
+                      METRICAS["link_em_a_href"] += 1
+                      return normalizar_link_video(href)
+
+              # 3) Fallback: regex no HTML cru
+              m = _VIDEO_RE_HTML.search(html_text)
               if m:
-                  return m[0]
+                  return normalizar_link_video(m.group(0))
+
+              # 4) Último recurso: <video>/<source>
               for tag in soup.find_all(["video", "source"]):
                   src = tag.get("src") or ""
                   if src.startswith("http"):
-                      return src
+                      return normalizar_link_video(src)
+
               return None
 
 
@@ -1099,7 +1129,7 @@ jobs:
                   soup_capa, html_capa = soup, texto
                   if not link:
                       METRICAS["playwright_skip"] += 1
-                      log("    (Sem link no HTML estático; Playwright desligado no Azure — vai para retentativa.)")
+                      log("    (Sem link nem em <a href>; vai para retentativa.)")
 
               titulo, ano = escolher_titulo(soup, url)
               capa = escolher_capa(soup, texto)
@@ -1264,7 +1294,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de filmes (proxmint fallback)"
+          git commit -m "feat: filmes (fix tankie.tube/w/ -> embed + busca em <a href>)"
           ok=0
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then ok=1; break; fi
