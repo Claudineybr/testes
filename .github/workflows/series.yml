@@ -66,6 +66,7 @@ jobs:
           import requests, sys, os, json, time, re, random, datetime, email.utils
           from pathlib import Path
           from html import escape as _esc
+          from urllib.parse import quote
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {
@@ -73,6 +74,12 @@ jobs:
               "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
               "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
           }
+
+          PROXIES_CORS = [
+              "https://api.allorigins.win/raw?url=",
+              "https://corsproxy.io/?url=",
+              "https://api.codetabs.com/v1/proxy?quest=",
+          ]
 
           DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 30)
           DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 8)
@@ -82,8 +89,9 @@ jobs:
           INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 2)
 
           METRICAS = {"requisicoes": 0, "ok": 0, "429": 0, "5xx": 0, "retries": 0,
-                      "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0, "conflitos": 0,
-                      "skip_perfeito": 0, "feed_hit": 0, "http_necessario": 0}
+                      "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0,
+                      "conflitos": 0, "skip_perfeito": 0, "feed_hit": 0,
+                      "http_necessario": 0, "proxy_fallback": 0, "proxy_hit": 0}
           EVENTOS = []
           _estado = {"ultima": 0.0, "intervalo": INTERVALO_MIN}
 
@@ -186,6 +194,26 @@ jobs:
               if ultimo_status == 429:
                   return 429, ""
               return None, ultimo
+
+
+          def http_get_via_proxy(url, timeout=45):
+              """Busca via CORS proxies gratuitos (para contornar 429 em IP de datacenter)."""
+              for i, base in enumerate(PROXIES_CORS):
+                  try:
+                      proxy_url = base + quote(url, safe="")
+                      host = base.split("//")[-1].split("/")[0]
+                      log(f"    [PROXY {i+1}/{len(PROXIES_CORS)}] {host}")
+                      t0 = time.time()
+                      r = requests.get(proxy_url, headers={"User-Agent": HEADERS["User-Agent"]}, timeout=timeout)
+                      dt = time.time() - t0
+                      if r.status_code == 200 and len(r.text) > 2000:
+                          log(f"    [PROXY] OK em {dt:.1f}s ({len(r.text)} bytes)")
+                          return 200, r.text
+                      log(f"    [PROXY] {r.status_code} em {dt:.1f}s ({len(r.text)} bytes)")
+                  except Exception as e:
+                      log(f"    [PROXY] ERRO: {type(e).__name__}: {str(e)[:80]}")
+                  time.sleep(random.uniform(1, 3))
+              return None, "todos os proxies falharam"
 
 
           _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site", re.I)
@@ -1104,7 +1132,7 @@ jobs:
 
 
           async def obter_link_episodio(ctx, url_ep):
-              # CORREÇÃO: feed-first — ZERO requests quando o episódio está no feed
+              # 1) Atalho do feed — ZERO requests
               ent = FEED_POSTS.get(url_ep)
               if ent and len(ent.get("conteudo", "")) >= CONTEUDO_MIN:
                   texto = pagina_do_feed(ent)
@@ -1113,8 +1141,19 @@ jobs:
                       METRICAS["feed_hit"] += 1
                       return link, None
 
+              # 2) HTTP direto — 1 tentativa só para falhar rápido em 429
               METRICAS["http_necessario"] += 1
-              status, texto = await asyncio.to_thread(http_get, url_ep)
+              log(f"      [HTTP-NEED] {url_ep.split('/')[-1]}")
+              status, texto = await asyncio.to_thread(http_get, url_ep, timeout=25, tentativas=1)
+
+              # 2b) Se 429, cai no proxy imediatamente (sem os 4 retries de 7 min)
+              if status == 429:
+                  METRICAS["proxy_fallback"] += 1
+                  log(f"      [PROXY-FB] 429 direto; tentando proxies...")
+                  status, texto = await asyncio.to_thread(http_get_via_proxy, url_ep)
+                  if status == 200:
+                      METRICAS["proxy_hit"] += 1
+
               if status == 429:
                   return None, "rate_limit"
               if status is None or status in (500, 502, 503, 504):
@@ -1125,6 +1164,8 @@ jobs:
                   link = extrair_link_estatico(texto)
                   if link:
                       return link, None
+
+              # 3) Playwright (último recurso — também bloqueado em Azure, mas mantido por segurança)
               html = await renderizar(ctx, url_ep)
               if html and validar_html(html, url_ep):
                   link = extrair_link_estatico(html)
@@ -1145,6 +1186,9 @@ jobs:
               soup = None
               ent = FEED_POSTS.get(url_serie)
               if ent:
+                  if ent.get("tipo") == "filme":
+                      log("    (Feed classificou como filme; pulando sem HTTP)")
+                      return "filme"
                   texto_f = pagina_do_feed(ent)
                   soup_f = BeautifulSoup(texto_f, "html.parser")
                   if eh_serie(soup_f) and extrair_episodios(soup_f, 1, url_serie):
@@ -1152,7 +1196,13 @@ jobs:
                       log("    (Dados do feed: sem requisição à página da série.)")
 
               if soup is None:
-                  status, texto = await asyncio.to_thread(http_get, url_serie)
+                  status, texto = await asyncio.to_thread(http_get, url_serie, timeout=25, tentativas=1)
+                  if status == 429:
+                      METRICAS["proxy_fallback"] += 1
+                      log(f"    [PROXY-FB] 429 direto na série; tentando proxies...")
+                      status, texto = await asyncio.to_thread(http_get_via_proxy, url_serie)
+                      if status == 200:
+                          METRICAS["proxy_hit"] += 1
                   if status == 429:
                       return "rate_limit"
                   if status is None:
@@ -1215,7 +1265,7 @@ jobs:
                   stem = f"{slug}_t{it['temp']}e{it['ep']}"
                   nome_json = nome_episodio(titulo, it["temp"], it["ep"], it["titulo"])
 
-                  # CORREÇÃO: skip HTTP se arquivo já está perfeito
+                  # skip se arquivo já está perfeito
                   existente = _localizar_arquivo_episodio(stem)
                   if existente:
                       d = checar_defeitos(existente)
@@ -1298,7 +1348,7 @@ jobs:
                           seguidos_429 += 1
                           evento("rate_limit", url, seguidos=seguidos_429)
                           if seguidos_429 >= 5:
-                              log("\n🚫 5 séries seguidas com 429 mesmo após os retries: o site está bloqueando. Encerrando a run.")
+                              log("\n🚫 5 séries seguidas com 429 mesmo após os proxies: o site está bloqueando. Encerrando a run.")
                               bloqueado = True
                               break
                           log("    ⏸️ rate-limit: pausa extra.")
@@ -1376,7 +1426,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de series (logs detalhados)"
+          git commit -m "feat: mega extracao de series (logs detalhados + proxy fallback)"
           ok=0
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then ok=1; break; fi
