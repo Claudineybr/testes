@@ -1,0 +1,105 @@
+name: Teste IP e Bloqueio
+
+on:
+  workflow_dispatch:
+
+jobs:
+  teste:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Mostrar IP de saída do runner
+        run: |
+          echo "=== IP público do runner ==="
+          curl -s https://api.ipify.org || echo "(ipify falhou)"
+          echo ""
+          echo "=== Detalhes do IP (ASN, org) ==="
+          curl -s https://ipinfo.io/json || echo "(ipinfo falhou)"
+          echo ""
+
+      - name: Testar acesso ao site
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+          SITE="https://www.vini7xgrave.site"
+
+          testar() {
+            local nome="$1"
+            local url="$2"
+            echo ""
+            echo "════════════════════════════════════════════════════════"
+            echo "TESTE: $nome"
+            echo "URL:   $url"
+            echo "════════════════════════════════════════════════════════"
+            local headers=$(curl -s -A "$UA" -D - -o /tmp/body.html -w "HTTP_CODE=%{http_code}\nSIZE=%{size_download}\nTIME=%{time_total}s\n" --max-time 30 "$url" 2>&1)
+            echo "$headers" | grep -E "HTTP_CODE|SIZE|TIME|^HTTP/|^server:|^cf-ray:|^cf-cache-status:|^retry-after:|^x-|^location:" | head -25
+            echo "--- Primeiros 400 bytes do corpo ---"
+            head -c 400 /tmp/body.html 2>/dev/null | tr -d '\0' || echo "(vazio)"
+            echo ""
+            echo "--- Últimos 200 bytes ---"
+            tail -c 200 /tmp/body.html 2>/dev/null | tr -d '\0' || echo "(vazio)"
+            echo ""
+          }
+
+          testar "Feed Blogger (deve funcionar — Google CDN)" \
+            "$SITE/feeds/posts/default?alt=json&max-results=1"
+
+          testar "Homepage do site" \
+            "$SITE/"
+
+          testar "Página de filme aleatória" \
+            "$SITE/2025/03/inix-shrek-2001.html"
+
+          testar "Página de série aleatória" \
+            "$SITE/2025/04/inix-from-origem.html"
+
+          testar "URL inexistente (404 esperado se não bloqueado)" \
+            "$SITE/2025/01/isto-nao-existe-xyz.html"
+
+      - name: Testar via proxies CORS
+        run: |
+          UA="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+          TARGET="https://www.vini7xgrave.site/2025/03/inix-shrek-2001.html"
+
+          testar_proxy() {
+            local nome="$1"
+            local url="$2"
+            echo ""
+            echo "════════════════════════════════════════════════════════"
+            echo "PROXY: $nome"
+            echo "════════════════════════════════════════════════════════"
+            local resp=$(curl -s -A "$UA" -o /tmp/proxy_body.html \
+              -w "HTTP_CODE=%{http_code}\nSIZE=%{size_download}\nTIME=%{time_total}s\n" \
+              --max-time 45 "$url" 2>&1)
+            echo "$resp"
+            echo "--- Primeiros 200 bytes ---"
+            head -c 200 /tmp/proxy_body.html 2>/dev/null || echo "(vazio)"
+            echo ""
+          }
+
+          testar_proxy "allorigins.win" "https://api.allorigins.win/raw?url=$(python3 -c "import urllib.parse;print(urllib.parse.quote('$TARGET', safe=''))")"
+          testar_proxy "corsproxy.io" "https://corsproxy.io/?url=$(python3 -c "import urllib.parse;print(urllib.parse.quote('$TARGET', safe=''))")"
+          testar_proxy "codetabs" "https://api.codetabs.com/v1/proxy?quest=$(python3 -c "import urllib.parse;print(urllib.parse.quote('$TARGET', safe=''))")"
+
+      - name: Resumo final
+        if: always()
+        run: |
+          echo ""
+          echo "════════════════════════════════════════════════════════"
+          echo "INTERPRETAÇÃO"
+          echo "════════════════════════════════════════════════════════"
+          echo ""
+          echo "FEED: HTTP 200 → normal (é Google CDN)"
+          echo ""
+          echo "HOMEPAGE / FILME / SÉRIE:"
+          echo "  - HTTP 200 com HTML completo  → IP NÃO bloqueado (o problema é outro)"
+          echo "  - HTTP 403 / 429 / 503         → IP BLOQUEADO pelo Cloudflare"
+          echo "  - Corpo com 'Just a moment'/'Attention required'/'error 1015'"
+          echo "                                  → Cloudflare challenge ativo"
+          echo ""
+          echo "PROXIES:"
+          echo "  - HTTP 200 com HTML  → proxy resolve (é a solução)"
+          echo "  - HTTP 403/429       → proxy também bloqueado"
+          echo ""
+          echo "Se FEED=200 e PÁGINAS=403/429 → confirma bloqueio de IP do Azure."
+          echo "Se PÁGINAS=200 → IP do Azure está OK; o 429 vem de VOLUME/RITMO."
+          echo ""
