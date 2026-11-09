@@ -1,140 +1,47 @@
 {
   "contagem": {},
-  "eventos": [
-    {
-      "quando": "2026-11-09T23:25:27+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/02/quadrilogia-thor.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:27:22+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/02/saga-missao-impossivel.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:28:40+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/02/shang-chi-e-lenda-dos-dez-aneis-2021.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:30:56+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/60-segundos-2000.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:32:24+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/a-ilha-fantasma-2020.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:34:38+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/a-sombra-do-mal-2023.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:36:30+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/armadilha-em-alto-mar-2024.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:37:30+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/bem-10-corrida-contra-o-tempo-2007.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:39:21+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/cacada-fantasma-2023.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:41:58+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/deu-louca-na-cinderela-2006.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:42:58+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/django-2012.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-09T23:44:50+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/experimento-maldito-2023.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    }
-  ],
+  "eventos": [],
   "metricas": {
     "ultima_run": {
-      "requisicoes": 87,
-      "ok": 75,
-      "429": 12,
+      "requisicoes": 34,
+      "ok": 34,
+      "429": 0,
       "5xx": 0,
       "retries": 0,
-      "falhas_definitivas": 12,
+      "falhas_definitivas": 0,
       "html_invalido": 0,
       "serie_inconsistente": 0,
       "conflitos": 0,
-      "proxy_fallback": 12,
-      "proxy_hit": 12,
-      "pausas_evitadas": 55,
-      "http_realizados": 44,
-      "playwright_skip": 44,
-      "proxmint_listas": 12,
+      "proxy_fallback": 0,
+      "proxy_hit": 0,
+      "pausas_evitadas": 96,
+      "http_realizados": 3,
+      "playwright_skip": 3,
+      "proxmint_listas": 0,
+      "link_em_a_href": 28,
+      "link_convertido_w2embed": 28,
       "robo": "filmes",
-      "quando": "2026-11-09T23:46:12+00:00",
-      "duracao_min": 33.0
+      "quando": "2026-11-09T23:57:37+00:00",
+      "duracao_min": 9.6
     },
     "acumulado": {
-      "requisicoes": 87,
-      "ok": 75,
-      "429": 12,
+      "requisicoes": 34,
+      "ok": 34,
+      "429": 0,
       "5xx": 0,
       "retries": 0,
-      "falhas_definitivas": 12,
+      "falhas_definitivas": 0,
       "html_invalido": 0,
       "serie_inconsistente": 0,
       "conflitos": 0,
-      "proxy_fallback": 12,
-      "proxy_hit": 12,
-      "pausas_evitadas": 55,
-      "http_realizados": 44,
-      "playwright_skip": 44,
-      "proxmint_listas": 12
+      "proxy_fallback": 0,
+      "proxy_hit": 0,
+      "pausas_evitadas": 96,
+      "http_realizados": 3,
+      "playwright_skip": 3,
+      "proxmint_listas": 0,
+      "link_em_a_href": 28,
+      "link_convertido_w2embed": 28
     }
   }
 }
