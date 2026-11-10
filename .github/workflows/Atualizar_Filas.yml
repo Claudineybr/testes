@@ -51,7 +51,7 @@ jobs:
           ARQ_TMDB_CACHE  = Path("tmdb_cache.json")
 
           APAGAR_FILAS = os.environ.get("APAGAR_FILAS", "false").lower() == "true"
-          CACHE_VERSION = "v6"
+          CACHE_VERSION = "v7"
 
           SERIES_LABELS = {
               "séries", "série", "series", "seriados",
@@ -100,27 +100,46 @@ jobs:
               except Exception:
                   return None
 
-          # ---------- URL helpers ----------
+          # ---------- URL helpers (FIX #1: cortar gênero) ----------
           def extrair_titulo_da_url(url):
+              """
+              inix-deadpool-2-2018-acaocomedia.html -> 'deadpool 2'
+              inix-guerra-do-amanha-2021-acaoficcao.html -> 'guerra do amanha'
+              inix-alvin-e-os-esquilos-2008.html -> 'alvin e os esquilos'
+              """
               m = re.search(r'/([^/]+)\.html', url)
               if not m:
                   return None
               slug = m.group(1)
+
               # Remove prefixos
               for _ in range(10):
-                  novo = re.sub(
-                      r'^(?:inix|arc|entre[_-]?nos|vini7x|marcos)[-_]',
-                      '', slug, flags=re.I,
-                  )
+                  novo = re.sub(r'^(?:inix|arc|entre[_-]?nos|vini7x|marcos)[-_]', '', slug, flags=re.I)
                   if novo == slug:
                       break
                   slug = novo
-              # NOVO: remove sufixo de duplicação Blogger (_21, _20, _27)
+
+              # Remove duplicação _NN (_20, _21, _27)
               slug = re.sub(r'_\d{1,3}$', '', slug)
-              # Remove ano do final
-              slug = re.sub(r'[-_]\d{4}$', '', slug)
-              # Remove _NNNNN longo (versões)
+              # Remove hash longo _NNNNN
               slug = re.sub(r'_\d{5,}$', '', slug)
+
+              # FIX: corta gênero DEPOIS do ano
+              # "deadpool-2-2018-acaocomedia" -> "deadpool-2-2018" (depois remove o -2018)
+              m_ano = re.search(r'[-_]((?:19|20)\d{2})(?:[-_]|$)', slug)
+              if m_ano:
+                  slug = slug[:m_ano.start()]  # corta ANTES do ano (remove ano e gênero)
+
+              # Remove ano do final (se sobrou)
+              slug = re.sub(r'[-_]\d{4}$', '', slug)
+              # Remove gêneros órfãos que sobraram
+              for gen in ("acaocomedia", "acaoficcao", "acaothriller", "terrorsuspense",
+                          "terrormisterio", "infantilfantasia", "infantilacao",
+                          "infantilaventura", "comediaanimacao", "terrorsobrenatural",
+                          "ficcao", "terror", "suspense", "comedia", "acao",
+                          "aventura", "infantil", "animacao", "drama", "romance"):
+                  slug = re.sub(rf'[-_]{gen}$', '', slug, flags=re.I)
+
               if len(slug) < 3:
                   return None
               return slug.replace('-', ' ').replace('_', ' ').strip()
@@ -134,11 +153,6 @@ jobs:
 
           # ---------- TMDB (multi + override por ano) ----------
           def tmdb_classificar(titulo, ano):
-              """
-              search/multi. Se o top tem ano != ano da URL,
-              procura outro resultado de TIPO DIFERENTE com o ano correto.
-              Sem filtro de match (evita virar 'ambos').
-              """
               if not TMDB_KEY or not titulo:
                   return None
 
@@ -168,7 +182,7 @@ jobs:
               top = results[0]
               tipo_top = top.get("media_type")
 
-              # Override: se ano da URL != ano do top, procura outro tipo que bata
+              # Override por ano (se top é TV mas URL tem ano de filme)
               if ano:
                   data_top = top.get("release_date") or top.get("first_air_date") or ""
                   ano_top = data_top.split("-")[0] if data_top else ""
@@ -232,22 +246,30 @@ jobs:
 
           # ---------- Detecção de série no conteúdo ----------
           def detectar_serie_no_conteudo(conteudo):
+              """
+              FIX: 'Temporada N' precisa de 3+ ocorrências (era 2).
+              'Episódio N' e 'TNE' bastam 1.
+              """
               if not conteudo:
                   return False, None
               c_lower = conteudo.lower()
 
+              # Episódio: 1+ já basta
               if re.search(r"\bepis[oó]dios?\s*\d+", c_lower):
                   n = len(re.findall(r"\bepis[oó]dios?\s*\d+", c_lower))
                   return True, f"conteúdo: {n}× Episódio(s) N"
 
+              # TNE: 1+ já basta
               if re.search(r"\bT\d{1,2}\s*E\d{1,3}\b", conteudo):
                   n = len(re.findall(r"\bT\d{1,2}\s*E\d{1,3}\b", conteudo))
                   return True, f"conteúdo: {n}× TNE"
 
-              if re.search(r"\btemporadas?\s*\d+", c_lower):
-                  n = len(re.findall(r"\btemporadas?\s*\d+", c_lower))
-                  return True, f"conteúdo: {n}× Temporada(s) N"
+              # Temporada: FIX — exige 3+
+              n_temp = len(re.findall(r"\btemporadas?\s*\d+", c_lower))
+              if n_temp >= 3:
+                  return True, f"conteúdo: {n_temp}× Temporada(s) N"
 
+              # Links de episódio: 3+
               links = re.findall(r"<a\b[^>]*>([^<]{1,100})</a>", conteudo, re.I)
               n_ep = 0
               for txt in links:
@@ -263,22 +285,22 @@ jobs:
 
           # ---------- Classificação ----------
           def classificar_url(url, labels, conteudo):
-              # Gate 1: label de série
+              # Gate 1: label de série (decisivo)
               if labels & SERIES_LABELS:
                   return {"classe": "serie", "motivos": [f"label: {sorted(labels & SERIES_LABELS)}"]}
 
-              # Gate 2: conteúdo com sinais de série
+              # Gate 2: conteúdo
               eh, motivo = detectar_serie_no_conteudo(conteudo)
               if eh:
                   return {"classe": "serie", "motivos": [motivo]}
 
-              # Gate 3: URL com temporada/season
+              # Gate 3: URL temporada/season
               m = re.search(r"/([^/]+?)\.html", url)
               slug = (m.group(1).lower() if m else "")
               if re.search(r"temporada|season", slug):
                   return {"classe": "serie", "motivos": ["URL: temporada/season"]}
 
-              # Fallback: TMDB com override por ano
+              # Fallback: TMDB
               titulo = extrair_titulo_da_url(url)
               ano = extrair_ano_da_url(url)
               tipo = tmdb_classificar(titulo, ano)
@@ -360,7 +382,6 @@ jobs:
               log(f"   📺 Séries:   {contagem['serie']}")
               log(f"   ❓ Ambíguos: {contagem['ambos']}")
 
-              # Amostras
               for classe in ("filme", "serie", "ambos"):
                   itens = [(u, info) for u, info in resultado.items() if info["classe"] == classe][:5]
                   if itens:
@@ -374,13 +395,15 @@ jobs:
               else:
                   nf, ns = set(filmes_old), set(series_old)
 
+              # FIX: "ambos" vai só pra fila de filmes
+              # (robô de filmes já detecta série e pula; robô de séries não é poluído)
               for url, info in resultado.items():
                   if info["classe"] == "filme":
                       nf.add(url)
                   elif info["classe"] == "serie":
                       ns.add(url)
-                  else:
-                      nf.add(url); ns.add(url)
+                  else:  # ambos
+                      nf.add(url)  # só filme, não série
 
               filme_final = ordenar(filmes_old, nf - set(filmes_old))
               series_final = ordenar(series_old, ns - set(series_old))
@@ -390,6 +413,7 @@ jobs:
 
               log(f"\n✅ Filmes fila: {len(filme_final)} URLs")
               log(f"✅ Séries fila: {len(series_final)} URLs")
+              log(f"   (ambos vão só pra fila de filmes — robô de filmes pula série)")
 
               salvar_cache()
 
@@ -410,7 +434,7 @@ jobs:
             echo "Nada novo nas filas."
             exit 0
           fi
-          git commit -m "chore: atualizar filas (multi + override por ano + limpa _NN)"
+          git commit -m "chore: atualizar filas (fix titulo + temporada 3+ + ambos só filmes)"
 
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
