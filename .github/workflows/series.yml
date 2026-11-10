@@ -54,19 +54,21 @@ jobs:
 
       - name: Instalar Python e Playwright
         run: |
-          pip install playwright beautifulsoup4 requests
+          pip install playwright beautifulsoup4 requests proxmint
           playwright install --with-deps chromium
 
       - name: Extrair Series e Retentar Falhas
         env:
           LOTE_SIZE: ${{ inputs.lote || '100' }}
           MODO_EXECUCAO: ${{ inputs.modo || 'baixar_e_consertar' }}
+          INTERVALO_MIN_SEG: '15'
+          DELAY_ENTRE_SEG: '20'
+          DELAY_JITTER_SEG: '5'
         run: |
           cat > /tmp/mega_series.py << 'PYEOF'
           import requests, sys, os, json, time, re, random, datetime, email.utils
           from pathlib import Path
           from html import escape as _esc
-          from urllib.parse import quote
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {
@@ -75,23 +77,38 @@ jobs:
               "Accept-Language": "pt-BR,pt;q=0.9,en;q=0.8",
           }
 
-          PROXIES_CORS = [
-              "https://api.allorigins.win/raw?url=",
-              "https://corsproxy.io/?url=",
-              "https://api.codetabs.com/v1/proxy?quest=",
-          ]
-
-          DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 30)
-          DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 8)
+          DELAY_ENTRE     = float(os.environ.get("DELAY_ENTRE_SEG") or 20)
+          DELAY_JITTER    = float(os.environ.get("DELAY_JITTER_SEG") or 5)
           RETRY_429_BASE  = float(os.environ.get("RETRY_429_SEG") or 60)
           RETRY_TETO      = float(os.environ.get("RETRY_TETO_SEG") or 300)
           HTTP_TENTATIVAS = int(os.environ.get("HTTP_TENTATIVAS") or 4)
-          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 2)
+          INTERVALO_MIN   = float(os.environ.get("INTERVALO_MIN_SEG") or 15)
+
+          PROXY_CACHE = []
+          PROXY_CACHE_TIME = 0
+          PROXY_CACHE_TTL = 300
+
+          def obter_proxies():
+              global PROXY_CACHE, PROXY_CACHE_TIME
+              if PROXY_CACHE and (time.time() - PROXY_CACHE_TIME) < PROXY_CACHE_TTL:
+                  return PROXY_CACHE
+              try:
+                  from proxmint import proxy_urls
+                  PROXY_CACHE = proxy_urls(protocol="http", limit=20)
+                  PROXY_CACHE_TIME = time.time()
+                  log(f"🔄 Proxmint: {len(PROXY_CACHE)} proxies carregados.")
+              except Exception as e:
+                  log(f"⚠️ Proxmint indisponível: {str(e)[:100]}")
+                  PROXY_CACHE = []
+                  PROXY_CACHE_TIME = time.time()
+              return PROXY_CACHE
 
           METRICAS = {"requisicoes": 0, "ok": 0, "429": 0, "5xx": 0, "retries": 0,
                       "falhas_definitivas": 0, "html_invalido": 0, "serie_inconsistente": 0,
-                      "conflitos": 0, "skip_perfeito": 0, "feed_hit": 0,
-                      "http_necessario": 0, "proxy_fallback": 0, "proxy_hit": 0}
+                      "conflitos": 0, "proxy_fallback": 0, "proxy_hit": 0,
+                      "proxmint_listas": 0, "link_em_a_href": 0, "link_convertido_w2embed": 0,
+                      "skip_perfeito": 0, "feed_hit": 0, "http_necessario": 0,
+                      "playwright_skip": 0, "episodios_tp_encontrados": 0}
           EVENTOS = []
           _estado = {"ultima": 0.0, "intervalo": INTERVALO_MIN}
 
@@ -196,32 +213,76 @@ jobs:
               return None, ultimo
 
 
-          def http_get_via_proxy(url, timeout=45):
-              """Busca via CORS proxies gratuitos (para contornar 429 em IP de datacenter)."""
-              for i, base in enumerate(PROXIES_CORS):
+          def http_get_com_proxy(url, timeout=25):
+              status, texto = http_get(url, timeout=timeout, tentativas=1)
+              if status != 429:
+                  return status, texto
+              proxies = obter_proxies()
+              if not proxies:
+                  return 429, ""
+              METRICAS["proxy_fallback"] += 1
+              METRICAS["proxmint_listas"] += 1
+              log(f"    [429] Direto bloqueado. Testando {len(proxies)} proxies do Proxmint...")
+              for i, proxy in enumerate(proxies):
                   try:
-                      proxy_url = base + quote(url, safe="")
-                      host = base.split("//")[-1].split("/")[0]
-                      log(f"    [PROXY {i+1}/{len(PROXIES_CORS)}] {host}")
+                      _esperar_vez()
+                      METRICAS["requisicoes"] += 1
                       t0 = time.time()
-                      r = requests.get(proxy_url, headers={"User-Agent": HEADERS["User-Agent"]}, timeout=timeout)
+                      r = requests.get(url, headers=HEADERS, timeout=timeout,
+                                       proxies={"http": proxy, "https": proxy})
                       dt = time.time() - t0
                       if r.status_code == 200 and len(r.text) > 2000:
-                          log(f"    [PROXY] OK em {dt:.1f}s ({len(r.text)} bytes)")
+                          METRICAS["ok"] += 1
+                          METRICAS["proxy_hit"] += 1
+                          log(f"    [PROXY {i+1}/{len(proxies)}] OK em {dt:.1f}s ({len(r.text)} bytes)")
                           return 200, r.text
-                      log(f"    [PROXY] {r.status_code} em {dt:.1f}s ({len(r.text)} bytes)")
+                      log(f"    [PROXY {i+1}/{len(proxies)}] {r.status_code} em {dt:.1f}s - próxima")
                   except Exception as e:
-                      log(f"    [PROXY] ERRO: {type(e).__name__}: {str(e)[:80]}")
-                  time.sleep(random.uniform(1, 3))
-              return None, "todos os proxies falharam"
+                      log(f"    [PROXY {i+1}/{len(proxies)}] Erro: {str(e)[:60]}")
+              log(f"    [PROXY] Todos falharam.")
+              return 429, ""
 
 
-          _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site", re.I)
+          _VIDEO_RE_HREF = re.compile(
+              r"tankie\.tube/(?:w|v|videos/embed)/"
+              r"|oneplayer\.site/"
+              r"|\.mp4(?:\?|$)"
+              r"|\.m3u8(?:\?|$)",
+              re.I
+          )
+
+          _VIDEO_RE_HTML = re.compile(
+              r"https?://[^\"'\s<>]*(?:"
+              r"tankie\.tube/(?:videos/embed|w|v)/[^\"'\s<>]+"
+              r"|oneplayer\.site/[^\"'\s<>]+"
+              r"|[^\"'\s<>]+\.(?:mp4|m3u8)(?:\?[^\"'\s<>]*)?"
+              r")",
+              re.I
+          )
+
+          _VIDEO_RE = re.compile(r"\.mp4|\.m3u8|tankie\.tube|oneplayer\.site", re.I)
           _EP_LISTA_RE = re.compile(
               r"epis[oó]dio[-_/]\d+|\bepis[oó]dio\s+\d+|lista de epis[oó]dios|\b\d+\s*[ªº°]\s*temporada", re.I)
           _CAT_SERIE_RE = re.compile(r"s[eé]rie|temporada|season|novela|anime|doram|epis[oó]dio", re.I)
           _CAT_FILME_RE = re.compile(r"filme|movie", re.I)
           CONTEUDO_MIN = 150
+
+          # NOVO: padrões para detectar episódios em href/texto
+          _HREF_TE   = re.compile(r"[tT][pP]?(\d{1,2})[eE](\d{1,3})", re.I)  # tp1e01, t1e1, T01E001
+          _HREF_EP   = re.compile(r"epis[oó]dio[-_/](\d+)", re.I)
+          _TEXTO_EP  = re.compile(r"epis[oó]dio\s*(\d+)", re.I)
+          _TEXTO_NUM = re.compile(r"^\s*(\d{1,3})\s*[\.\-–—:]\s+", re.I)  # "1. " / "1 - " / "1: "
+          _EP_HINT   = re.compile(r"epis[oó]dio|cap[ií]tulo", re.I)
+
+
+          def normalizar_link_video(link):
+              if not link:
+                  return link
+              m = re.match(r"https?://tankie\.tube/w/([a-zA-Z0-9]+)", link)
+              if m:
+                  METRICAS["link_convertido_w2embed"] += 1
+                  return f"https://tankie.tube/videos/embed/{m.group(1)}"
+              return link
 
 
           def classificar_entrada(entry):
@@ -347,6 +408,7 @@ jobs:
           def escrever_atomico(destino, texto):
               destino = Path(destino)
               tmp = destino.with_name(destino.name + ".tmp")
+              tmp.write_text(tmp_text:=texto, encoding="utf-8") if False else None
               tmp.write_text(texto, encoding="utf-8")
               tmp.replace(destino)
 
@@ -388,24 +450,7 @@ jobs:
 
 
           async def renderizar(context, url, espera=5.0):
-              page = await context.new_page()
-              html = ""
-              try:
-                  await page.goto(url, wait_until="domcontentloaded", timeout=25000)
-                  await asyncio.sleep(espera)
-                  html = await page.content()
-              except Exception as e:
-                  log(f"    (Falha ao renderizar: {str(e)[:120]})")
-                  try:
-                      html = await page.content()
-                  except Exception:
-                      html = ""
-              finally:
-                  try:
-                      await page.close()
-                  except Exception:
-                      pass
-              return html
+              return ""
 
 
           def carregar_json(arq, padrao):
@@ -639,16 +684,19 @@ jobs:
               for ld in ler_ld(soup):
                   v = ld.get("contentUrl")
                   if isinstance(v, str) and v.startswith("http"):
-                      return v
-              m = re.findall(
-                  r"(https?://[^\"'\s<>]+(?:\.mp4|\.m3u8|tankie\.tube/videos/embed|oneplayer\.site)[^\"'\s<>]*)",
-                  html_text)
+                      return normalizar_link_video(v)
+              for a in soup.find_all("a", href=True):
+                  href = a["href"].strip()
+                  if _VIDEO_RE_HREF.search(href):
+                      METRICAS["link_em_a_href"] += 1
+                      return normalizar_link_video(href)
+              m = _VIDEO_RE_HTML.search(html_text)
               if m:
-                  return m[0]
+                  return normalizar_link_video(m.group(0))
               for tag in soup.find_all(["video", "source"]):
                   src = tag.get("src") or ""
                   if src.startswith("http"):
-                      return src
+                      return normalizar_link_video(src)
               return None
 
 
@@ -1020,14 +1068,21 @@ jobs:
                   if any(t in ("TVSeries", "TVSeason", "TVEpisode") for t in tipos):
                       return True
               for a in soup.find_all("a", href=True):
-                  if re.search(r"epis[oó]dio[-_/]\d+", a["href"], re.I):
+                  href = a.get("href", "")
+                  texto = a.get_text(" ", strip=True)
+                  if re.search(r"epis[oó]dio[-_/]\d+", href, re.I):
                       return True
-                  if re.search(r"\bepis[oó]dio\s+\d+", a.get_text(strip=True), re.I):
+                  if re.search(r"\bepis[oó]dio\s+\d+", texto, re.I):
+                      return True
+                  # NOVO: aceita padrão tp1e01, t1e1, T01E001 em href
+                  if _HREF_TE.search(href):
                       return True
               texto = soup.get_text(" ", strip=True).lower()
               if re.search(r"lista de epis[oó]dios", texto):
                   return True
               if re.search(r"\b\d+\s*[ªº°]\s*temporada", texto):
+                  return True
+              if re.search(r"temporada\s*\d+", texto):
                   return True
               return False
 
@@ -1060,8 +1115,14 @@ jobs:
 
 
           def extrair_episodios(soup, temp_inicial=1, url=""):
+              """Extrai episódios da página. Aceita:
+              - links com 'Episódio N' no texto
+              - links com 'N. Capítulo/Título' no texto
+              - hrefs com tp1e01, t1e1, episodio-N
+              """
               temporada, eps, vistos = temp_inicial, [], set()
               ultimo_ep = 0
+
               for tag in soup.find_all(True):
                   if tag.name in ("script", "style", "head", "title", "meta", "link"):
                       continue
@@ -1072,28 +1133,62 @@ jobs:
                       if n is not None and n != temporada:
                           temporada, ultimo_ep = n, 0
                       continue
+
                   texto = tag.get_text(" ", strip=True)
-                  if not re.search(r"epis[oó]dio", texto, re.I):
-                      continue
-                  href = tag.get("href")
+                  href = tag.get("href") or ""
                   if not href or href.startswith(("#", "javascript:")):
                       continue
-                  href = urljoin(BASE_URL + "/", href)
-                  if href in vistos:
+
+                  href_abs = urljoin(BASE_URL + "/", href)
+                  if href_abs in vistos:
                       continue
-                  vistos.add(href)
-                  m_ep = re.search(r"Epis[oó]dio\s*(\d+)", texto, re.I)
-                  num = int(m_ep.group(1)) if m_ep else sum(1 for e in eps if e["temp"] == temporada) + 1
-                  m_t = re.search(r"\bT\s*(\d{1,2})\s*[Ex ]", texto) or re.search(r"\b(\d{1,2})\s*x\s*\d{1,3}\b", texto)
-                  if m_t and int(m_t.group(1)) != temporada:
-                      temporada, ultimo_ep = int(m_t.group(1)), 0
-                  elif num == 1 and ultimo_ep > 1 and any(e["temp"] == temporada and int(e["ep"]) == 1 for e in eps):
+
+                  # Detecta se é link de episódio (4 caminhos)
+                  m_href_te   = _HREF_TE.search(href)
+                  m_href_ep   = _HREF_EP.search(href)
+                  m_texto_ep  = _TEXTO_EP.search(texto)
+                  m_texto_num = _TEXTO_NUM.match(texto)
+                  tem_hint    = _EP_HINT.search(texto)
+
+                  if not (m_href_te or m_href_ep or m_texto_ep or m_texto_num or tem_hint):
+                      continue
+
+                  vistos.add(href_abs)
+
+                  # Temporada e número do episódio
+                  temp_ep, num = None, None
+                  if m_href_te:
+                      temp_ep = int(m_href_te.group(1))
+                      num = int(m_href_te.group(2))
+                      METRICAS["episodios_tp_encontrados"] += 1
+                  elif m_href_ep:
+                      num = int(m_href_ep.group(1))
+                  elif m_texto_ep:
+                      num = int(m_texto_ep.group(1))
+                  elif m_texto_num:
+                      num = int(m_texto_num.group(1))
+
+                  if temp_ep and temp_ep != temporada:
+                      temporada, ultimo_ep = temp_ep, 0
+
+                  if num is None:
+                      num = sum(1 for e in eps if e["temp"] == temporada) + 1
+
+                  # Se num voltou a 1 sem cabeçalho novo, assume temporada+1
+                  if num == 1 and ultimo_ep > 1 and any(e["temp"] == temporada and int(e["ep"]) == 1 for e in eps):
                       temporada, ultimo_ep = temporada + 1, 0
-                      evento("temporada_inferida", url, nova_temporada=temporada, motivo="episódio voltou a 1 sem cabeçalho")
+                      evento("temporada_inferida", url, nova_temporada=temporada, motivo="episódio voltou a 1")
                       log(f"    (Episódio voltou a 1 sem cabeçalho: assumindo T{temporada}.)")
+
                   ultimo_ep = num
-                  titulo_ep = re.sub(r"(?:\bT\s*\d+\s*)?Epis[oó]dio\s*\d+\s*[-–:]?\s*", "", texto, count=1, flags=re.I).strip()
-                  eps.append({"temp": temporada, "ep": str(num), "titulo": titulo_ep, "url": href})
+
+                  # Título do episódio: remove prefixo numérico e "Episódio N -"
+                  titulo_ep = _TEXTO_NUM.sub("", texto)
+                  titulo_ep = re.sub(r"^Epis[oó]dio\s*\d+\s*[-–:]\s*", "", titulo_ep, flags=re.I)
+                  titulo_ep = titulo_ep.strip()
+
+                  eps.append({"temp": temporada, "ep": str(num), "titulo": titulo_ep, "url": href_abs})
+
               return eps
 
 
@@ -1132,7 +1227,6 @@ jobs:
 
 
           async def obter_link_episodio(ctx, url_ep):
-              # 1) Atalho do feed — ZERO requests
               ent = FEED_POSTS.get(url_ep)
               if ent and len(ent.get("conteudo", "")) >= CONTEUDO_MIN:
                   texto = pagina_do_feed(ent)
@@ -1141,18 +1235,8 @@ jobs:
                       METRICAS["feed_hit"] += 1
                       return link, None
 
-              # 2) HTTP direto — 1 tentativa só para falhar rápido em 429
               METRICAS["http_necessario"] += 1
-              log(f"      [HTTP-NEED] {url_ep.split('/')[-1]}")
-              status, texto = await asyncio.to_thread(http_get, url_ep, timeout=25, tentativas=1)
-
-              # 2b) Se 429, cai no proxy imediatamente (sem os 4 retries de 7 min)
-              if status == 429:
-                  METRICAS["proxy_fallback"] += 1
-                  log(f"      [PROXY-FB] 429 direto; tentando proxies...")
-                  status, texto = await asyncio.to_thread(http_get_via_proxy, url_ep)
-                  if status == 200:
-                      METRICAS["proxy_hit"] += 1
+              status, texto = await asyncio.to_thread(http_get_com_proxy, url_ep, timeout=25)
 
               if status == 429:
                   return None, "rate_limit"
@@ -1165,12 +1249,7 @@ jobs:
                   if link:
                       return link, None
 
-              # 3) Playwright (último recurso — também bloqueado em Azure, mas mantido por segurança)
-              html = await renderizar(ctx, url_ep)
-              if html and validar_html(html, url_ep):
-                  link = extrair_link_estatico(html)
-                  if link:
-                      return link, None
+              METRICAS["playwright_skip"] += 1
               return None, "sem_link"
 
 
@@ -1196,13 +1275,7 @@ jobs:
                       log("    (Dados do feed: sem requisição à página da série.)")
 
               if soup is None:
-                  status, texto = await asyncio.to_thread(http_get, url_serie, timeout=25, tentativas=1)
-                  if status == 429:
-                      METRICAS["proxy_fallback"] += 1
-                      log(f"    [PROXY-FB] 429 direto na série; tentando proxies...")
-                      status, texto = await asyncio.to_thread(http_get_via_proxy, url_serie)
-                      if status == 200:
-                          METRICAS["proxy_hit"] += 1
+                  status, texto = await asyncio.to_thread(http_get_com_proxy, url_serie, timeout=25)
                   if status == 429:
                       return "rate_limit"
                   if status is None:
@@ -1219,18 +1292,8 @@ jobs:
                       return "erro_rede"
                   soup = BeautifulSoup(texto, "html.parser")
                   if not eh_serie(soup):
-                      sem_pistas = not re.search(r"epis[oó]dio|temporada", texto, re.I)
-                      if extrair_link_estatico(texto, soup) and sem_pistas:
-                          log("    (É FILME. Pulando...)")
-                          return "filme"
-                      html_r = await renderizar(ctx, url_serie)
-                      if not html_r or not validar_html(html_r, url_serie):
-                          return "erro_rede"
-                      soup_r = BeautifulSoup(html_r, "html.parser")
-                      if not eh_serie(soup_r):
-                          log("    (É FILME. Pulando...)")
-                          return "filme"
-                      soup, texto = soup_r, html_r
+                      log("    (É FILME. Pulando...)")
+                      return "filme"
 
               titulo, _ = escolher_titulo(soup, url_serie, serie=True)
               brutos = candidatos_titulo(soup)
@@ -1265,7 +1328,6 @@ jobs:
                   stem = f"{slug}_t{it['temp']}e{it['ep']}"
                   nome_json = nome_episodio(titulo, it["temp"], it["ep"], it["titulo"])
 
-                  # skip se arquivo já está perfeito
                   existente = _localizar_arquivo_episodio(stem)
                   if existente:
                       d = checar_defeitos(existente)
@@ -1279,8 +1341,8 @@ jobs:
                       if motivo == "rate_limit":
                           evento("rate_limit", it["url"], serie=url_serie)
                           return "rate_limit"
-                      if motivo in ("rede", "html_invalido"):
-                          log(f"      T{it['temp']}E{it['ep']}: página do episódio inválida ({motivo}); retentativa depois.")
+                      if motivo in ("rede", "html_invalido", "sem_link"):
+                          log(f"      T{it['temp']}E{it['ep']}: {motivo}; retentativa depois.")
                           link = None
                       res = upsert(stem, nome_json, link, capa, MODO, ind="      ")
                   except Exception as e:
@@ -1304,6 +1366,11 @@ jobs:
           async def main():
               construir_indice()
               FEED_POSTS.update(indice_do_feed())
+
+              log("\n⏳ Feed carregado. Aguardando 60s para esvaziar janela de rate limit...")
+              time.sleep(60)
+              log("✅ Cooldown concluído. Iniciando processamento de séries.\n")
+
               if not ARQ_FILA.exists():
                   log("Criando fila de séries...")
                   urls, _ = buscar_urls_feed()
@@ -1426,7 +1493,7 @@ jobs:
           git add -A
           git reset .github/ 2>/dev/null || true
           if git diff --cached --quiet; then echo "Nada novo."; exit 0; fi
-          git commit -m "feat: mega extracao de series (logs detalhados + proxy fallback)"
+          git commit -m "feat: series (aceita tp1e01 + Capitulo N + capitulos)"
           ok=0
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then ok=1; break; fi
