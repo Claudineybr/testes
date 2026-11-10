@@ -1,7 +1,5 @@
 {
-  "contagem": {
-    "https://www.vini7xgrave.site/2025/09/inix-academia-de-viloes-2025.html": 2
-  },
+  "contagem": {},
   "eventos": [
     {
       "quando": "2026-11-10T08:37:53+00:00",
@@ -134,36 +132,48 @@
       "status": 429,
       "detalhe": "HTTP 429",
       "tentativas": 1
+    },
+    {
+      "quando": "2026-11-10T11:35:14+00:00",
+      "tipo": "excecao",
+      "url": "https://www.vini7xgrave.site/2025/09/inix-academia-de-viloes-2025.html",
+      "detalhe": "link inválido para academia_de_viloes_2025.html: 'com/m/Academia.de.Vil%C3%B5es.2025.1080p.WEB-DL.DUAL.5.1.mp4'"
+    },
+    {
+      "quando": "2026-11-10T11:36:01+00:00",
+      "tipo": "url_descartada",
+      "url": "https://www.vini7xgrave.site/2025/09/inix-academia-de-viloes-2025.html",
+      "motivo": "3 falhas seguidas"
     }
   ],
   "metricas": {
     "ultima_run": {
-      "requisicoes": 44,
-      "ok": 43,
-      "429": 1,
+      "requisicoes": 36,
+      "ok": 36,
+      "429": 0,
       "5xx": 0,
       "retries": 0,
-      "falhas_definitivas": 1,
+      "falhas_definitivas": 0,
       "html_invalido": 0,
       "serie_inconsistente": 0,
       "conflitos": 0,
-      "proxy_fallback": 1,
-      "proxy_hit": 1,
-      "pausas_evitadas": 96,
-      "http_realizados": 3,
-      "playwright_skip": 11,
-      "proxmint_listas": 1,
-      "link_em_a_href": 4,
+      "proxy_fallback": 0,
+      "proxy_hit": 0,
+      "pausas_evitadas": 97,
+      "http_realizados": 2,
+      "playwright_skip": 5,
+      "proxmint_listas": 0,
+      "link_em_a_href": 3,
       "link_convertido_w2embed": 0,
       "multifilme_paginas": 0,
       "multifilme_arquivos": 0,
       "robo": "filmes",
-      "quando": "2026-11-10T11:21:57+00:00",
-      "duracao_min": 13.6
+      "quando": "2026-11-10T11:37:12+00:00",
+      "duracao_min": 10.5
     },
     "acumulado": {
-      "requisicoes": 635,
-      "ok": 620,
+      "requisicoes": 671,
+      "ok": 656,
       "429": 15,
       "5xx": 0,
       "retries": 0,
@@ -173,11 +183,11 @@
       "conflitos": 0,
       "proxy_fallback": 15,
       "proxy_hit": 15,
-      "pausas_evitadas": 1554,
-      "http_realizados": 30,
-      "playwright_skip": 115,
+      "pausas_evitadas": 1651,
+      "http_realizados": 32,
+      "playwright_skip": 120,
       "proxmint_listas": 15,
-      "link_em_a_href": 36,
+      "link_em_a_href": 39,
       "link_convertido_w2embed": 22,
       "multifilme_paginas": 4,
       "multifilme_arquivos": 8
