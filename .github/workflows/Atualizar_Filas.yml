@@ -39,7 +39,6 @@ jobs:
           cat > /tmp/atualizar_filas.py << 'PYEOF'
           import requests, sys, os, re, json, time
           from pathlib import Path
-          from difflib import SequenceMatcher
           import unicodedata
 
           BASE_URL = "https://www.vini7xgrave.site"
@@ -53,7 +52,7 @@ jobs:
           ARQ_TMDB_CACHE  = Path("tmdb_cache.json")
 
           APAGAR_FILAS = os.environ.get("APAGAR_FILAS", "false").lower() == "true"
-          CACHE_VERSION = "v4"
+          CACHE_VERSION = "v5"
 
           SERIES_LABELS = {
               "séries", "série", "series", "seriados",
@@ -61,22 +60,7 @@ jobs:
               "temporada", "season",
           }
 
-          _ANO_RE = r"(?<!\d)(?:19|20)\d{2}(?!\d)"
-
           def log(*a): print(*a, flush=True); sys.stdout.flush()
-
-          def normalizar(s):
-              s = unicodedata.normalize("NFKD", str(s or "").lower())
-              s = "".join(c for c in s if not unicodedata.combining(c))
-              s = re.sub(r"[^a-z0-9 ]", " ", s)
-              s = re.sub(r"\s+", " ", s).strip()
-              return s
-
-          def similaridade(a, b):
-              a, b = normalizar(a), normalizar(b)
-              if not a or not b:
-                  return 0.0
-              return SequenceMatcher(None, a, b).ratio() * 100
 
           # ---------- Cache ----------
           cache = {}
@@ -135,24 +119,18 @@ jobs:
                   return None
               return slug.replace('-', ' ').replace('_', ' ').strip()
 
-          def extrair_ano_da_url(url):
-              m = re.search(r"/([^/?#]+?)(?:\.html)?(?:[?#].*)?$", url or "")
-              if not m:
-                  return None
-              anos = re.findall(_ANO_RE, m.group(1))
-              return anos[-1] if anos else None
-
-          # ---------- TMDB (multi + override por ano) ----------
-          def tmdb_classificar(titulo, ano):
+          # ---------- TMDB (EXATO original) ----------
+          def tmdb_classificar(titulo):
               """
-              Retorna 'movie', 'tv', 'ambos' ou None.
+              Retorna media_type do primeiro resultado de search/multi.
+              Sem filtro de match, sem override por ano.
               """
               if not TMDB_KEY or not titulo:
                   return None
 
-              chave = f"{CACHE_VERSION}|{titulo.lower().strip()}|{ano or ''}"
+              chave = f"{CACHE_VERSION}|{titulo.lower().strip()}"
               if chave in cache:
-                  return cache[chave].get("tipo")
+                  return cache[chave]
 
               r = _tmdb_get("/search/multi", {
                   "api_key": TMDB_KEY,
@@ -162,7 +140,7 @@ jobs:
               })
 
               if r is None or r.status_code != 200:
-                  cache[chave] = {"tipo": None}
+                  cache[chave] = None
                   return None
 
               results = [
@@ -170,37 +148,14 @@ jobs:
                   if x.get("media_type") in ("movie", "tv")
               ]
               if not results:
-                  cache[chave] = {"tipo": None}
+                  cache[chave] = None
                   return None
 
-              top = results[0]
-              tipo_top = top.get("media_type")
-              data_top = top.get("release_date") or top.get("first_air_date") or ""
-              ano_top = data_top.split("-")[0] if data_top else ""
-              titulo_top = top.get("title") or top.get("name") or ""
-              match_top = similaridade(titulo, titulo_top)
+              tipo = results[0]["media_type"]
+              cache[chave] = tipo
+              return tipo
 
-              # Top com match muito baixo e ano não bate → ambíguo
-              if match_top < 40 and (not ano or ano != ano_top):
-                  cache[chave] = {"tipo": None}
-                  return None
-
-              # Override: ano URL bate com tipo DIFERENTE do top
-              if ano and ano != ano_top:
-                  for res in results[1:10]:
-                      tipo_r = res.get("media_type")
-                      data_r = res.get("release_date") or res.get("first_air_date") or ""
-                      ano_r = data_r.split("-")[0] if data_r else ""
-                      titulo_r = res.get("title") or res.get("name") or ""
-                      if (ano_r == ano and tipo_r != tipo_top
-                          and similaridade(titulo, titulo_r) >= 60):
-                          cache[chave] = {"tipo": tipo_r}
-                          return tipo_r
-
-              cache[chave] = {"tipo": tipo_top}
-              return tipo_top
-
-          # ---------- Feed (com conteúdo) ----------
+          # ---------- Feed ----------
           def get_all_entries():
               entries = {}
               start = 1
@@ -246,71 +201,62 @@ jobs:
                       break
               return entries
 
-          # ---------- Detecção de série no conteúdo (gates) ----------
+          # ---------- Detecção de série no conteúdo ----------
           def detectar_serie_no_conteudo(conteudo):
-              """
-              Retorna (bool, motivo). True se o conteúdo tem sinais
-              INEQUÍVOCOS de série.
-              """
               if not conteudo:
                   return False, None
-
               c_lower = conteudo.lower()
 
-              # Gate 1: "Episódio N" no texto (com dígito obrigatório)
-              if re.search(r"\bepis[oó]dio\s*\d+", c_lower):
-                  n = len(re.findall(r"\bepis[oó]dio\s*\d+", c_lower))
-                  return True, f"conteúdo: {n}× Episódio N"
+              if re.search(r"\bepis[oó]dios?\s*\d+", c_lower):
+                  n = len(re.findall(r"\bepis[oó]dios?\s*\d+", c_lower))
+                  return True, f"conteúdo: {n}× Episódio(s) N"
 
-              # Gate 2: "T1E1" / "T01E01" no conteúdo
               if re.search(r"\bT\d{1,2}\s*E\d{1,3}\b", conteudo):
                   n = len(re.findall(r"\bT\d{1,2}\s*E\d{1,3}\b", conteudo))
                   return True, f"conteúdo: {n}× TNE"
 
-              # Gate 3: 3+ links <a> com texto "Episódio", "Capítulo" ou "N. ..."
-              links_ep = re.findall(
-                  r"<a\b[^>]*>([^<]{1,80})</a>",
-                  conteudo,
-                  re.I,
-              )
+              if re.search(r"\btemporadas?\s*\d+", c_lower):
+                  n = len(re.findall(r"\btemporadas?\s*\d+", c_lower))
+                  return True, f"conteúdo: {n}× Temporada(s) N"
+
+              links = re.findall(r"<a\b[^>]*>([^<]{1,100})</a>", conteudo, re.I)
               n_ep = 0
-              for txt in links_ep:
-                  if re.search(r"(?:epis[oó]dio|cap[ií]tulo)\s*\d+", txt, re.I):
+              for txt in links:
+                  t = txt.strip()
+                  if re.match(r"^\s*(?:\d{1,3}\s*[\.\-–—:]\s*)?(?:epis[oó]dio|cap[ií]tulo)\s*\d+", t, re.I):
                       n_ep += 1
-                  elif re.match(r"^\s*\d{1,3}\s*[\.\-–—:]\s+\S", txt):
+                  elif re.match(r"^\s*\d{1,3}\s*[\.\-–—:]\s+\S", t):
                       n_ep += 1
               if n_ep >= 3:
                   return True, f"conteúdo: {n_ep} links episódio/capítulo"
 
               return False, None
 
-          # ---------- Classificação (gates + TMDB) ----------
+          # ---------- Classificação ----------
           def classificar_url(url, labels, conteudo):
-              # === Gate 1: label de série ===
+              # Gate 1: label de série
               if labels & SERIES_LABELS:
                   return {"classe": "serie", "motivos": [f"label: {sorted(labels & SERIES_LABELS)}"]}
 
-              # === Gate 2: conteúdo tem episódios ===
-              eh_serie, motivo_c = detectar_serie_no_conteudo(conteudo)
-              if eh_serie:
-                  return {"classe": "serie", "motivos": [motivo_c]}
+              # Gate 2: conteúdo com sinais de série
+              eh, motivo = detectar_serie_no_conteudo(conteudo)
+              if eh:
+                  return {"classe": "serie", "motivos": [motivo]}
 
-              # === Gate 3: URL tem "temporada"/"season" ===
+              # Gate 3: URL com temporada/season
               m = re.search(r"/([^/]+?)\.html", url)
               slug = (m.group(1).lower() if m else "")
               if re.search(r"temporada|season", slug):
                   return {"classe": "serie", "motivos": ["URL: temporada/season"]}
 
-              # === Fallback: TMDB ===
+              # Fallback: TMDB (EXATO original)
               titulo = extrair_titulo_da_url(url)
-              ano = extrair_ano_da_url(url)
-              tipo = tmdb_classificar(titulo, ano)
+              tipo = tmdb_classificar(titulo)
 
               if tipo == "movie":
                   return {"classe": "filme", "motivos": ["TMDB: movie"]}
               if tipo == "tv":
                   return {"classe": "serie", "motivos": ["TMDB: tv"]}
-
               return {"classe": "ambos", "motivos": ["sem sinal forte"]}
 
           def carregar_lista(arq):
@@ -384,7 +330,7 @@ jobs:
               log(f"   📺 Séries:   {contagem['serie']}")
               log(f"   ❓ Ambíguos: {contagem['ambos']}")
 
-              # Amostras por motivo (5 de cada)
+              # Amostras (5 de cada) com motivos
               for classe in ("filme", "serie", "ambos"):
                   itens = [(u, info) for u, info in resultado.items() if info["classe"] == classe][:5]
                   if itens:
@@ -434,7 +380,7 @@ jobs:
             echo "Nada novo nas filas."
             exit 0
           fi
-          git commit -m "chore: atualizar filas (gates de série + TMDB override)"
+          git commit -m "chore: atualizar filas (gates + TMDB original)"
 
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
