@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       apagar_filas:
-        description: '⚠️ APAGAR e reconstruir filas do zero (classifica TODAS as URLs com labels + TMDB)'
+        description: '⚠️ APAGAR e reconstruir filas do zero'
         required: false
         default: false
         type: boolean
@@ -21,6 +21,7 @@ concurrency:
 jobs:
   atualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 55
     steps:
       - name: Baixar repositório
         uses: actions/checkout@v5
@@ -38,11 +39,14 @@ jobs:
           cat > /tmp/atualizar_filas.py << 'PYEOF'
           import requests, sys, os, re, json, time
           from pathlib import Path
+          from difflib import SequenceMatcher
+          import unicodedata
 
           BASE_URL = "https://www.vini7xgrave.site"
           HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
           TMDB_BASE = "https://api.themoviedb.org/3"
           TMDB_KEY = os.environ.get("TMDB_API_KEY", "").strip()
+          TMDB_RATE = 4.0
 
           ARQ_FILA_FILMES = Path("filmes_fila.txt")
           ARQ_FILA_SERIES = Path("series_fila.txt")
@@ -56,79 +60,148 @@ jobs:
               "temporada", "season",
           }
 
+          _ANO_RE = r"(?<!\d)(?:19|20)\d{2}(?!\d)"
+
           def log(*a): print(*a, flush=True); sys.stdout.flush()
 
-          # ---------- TMDB cache ----------
+          def normalizar(s):
+              s = unicodedata.normalize("NFKD", str(s or "").lower())
+              s = "".join(c for c in s if not unicodedata.combining(c))
+              s = re.sub(r"[^a-z0-9 ]", " ", s)
+              s = re.sub(r"\s+", " ", s).strip()
+              return s
+
+          def similaridade(a, b):
+              a, b = normalizar(a), normalizar(b)
+              if not a or not b:
+                  return 0.0
+              return SequenceMatcher(None, a, b).ratio() * 100
+
+          # ---------- Cache ----------
           cache = {}
           if ARQ_TMDB_CACHE.exists():
               try:
                   cache = json.loads(ARQ_TMDB_CACHE.read_text(encoding="utf-8"))
-              except: pass
+              except Exception:
+                  pass
 
           def salvar_cache():
               try:
                   ARQ_TMDB_CACHE.write_text(
                       json.dumps(cache, ensure_ascii=False, indent=2),
-                      encoding="utf-8"
+                      encoding="utf-8",
                   )
-              except: pass
+              except Exception:
+                  pass
 
+          # ---------- Rate limit ----------
+          _ultima = [0.0]
+
+          def _tmdb_get(endpoint, params):
+              falta = _ultima[0] + (1.0 / TMDB_RATE) - time.time()
+              if falta > 0:
+                  time.sleep(falta)
+              _ultima[0] = time.time()
+              try:
+                  r = requests.get(f"{TMDB_BASE}{endpoint}", params=params, timeout=15)
+                  if r.status_code == 429:
+                      time.sleep(5)
+                      r = requests.get(f"{TMDB_BASE}{endpoint}", params=params, timeout=15)
+                  return r
+              except Exception:
+                  return None
+
+          # ---------- URL helpers ----------
           def extrair_titulo_da_url(url):
-              """Ex: .../inix-bridgerton.html -> 'Bridgerton'"""
               m = re.search(r'/([^/]+)\.html', url)
-              if not m: return None
+              if not m:
+                  return None
               slug = m.group(1)
               for _ in range(10):
                   novo = re.sub(
                       r'^(?:inix|arc|entre[_-]?nos|vini7x|marcos)[-_]',
-                      '', slug, flags=re.I
+                      '', slug, flags=re.I,
                   )
-                  if novo == slug: break
+                  if novo == slug:
+                      break
                   slug = novo
               slug = re.sub(r'[-_]\d{4}$', '', slug)
               slug = re.sub(r'_\d{5,}$', '', slug)
-              if len(slug) < 3: return None
+              if len(slug) < 3:
+                  return None
               return slug.replace('-', ' ').replace('_', ' ').strip()
 
-          def tmdb_classificar(titulo):
-              """Retorna 'tv', 'movie' ou None (não encontrado/erro)."""
-              if not TMDB_KEY or not titulo:
+          def extrair_ano_da_url(url):
+              m = re.search(r"/([^/?#]+?)(?:\.html)?(?:[?#].*)?$", url or "")
+              if not m:
                   return None
-              chave = titulo.lower().strip()
-              if chave in cache:
-                  return cache[chave]
+              anos = re.findall(_ANO_RE, m.group(1))
+              return anos[-1] if anos else None
 
-              try:
-                  r = requests.get(
-                      f"{TMDB_BASE}/search/multi",
-                      params={
-                          "api_key": TMDB_KEY,
-                          "query": titulo,
-                          "language": "pt-BR",
-                          "include_adult": "false",
-                      },
-                      timeout=15,
-                  )
-                  if r.status_code != 200:
-                      cache[chave] = None
-                      return None
-                  data = r.json()
-                  resultados = data.get("results", [])
-                  # Filtra apenas movie/tv (ignora person)
-                  resultados = [
-                      x for x in resultados
-                      if x.get("media_type") in ("movie", "tv")
-                  ]
-                  if not resultados:
-                      cache[chave] = None
-                      return None
-                  # Pega o primeiro resultado (TMDB ordena por relevância)
-                  tipo = resultados[0].get("media_type")
-                  cache[chave] = tipo
-                  return tipo
-              except Exception:
-                  cache[chave] = None
-                  return None
+          # ---------- TMDB (search/multi + override por ano) ----------
+          def tmdb_classificar(titulo, ano):
+              """
+              Usa search/multi (1 chamada). Confia no primeiro resultado
+              MAS se o ano da URL não bate com o do top, procura na lista
+              um resultado de TIPO DIFERENTE que bata o ano.
+              Retorna (tipo, peso, motivo).
+              """
+              if not TMDB_KEY or not titulo:
+                  return None, 0, "TMDB desligado"
+
+              chave = f"{titulo.lower().strip()}|{ano or ''}"
+              if chave in cache:
+                  c = cache[chave]
+                  return c.get("tipo"), c.get("peso", 0), c.get("motivo", "cache")
+
+              r = _tmdb_get("/search/multi", {
+                  "api_key": TMDB_KEY,
+                  "query": titulo,
+                  "language": "pt-BR",
+                  "include_adult": "false",
+              })
+
+              if r is None or r.status_code != 200:
+                  cache[chave] = {"tipo": None, "peso": 0, "motivo": "TMDB erro"}
+                  return None, 0, "TMDB erro"
+
+              results = [
+                  x for x in r.json().get("results", [])
+                  if x.get("media_type") in ("movie", "tv")
+              ]
+              if not results:
+                  cache[chave] = {"tipo": None, "peso": 0, "motivo": "TMDB nada"}
+                  return None, 0, "TMDB nada"
+
+              top = results[0]
+              tipo_top = top.get("media_type")
+              data_top = top.get("release_date") or top.get("first_air_date") or ""
+              ano_top = data_top.split("-")[0] if data_top else ""
+
+              # Caso 1: top bate o ano → decisivo
+              if ano and ano_top == ano:
+                  cache[chave] = {"tipo": tipo_top, "peso": 60,
+                                  "motivo": f"TMDB: {tipo_top} bate ano {ano}"}
+                  return tipo_top, 60, f"TMDB: {tipo_top} (ano {ano})"
+
+              # Caso 2: procura tipo diferente que bate ano
+              if ano:
+                  for res in results[1:8]:
+                      tipo_r = res.get("media_type")
+                      data_r = res.get("release_date") or res.get("first_air_date") or ""
+                      ano_r = data_r.split("-")[0] if data_r else ""
+                      if ano_r == ano and tipo_r != tipo_top:
+                          cache[chave] = {"tipo": tipo_r, "peso": 50,
+                                          "motivo": f"TMDB: {tipo_r} bate ano (top era {tipo_top})"}
+                          return tipo_r, 50, f"TMDB: {tipo_r} (ano {ano})"
+
+              # Caso 3: sem match de ano → confia no top
+              titulo_top = top.get("title") or top.get("name") or ""
+              match = similaridade(titulo, titulo_top)
+              peso = 40 if match >= 80 else 30
+              cache[chave] = {"tipo": tipo_top, "peso": peso,
+                              "motivo": f"TMDB: {tipo_top} (top, match {match:.0f}%)"}
+              return tipo_top, peso, f"TMDB: {tipo_top} (top)"
 
           # ---------- Feed ----------
           def get_all_entries():
@@ -151,7 +224,7 @@ jobs:
                           link = next(
                               (l["href"] for l in e.get("link", [])
                                if l.get("rel") == "alternate"),
-                              None
+                              None,
                           )
                           if not link:
                               continue
@@ -161,7 +234,7 @@ jobs:
                               for c in e.get("category", [])
                               if c.get("term")
                           }
-                          entries[url] = labels
+                          entries[url] = {"labels": labels}
                       start += 150
                       if len(feed_entries) < 150:
                           break
@@ -170,159 +243,151 @@ jobs:
                       break
               return entries
 
-          # ---------- Classificação em camadas ----------
+          # ---------- Classificação ----------
           def classificar_url(url, labels):
-              """
-              Retorna 'serie', 'filme' ou 'ambos'.
-              Camada 1: labels do feed.
-              Camada 2: TMDB multi search.
-              Camada 3: ambos (segurança).
-              """
-              # Camada 1
+              score = 0
+              motivos = []
+
+              # Camada 1: label de série (decisivo)
               if labels & SERIES_LABELS:
-                  return 'serie'
+                  return {
+                      "classe": "serie",
+                      "score": 100,
+                      "motivos": [f"label: {sorted(labels & SERIES_LABELS)}"],
+                  }
 
-              # Camada 2
+              # Camada 2: URL tem "temporada"/"season" (sinal forte)
+              m = re.search(r"/([^/]+?)\.html", url)
+              slug = (m.group(1).lower() if m else "")
+              if re.search(r"temporada|season", slug):
+                  score -= 40
+                  motivos.append("URL: temporada/season")
+
+              # Camada 3: TMDB (search/multi + override)
               titulo = extrair_titulo_da_url(url)
-              tipo = tmdb_classificar(titulo) if titulo else None
-              if tipo == 'tv':
-                  return 'serie'
-              if tipo == 'movie':
-                  return 'filme'
+              ano = extrair_ano_da_url(url)
+              tipo, peso, motivo = tmdb_classificar(titulo, ano)
 
-              # Camada 3
-              return 'ambos'
+              if tipo == "movie":
+                  score += peso
+                  motivos.append(motivo)
+              elif tipo == "tv":
+                  score -= peso
+                  motivos.append(motivo)
+              else:
+                  motivos.append(motivo)
 
-          def carregar_lista(arquivo):
-              if arquivo.exists():
-                  return [
-                      l.strip() for l in
-                      arquivo.read_text(encoding="utf-8").splitlines()
-                      if l.strip()
-                  ]
+              # Decisão (threshold 30 = decisivo)
+              if score >= 30:
+                  classe = "filme"
+              elif score <= -30:
+                  classe = "serie"
+              else:
+                  classe = "ambos"
+
+              return {"classe": classe, "score": score, "motivos": motivos}
+
+          def carregar_lista(arq):
+              if arq.exists():
+                  return [l.strip() for l in arq.read_text(encoding="utf-8").splitlines() if l.strip()]
               return []
 
-          def ordenar_lista(original, adicoes_set):
-              vistos = set()
-              resultado = []
+          def ordenar(original, adicoes):
+              vistos, out = set(), []
               for u in original:
                   if u not in vistos:
-                      resultado.append(u)
-                      vistos.add(u)
-              for u in sorted(adicoes_set):
+                      out.append(u); vistos.add(u)
+              for u in sorted(adicoes):
                   if u not in vistos:
-                      resultado.append(u)
-                      vistos.add(u)
-              return resultado
+                      out.append(u); vistos.add(u)
+              return out
 
           # ---------- Main ----------
           def main():
-              log("Buscando feed completo...")
+              log("Buscando feed...")
               feed = get_all_entries()
-              log(f"📥 {len(feed)} posts no feed.")
+              log(f"📥 {len(feed)} posts.")
 
               if not feed:
-                  log("❌ Feed vazio. NÃO vou sobrescrever as filas (segurança).")
+                  log("❌ Feed vazio, abortando.")
                   return
 
               if not TMDB_KEY:
-                  log("⚠️ TMDB_API_KEY não configurada. Ambíguos ficarão em ambas as filas.")
-
-              # Decide o que classificar
-              if APAGAR_FILAS:
-                  log("⚠️ MODO APAGAR: filas serão reconstruídas do zero.")
-                  fila_filmes_old = []
-                  fila_series_old = []
-              else:
-                  fila_filmes_old = carregar_lista(ARQ_FILA_FILMES)
-                  fila_series_old = carregar_lista(ARQ_FILA_SERIES)
-                  log(
-                      f"Filmes fila atual: {len(fila_filmes_old)} | "
-                      f"Séries fila atual: {len(fila_series_old)}"
-                  )
-
-              set_filmes_old = set(fila_filmes_old)
-              set_series_old = set(fila_series_old)
+                  log("⚠️ TMDB_API_KEY ausente.")
 
               if APAGAR_FILAS:
-                  a_classificar = set(feed.keys())
+                  log("⚠️ MODO APAGAR: reconstruindo do zero.")
+                  filmes_old, series_old = [], []
               else:
-                  a_classificar = {
-                      u for u in feed
-                      if u not in set_filmes_old and u not in set_series_old
-                  }
+                  filmes_old = carregar_lista(ARQ_FILA_FILMES)
+                  series_old = carregar_lista(ARQ_FILA_SERIES)
+                  log(f"Filmes atual: {len(filmes_old)} | Séries atual: {len(series_old)}")
 
-              if not a_classificar and not APAGAR_FILAS:
-                  log("✅ Nenhuma URL nova. Filas já atualizadas.")
+              set_f = set(filmes_old)
+              set_s = set(series_old)
+
+              if APAGAR_FILAS:
+                  a_class = set(feed.keys())
+              else:
+                  a_class = {u for u in feed if u not in set_f and u not in set_s}
+
+              if not a_class and not APAGAR_FILAS:
+                  log("✅ Nada novo.")
                   return
 
-              log(f"🔍 Classificando {len(a_classificar)} URLs...")
+              log(f"🔍 Classificando {len(a_class)} URLs...")
 
-              contagem = {'filme': 0, 'serie': 0, 'ambos': 0}
+              contagem = {"filme": 0, "serie": 0, "ambos": 0}
               resultado = {}
-              total = len(a_classificar)
+              total = len(a_class)
 
-              for i, url in enumerate(sorted(a_classificar), 1):
-                  labels = feed.get(url, set())
-                  classe = classificar_url(url, labels)
-                  resultado[url] = classe
-                  contagem[classe] += 1
+              for i, url in enumerate(sorted(a_class), 1):
+                  labels = feed[url].get("labels", set())
+                  info = classificar_url(url, labels)
+                  resultado[url] = info
+                  contagem[info["classe"]] += 1
 
                   if i % 100 == 0 or i == total:
-                      log(
-                          f"  [{i}/{total}] "
-                          f"(🎬 {contagem['filme']} | "
-                          f"📺 {contagem['serie']} | "
-                          f"❓ {contagem['ambos']})"
-                      )
+                      log(f"  [{i}/{total}] (🎬 {contagem['filme']} | 📺 {contagem['serie']} | ❓ {contagem['ambos']})")
                       salvar_cache()
 
-              log("📊 Resultado final:")
-              log(f"   🎬 Filmes:  {contagem['filme']}")
-              log(f"   📺 Séries:  {contagem['serie']}")
+              log("\n📊 Resultado:")
+              log(f"   🎬 Filmes:   {contagem['filme']}")
+              log(f"   📺 Séries:   {contagem['serie']}")
               log(f"   ❓ Ambíguos: {contagem['ambos']}")
 
-              ex_filmes = [u for u, c in resultado.items() if c == 'filme'][:3]
-              ex_series = [u for u, c in resultado.items() if c == 'serie'][:3]
-              if ex_filmes:
-                  log(f"   Exemplos filmes: {ex_filmes}")
-              if ex_series:
-                  log(f"   Exemplos séries: {ex_series}")
+              amostras = {k: [] for k in ("filme", "serie", "ambos")}
+              for url, info in resultado.items():
+                  if len(amostras[info["classe"]]) < 3:
+                      amostras[info["classe"]].append((url, info["score"], info["motivos"]))
 
-              # Aplicar nas filas
+              for classe in ("filme", "serie", "ambos"):
+                  if amostras[classe]:
+                      log(f"\n   Amostras {classe.upper()}:")
+                      for url, score, motivos in amostras[classe]:
+                          log(f"     • score={score:+3d} | {url.split('/')[-1]}")
+                          log(f"       {'; '.join(motivos)}")
+
               if APAGAR_FILAS:
-                  novas_filmes = set()
-                  novas_series = set()
+                  nf, ns = set(), set()
               else:
-                  novas_filmes = set(fila_filmes_old)
-                  novas_series = set(fila_series_old)
+                  nf, ns = set(filmes_old), set(series_old)
 
-              for url, classe in resultado.items():
-                  if classe == 'filme':
-                      novas_filmes.add(url)
-                  elif classe == 'serie':
-                      novas_series.add(url)
+              for url, info in resultado.items():
+                  if info["classe"] == "filme":
+                      nf.add(url)
+                  elif info["classe"] == "serie":
+                      ns.add(url)
                   else:
-                      novas_filmes.add(url)
-                      novas_series.add(url)
+                      nf.add(url); ns.add(url)
 
-              filme_final = ordenar_lista(
-                  fila_filmes_old,
-                  novas_filmes - set(fila_filmes_old)
-              )
-              series_final = ordenar_lista(
-                  fila_series_old,
-                  novas_series - set(fila_series_old)
-              )
+              filme_final = ordenar(filmes_old, nf - set(filmes_old))
+              series_final = ordenar(series_old, ns - set(series_old))
 
-              ARQ_FILA_FILMES.write_text(
-                  "\n".join(filme_final), encoding="utf-8"
-              )
-              ARQ_FILA_SERIES.write_text(
-                  "\n".join(series_final), encoding="utf-8"
-              )
+              ARQ_FILA_FILMES.write_text("\n".join(filme_final), encoding="utf-8")
+              ARQ_FILA_SERIES.write_text("\n".join(series_final), encoding="utf-8")
 
-              log(f"✅ Filmes fila: {len(filme_final)} URLs")
+              log(f"\n✅ Filmes fila: {len(filme_final)} URLs")
               log(f"✅ Séries fila: {len(series_final)} URLs")
 
               salvar_cache()
@@ -344,14 +409,14 @@ jobs:
             echo "Nada novo nas filas."
             exit 0
           fi
-          git commit -m "chore: atualizar filas (labels + TMDB)"
+          git commit -m "chore: atualizar filas (search/multi + override por ano)"
 
           for i in $(seq 1 5); do
             if git push origin HEAD:main; then break; fi
-            echo "Conflito detectado. Sincronizando..."
+            echo "Conflito. Sincronizando..."
             git pull origin main --no-rebase -X ours --no-edit
             git add -A
             git reset .github/ 2>/dev/null || true
-            git commit -m "chore: retry atualizar filas $i" || true
+            git commit -m "chore: retry $i" || true
             sleep $((RANDOM % 10 + 5))
           done
