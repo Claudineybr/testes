@@ -1,292 +1,51 @@
 {
   "contagem": {},
-  "eventos": [
-    {
-      "quando": "2026-11-10T00:25:52+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-army-of-dead-invasao-em-las-vegas.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T00:27:48+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/duologia-o-auto-da-compadecida.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T00:39:09+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/duologia-o-auto-da-compadecida.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T00:39:57+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-army-of-dead-invasao-em-las-vegas.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T00:52:24+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/duologia-o-auto-da-compadecida.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:16:36+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-o-escorpiao-rei-2-saga-de-um.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:18:35+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/duologia-o-auto-da-compadecida.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:20:02+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-historias-assustadoras-para-contar.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:22:16+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-mudanca-de-habito-2-de-volta-ao.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:37:37+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-invencivel.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:38:24+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-maxton-hall-o-mundo-entre-nos.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:54:44+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-maxton-hall-o-mundo-entre-nos.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:55:31+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-mudanca-de-habito-2-de-volta-ao.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T01:57:24+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-o-que-ha-de-novo-scooby-doo.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:10:26+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-mudanca-de-habito-2-de-volta-ao.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:13:35+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-scooby-doo-e-o-monstro-do-lago.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:27:52+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-maxton-hall-o-mundo-entre-nos.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:30:40+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-risco-maximo-2017.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:32:16+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-sorte-2022.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:45:56+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-sorte-2022.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T02:58:36+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-nao-se-preocupe-querida-2022.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:12:15+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-saga-molusco-anoitecer-2012.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:13:50+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/03/inix-risco-maximo-2017.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:16:27+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/arc-halloween-2-1981.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:17:27+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/blog-post.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:30:27+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/arc-halloween-2-1981.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:32:01+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-nao-se-preocupe-querida-2022.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:33:00+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-stitches-o-retorno-do-palhaco.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:48:12+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-jogo-de-sacrificio-2023.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    },
-    {
-      "quando": "2026-11-10T03:48:59+00:00",
-      "tipo": "http_esgotado",
-      "url": "https://www.vini7xgrave.site/2025/04/inix-nao-se-preocupe-querida-2022.html",
-      "status": 429,
-      "detalhe": "HTTP 429",
-      "tentativas": 1
-    }
-  ],
+  "eventos": [],
   "metricas": {
     "ultima_run": {
-      "requisicoes": 41,
-      "ok": 39,
-      "429": 2,
+      "requisicoes": 35,
+      "ok": 35,
+      "429": 0,
       "5xx": 0,
       "retries": 0,
-      "falhas_definitivas": 2,
+      "falhas_definitivas": 0,
       "html_invalido": 0,
       "serie_inconsistente": 0,
       "conflitos": 0,
-      "proxy_fallback": 2,
-      "proxy_hit": 2,
-      "pausas_evitadas": 96,
-      "http_realizados": 3,
-      "playwright_skip": 8,
-      "proxmint_listas": 2,
-      "link_em_a_href": 0,
-      "link_convertido_w2embed": 0,
-      "multifilme_paginas": 0,
-      "multifilme_arquivos": 0,
+      "proxy_fallback": 0,
+      "proxy_hit": 0,
+      "pausas_evitadas": 95,
+      "http_realizados": 4,
+      "playwright_skip": 3,
+      "proxmint_listas": 0,
+      "link_em_a_href": 1,
+      "link_convertido_w2embed": 19,
+      "multifilme_paginas": 1,
+      "multifilme_arquivos": 8,
       "robo": "filmes",
-      "quando": "2026-11-10T03:49:59+00:00",
-      "duracao_min": 12.5
+      "quando": "2026-11-10T04:12:26+00:00",
+      "duracao_min": 10.1
     },
     "acumulado": {
-      "requisicoes": 661,
-      "ok": 629,
-      "429": 30,
-      "5xx": 1,
-      "retries": 1,
-      "falhas_definitivas": 30,
+      "requisicoes": 35,
+      "ok": 35,
+      "429": 0,
+      "5xx": 0,
+      "retries": 0,
+      "falhas_definitivas": 0,
       "html_invalido": 0,
       "serie_inconsistente": 0,
       "conflitos": 0,
-      "proxy_fallback": 30,
-      "proxy_hit": 30,
-      "pausas_evitadas": 1554,
-      "http_realizados": 30,
-      "playwright_skip": 131,
-      "proxmint_listas": 30,
-      "link_em_a_href": 89,
-      "link_convertido_w2embed": 83,
-      "multifilme_paginas": 0,
-      "multifilme_arquivos": 0
+      "proxy_fallback": 0,
+      "proxy_hit": 0,
+      "pausas_evitadas": 95,
+      "http_realizados": 4,
+      "playwright_skip": 3,
+      "proxmint_listas": 0,
+      "link_em_a_href": 1,
+      "link_convertido_w2embed": 19,
+      "multifilme_paginas": 1,
+      "multifilme_arquivos": 8
     }
   }
 }
