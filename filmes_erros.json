@@ -3,8 +3,8 @@
   "eventos": [],
   "metricas": {
     "ultima_run": {
-      "requisicoes": 34,
-      "ok": 34,
+      "requisicoes": 33,
+      "ok": 33,
       "429": 0,
       "5xx": 0,
       "retries": 0,
@@ -14,19 +14,19 @@
       "conflitos": 0,
       "proxy_fallback": 0,
       "proxy_hit": 0,
-      "pausas_evitadas": 96,
-      "http_realizados": 3,
-      "playwright_skip": 3,
+      "pausas_evitadas": 98,
+      "http_realizados": 1,
+      "playwright_skip": 2,
       "proxmint_listas": 0,
-      "link_em_a_href": 28,
-      "link_convertido_w2embed": 28,
+      "link_em_a_href": 36,
+      "link_convertido_w2embed": 36,
       "robo": "filmes",
-      "quando": "2026-11-09T23:57:37+00:00",
-      "duracao_min": 9.6
+      "quando": "2026-11-10T00:15:56+00:00",
+      "duracao_min": 9.2
     },
     "acumulado": {
-      "requisicoes": 34,
-      "ok": 34,
+      "requisicoes": 67,
+      "ok": 67,
       "429": 0,
       "5xx": 0,
       "retries": 0,
@@ -36,12 +36,12 @@
       "conflitos": 0,
       "proxy_fallback": 0,
       "proxy_hit": 0,
-      "pausas_evitadas": 96,
-      "http_realizados": 3,
-      "playwright_skip": 3,
+      "pausas_evitadas": 194,
+      "http_realizados": 4,
+      "playwright_skip": 5,
       "proxmint_listas": 0,
-      "link_em_a_href": 28,
-      "link_convertido_w2embed": 28
+      "link_em_a_href": 64,
+      "link_convertido_w2embed": 64
     }
   }
 }
