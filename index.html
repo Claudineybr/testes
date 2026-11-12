@@ -8,15 +8,15 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #0a1512; color: #fff; min-height: 100vh; overflow-x: hidden; }
     
-    /* ================= FUNDO COM SLIDESHOW ================= */
+    /* ================= FUNDO FIXO COM O GATO ================= */
     .bg-container {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat;
-      transition: background-image 1.5s ease-in-out;
+      background-image: url('https://i.imgur.com/P2NKIpU.gif');
     }
     .bg-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-      z-index: -1; background: linear-gradient(rgba(15, 15, 30, 0.7), rgba(10, 25, 20, 0.9));
+      z-index: -1; background: linear-gradient(rgba(15, 15, 30, 0.75), rgba(10, 25, 20, 0.9));
     }
     
     /* HEADER NATALINO */
@@ -87,6 +87,7 @@
     .btn-original { background: transparent; color: rgba(255, 255, 255, 0.6); text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.2); transition: 0.3s; }
     .btn-original:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #fff; }
 
+    /* NEVE */
     #snow-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; overflow: hidden; }
     .snowflake { position: absolute; top: -10px; color: #fff; font-size: 1.5em; font-family: Arial, sans-serif; user-select: none; pointer-events: none; animation: fall linear forwards; text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); }
     @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
@@ -110,7 +111,7 @@
 </head>
 <body>
 
-  <div class="bg-container" id="bg-slideshow"></div>
+  <div class="bg-container"></div>
   <div class="bg-overlay"></div>
   <div id="snow-container"></div>
 
@@ -162,25 +163,6 @@
   </div>
 
   <script>
-    // ================= SLIDESHOW DE FUNDO =================
-    const fundos = [
-      'https://i.imgur.com/P2NKIpU.gif', // O GATO QUE VOCÊ MANDOU!
-      'https://i.imgur.com/tS1x5H4.png', // O outro fundo
-      'https://images.unsplash.com/photo-1574267432553-4b4628081c31?w=1920&q=80',
-      'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80'
-    ];
-
-    let indiceFundoAtual = 0;
-    const bgElement = document.getElementById('bg-slideshow');
-
-    function trocarFundo() {
-      const url = fundos[indiceFundoAtual];
-      bgElement.style.backgroundImage = `url('${url}')`;
-      indiceFundoAtual = (indiceFundoAtual + 1) % fundos.length;
-    }
-    trocarFundo();
-    setInterval(trocarFundo, 10000);
-
     // ================= LÓGICA DA NEVE =================
     function createSnow() {
       const container = document.getElementById('snow-container');
