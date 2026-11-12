@@ -8,17 +8,18 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #0a1512; color: #fff; min-height: 100vh; overflow-x: hidden; }
     
-    /* ================= FUNDO FIXO COM O GATO (MAIS VISÍVEL) ================= */
+    /* ================= FUNDO COM GIF DE NATAL ================= */
     .bg-container {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat;
-      background-image: url('https://i.imgur.com/P2NKIpU.gif');
+      /* GIF DA ÁRVORE DE NATAL AQUI */
+      background-image: url('https://i.giphy.com/media/gNke2UrUTopOg/giphy.gif');
     }
     .bg-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -1; 
-      /* Opacidade mais leve, mas um pouco mais forte que a home para ler a lista de eps */
-      background: linear-gradient(rgba(10, 15, 12, 0.5), rgba(10, 15, 12, 0.7)); 
+      /* Opacidade mais escura para ler a lista de eps */
+      background: linear-gradient(rgba(10, 15, 12, 0.6), rgba(10, 15, 12, 0.85)); 
     }
 
     header { background: rgba(15, 25, 20, 0.9); backdrop-filter: blur(10px); padding: 18px 40px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid rgba(255, 183, 3, 0.3); box-shadow: 0 4px 20px rgba(230, 57, 70, 0.2); }
