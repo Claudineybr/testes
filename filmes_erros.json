@@ -23,12 +23,12 @@
       "multifilme_paginas": 0,
       "multifilme_arquivos": 0,
       "robo": "filmes",
-      "quando": "2026-11-11T23:51:52+00:00",
+      "quando": "2026-11-12T04:27:21+00:00",
       "duracao_min": 8.5
     },
     "acumulado": {
-      "requisicoes": 31,
-      "ok": 31,
+      "requisicoes": 62,
+      "ok": 62,
       "429": 0,
       "5xx": 0,
       "retries": 0,
