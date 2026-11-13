@@ -3,7 +3,7 @@ name: Classificar filmes
 on:
   push:
     paths:
-      - 'filmes/**'
+      - '**.html'
       - '.github/workflows/classificar.yml'
   workflow_dispatch:
   schedule:
@@ -51,7 +51,8 @@ jobs:
           GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
                      "Família","Fantasia","História","Terror","Música","Mistério","Romance",
                      "Ficção Científica","Thriller","Guerra","Faroeste"]
-          PASTA, SAIDA, LOTE = "filmes", "classificacao.json", 40
+          PASTA, SAIDA, LOTE = ".", "classificacao.json", 40
+          IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
 
           SCHEMA = {
               "type": "object",
@@ -82,6 +83,9 @@ jobs:
               for arq in sorted(os.listdir(PASTA)):
                   if not arq.endswith(".html"):
                       continue
+                  if arq in IGNORAR:
+                      print(f"[info] {arq}: ignorado (blocklist)")
+                      continue
                   total += 1
                   soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
                   el = soup.select_one("h1, .titulo, title")
@@ -91,7 +95,7 @@ jobs:
                   com_titulo += 1
                   titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
                   yield arq, titulo
-              print(f"[info] {total} HTMLs em '{PASTA}', {com_titulo} com título extraído")
+              print(f"[info] {total} HTMLs candidatos, {com_titulo} com título extraído")
 
           def classificar_lote(pares):
               entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
