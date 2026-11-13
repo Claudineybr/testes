@@ -20,7 +20,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 120          # 14789 filmes podem precisar de mais tempo
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -76,7 +76,6 @@ jobs:
 
           def extrair_titulos():
               if not os.path.isdir(PASTA):
-                  print(f"[aviso] pasta '{PASTA}' não existe no repo")
                   return
               total, com_titulo = 0, 0
               for arq in sorted(os.listdir(PASTA)):
@@ -88,7 +87,6 @@ jobs:
                   soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
                   el = soup.select_one("h1, .titulo, title")
                   if not el:
-                      print(f"[aviso] {arq}: nenhum seletor 'h1, .titulo, title' encontrado")
                       continue
                   com_titulo += 1
                   titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
@@ -103,14 +101,16 @@ jobs:
                   "Regras:\n"
                   "- Use APENAS gêneros da lista, escritos exatamente como estão.\n"
                   "- Se não reconhecer o filme, retorne 'generos': [].\n"
-                  "- Não invente. Não explique.\n\n"
+                  "- Não invente. Não explique.\n"
+                  "- Responda APENAS o JSON, sem texto antes ou depois.\n\n"
                   + json.dumps({"filmes": entrada}, ensure_ascii=False)
               )
+
               resp = client.chat.completions.create(
                   model=MODELO,
                   messages=[{"role": "user", "content": prompt}],
                   temperature=0,
-                  max_tokens=4096,
+                  max_tokens=8192,
                   response_format={
                       "type": "json_schema",
                       "json_schema": {
@@ -119,8 +119,31 @@ jobs:
                       },
                   },
               )
-              saida = json.loads(resp.choices[0].message.content)["filmes"]
-              por_id = {str(x["id"]): x.get("generos", []) for x in saida}
+
+              if not resp.choices:
+                  raise ValueError("resposta sem choices")
+
+              choice = resp.choices[0]
+              finish = getattr(choice, "finish_reason", "?")
+              msg = choice.message
+              content = msg.content
+
+              # fallback: alguns modelos só populam reasoning_content
+              if not content:
+                  content = getattr(msg, "reasoning_content", None)
+
+              if not content:
+                  raise ValueError(f"content vazio (finish_reason={finish})")
+
+              try:
+                  data = json.loads(content)
+              except json.JSONDecodeError as e:
+                  raise ValueError(f"JSON inválido (finish_reason={finish}): {e}")
+
+              if "filmes" not in data:
+                  raise ValueError(f"JSON sem 'filmes' (finish_reason={finish})")
+
+              por_id = {str(x.get("id")): x.get("generos", []) for x in data["filmes"]}
               result = {}
               for i, (arq, tit) in enumerate(pares):
                   gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
@@ -132,17 +155,35 @@ jobs:
               return result
 
           def classificar_com_retry(pares, tentativas=5):
+              if not pares:
+                  return {}
               for n in range(tentativas):
                   try:
                       return classificar_lote(pares)
                   except Exception as e:
-                      if "429" in str(e) or "rate" in str(e).lower():
+                      msg = str(e)
+                      # rate limit: backoff exponencial, mesma lista
+                      if "429" in msg or "rate limit" in msg.lower():
                           espera = 2 ** n
-                          print(f"[aviso] 429 no lote — esperando {espera}s (tentativa {n+1}/{tentativas})")
+                          print(f"[aviso] 429 — esperando {espera}s (tentativa {n+1}/{tentativas})")
                           time.sleep(espera)
-                      else:
-                          raise
-              print(f"[erro] lote falhou após {tentativas} tentativas")
+                          continue
+                      # erro de conteúdo/parse: divide o lote pela metade
+                      if len(pares) > 1:
+                          mid = len(pares) // 2
+                          print(f"[aviso] lote de {len(pares)} falhou ({msg}); dividindo em {mid}+{len(pares)-mid}")
+                          r1 = classificar_com_retry(pares[:mid], tentativas)
+                          time.sleep(2.0)
+                          r2 = classificar_com_retry(pares[mid:], tentativas)
+                          time.sleep(2.0)
+                          r1.update(r2)
+                          return r1
+                      # 1 filme só, desiste
+                      arq, tit = pares[0]
+                      print(f"[erro] não classificou: {tit} ({msg})")
+                      return {arq: {"titulo": tit, "generos": ["indefinido"], "fonte": "indefinido"}}
+              # esgotou tentativas 429
+              print(f"[aviso] lote de {len(pares)} abandonado após {tentativas} tentativas")
               return {}
 
           pendentes = [(a, t) for a, t in extrair_titulos()
@@ -160,9 +201,7 @@ jobs:
                   cache.update(resultado)
                   json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
                   print(f"[info] progresso: {min(i + LOTE, len(pendentes))}/{len(pendentes)}")
-              else:
-                  print(f"[aviso] lote {i} não foi classificado — pulando")
-              time.sleep(2.0)   # 40 RPM → 1 req a cada 1,5 s; 2 s de margem
+              time.sleep(2.0)
 
           indef = sum(1 for v in cache.values() if v["fonte"] == "indefinido")
           print(f"[ok] total no índice: {len(cache)}, indefinidos: {indef}")
