@@ -17,7 +17,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Limite máximo do GitHub (6 horas)
+    timeout-minutes: 360 # 6 horas
     steps:
       - uses: actions/checkout@v4
 
@@ -39,18 +39,27 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # --- TURBO MODE: 6 MODELOS EM ROTAÇÃO ---
+          # --- 15 MODELOS ATIVOS PARA RESERVA E ROTAÇÃO ---
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
+              "nvidia/nemotron-3.5-super-vl-120b-a12b",
+              "nvidia/nemotron-3.5-lightning-30b-a3b",
               "openai/gpt-oss-20b",
               "meta/llama-3.2-90b-vision-instruct",
+              "meta/llama-3.3-70b-instruct",
+              "mistralai/mistral-large-4-instruct",
+              "mistralai/mistral-medium-3.5-128b",
+              "deepseek-ai/deepseek-v4.1-flash",
               "deepseek-ai/deepseek-v4-flash",
-              "nvidia/nemotron-3.5-super-vl-120b-a12b",
-              "mistralai/mistral-medium-3.5-128b" 
+              "z-ai/glm-5-3-flash",
+              "moonshotai/kimi-k3.1-pro",
+              "minimaxai/minimax-m3.1-flash",
+              "google/gemma-4-31b-it",
+              "meta/muse-glimmer-30b"
           ]
 
           LOTE = 20
-          MAX_WORKERS = 6 # <-- Aumentado para 6 threads paralelas
+          MAX_WORKERS = 10 # <-- AUMENTADO PARA 10 THREADS SIMULTÂNEAS
 
           client = OpenAI(
               api_key=os.environ["NVIDIA_API_KEY"],
@@ -116,7 +125,7 @@ jobs:
               modelos_para_tentar = MODELOS[idx_inicial:] + MODELOS[:idx_inicial]
 
               for modelo in modelos_para_tentar:
-                  for tentativa in range(3):
+                  for tentativa in range(2): # 2 tentativas por modelo
                       try:
                           resp = client.chat.completions.create(
                               model=modelo,
@@ -128,7 +137,7 @@ jobs:
                           
                           content = resp.choices[0].message.content
                           if not content:
-                              raise ValueError("JSON vazio (modelo pensou demais)")
+                              raise ValueError("JSON vazio")
                               
                           data = json.loads(content)
                           por_id = {str(x.get("id")): x for x in data.get("filmes", [])}
@@ -154,33 +163,31 @@ jobs:
                               log(f"[!] {modelo} indisponível. Pulando...")
                               break 
                           elif "429" in msg:
-                              log(f"[!] Rate limit (429) em {modelo}. Aguardando {5*(tentativa+1)}s...")
-                              time.sleep(5 * (tentativa + 1))
-                          elif "JSON vazio" in msg:
-                              log(f"[!] {modelo} não retornou JSON válido. Pulando...")
+                              log(f"[!] Rate limit (429) em {modelo}. Aguardando {3*(tentativa+1)}s...")
+                              time.sleep(3 * (tentativa + 1))
+                          elif "JSON vazio" in msg or "Unterminated string" in msg or "JSONDecodeError" in msg:
+                              log(f"[!] {modelo} gerou JSON inválido. Pulando...")
                               break 
                           else:
                               log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
                               time.sleep(1)
 
-              log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando {len(pares)} títulos como 'indefinido'.")
+              log(f"[x] Lote {lote_num} falhou. Marcando como 'indefinido'.")
               return {arq: {"titulo": tit, "tipo": "desconhecido", "generos": ["indefinido"], "fonte": "indefinido"} for arq, tit in pares}
 
           pendentes = [
               (a, t) for a, t in extrair_titulos() 
-              if a not in cache 
-              or cache[a].get("fonte") == "indefinido" 
-              or "tipo" not in cache[a]
+              if a not in cache or cache[a].get("fonte") == "indefinido" or "tipo" not in cache[a]
           ]
           
           if not pendentes:
-              log("[info] Nenhum filme ou série pendente. Encerrando.")
+              log("[info] Nenhum título pendente. Encerrando.")
               exit(0)
 
           total_lotes = (len(pendentes) + LOTE - 1) // LOTE
           log(f"==================================================")
-          log(f"🚀 INICIANDO TURBO: {len(pendentes)} títulos em {total_lotes} lotes.")
-          log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em rotação.")
+          log(f"🚀 INICIANDO SUPER TURBO: {len(pendentes)} títulos em {total_lotes} lotes.")
+          log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos de reserva.")
           log(f"==================================================")
 
           tarefas = []
@@ -229,7 +236,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
           else
-            git commit -m "chore: atualiza classificacao (Turbo 6 IAs) [skip ci]"
+            git commit -m "chore: atualiza classificacao (Super Turbo 15 IAs) [skip ci]"
             git pull origin main -X ours --no-rebase
             git push
           fi
