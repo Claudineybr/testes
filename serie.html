@@ -8,17 +8,15 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #0a1512; color: #fff; min-height: 100vh; overflow-x: hidden; }
     
-    /* ================= FUNDO COM GIF DE NATAL ================= */
+    /* ================= FUNDO COM SLIDESHOW (FOTOS ESTÁTICAS) ================= */
     .bg-container {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat;
-      /* GIF DA ÁRVORE DE NATAL AQUI */
-      background-image: url('https://i.giphy.com/media/gNke2UrUTopOg/giphy.gif');
+      transition: background-image 1.5s ease-in-out;
     }
     .bg-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -1; 
-      /* Opacidade mais escura para ler a lista de eps */
       background: linear-gradient(rgba(10, 15, 12, 0.6), rgba(10, 15, 12, 0.85)); 
     }
 
@@ -71,7 +69,6 @@
     .btn-erro { background: #e63946; color: #fff; text-decoration: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4); }
     .btn-erro:hover { background: #c1121f; }
 
-    /* NEVE */
     #snow-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; overflow: hidden; }
     .snowflake { position: absolute; top: -10px; color: #fff; font-size: 1.5em; font-family: Arial, sans-serif; user-select: none; pointer-events: none; animation: fall linear forwards; text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); }
     @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
@@ -85,7 +82,7 @@
 </head>
 <body>
 
-  <div class="bg-container"></div>
+  <div class="bg-container" id="bg-slideshow"></div>
   <div class="bg-overlay"></div>
   <div id="snow-container"></div>
 
@@ -119,6 +116,30 @@
   </div>
 
   <script>
+    // ================= SLIDESHOW DE FUNDO (SÓ AS 5 FOTOS APROVADAS) =================
+    const fundos = [
+      'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=1920&q=80&auto=format&fit=crop'
+    ];
+
+    let indiceFundoAtual = 0;
+    const bgElement = document.getElementById('bg-slideshow');
+
+    function trocarFundo() {
+      const url = fundos[indiceFundoAtual];
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        bgElement.style.backgroundImage = `url('${url}')`;
+        indiceFundoAtual = (indiceFundoAtual + 1) % fundos.length;
+      };
+    }
+    trocarFundo();
+    setInterval(trocarFundo, 10000);
+
     // ================= LÓGICA DA NEVE =================
     function createSnow() {
       const container = document.getElementById('snow-container');
