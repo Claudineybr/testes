@@ -44,9 +44,9 @@ jobs:
               "nvidia/nemotron-3-ultra-550b-a55b",
               "openai/gpt-oss-20b",
               "meta/llama-3.2-90b-vision-instruct",
-              "deepseek-ai/deepseek-v4.1-flash",
-              "nvidia/nemotron-3.5-lightning-30b-a3b",
-              "meta/llama-3.3-70b-instruct" 
+              "deepseek-ai/deepseek-v4-flash",
+              "nvidia/nemotron-3.5-super-vl-120b-a12b",
+              "mistralai/mistral-medium-3.5-128b" 
           ]
 
           LOTE = 20
