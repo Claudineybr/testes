@@ -37,12 +37,17 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           python -u - <<'PYEOF'
-          import json, os, re, time
+          import json, os, re, time, threading
           from bs4 import BeautifulSoup
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # Rotação de modelos (mesma API Key, limites separados)
+          # Trava para os prints não se misturarem entre as threads
+          log_lock = threading.Lock()
+          def log(msg):
+              with log_lock:
+                  print(msg, flush=True)
+
           MODELOS = [
               "meta/llama-3.1-8b-instruct",
               "meta/llama-3.3-70b-instruct",
@@ -51,9 +56,8 @@ jobs:
               "nvidia/llama-3.3-nemotron-super-49b-v1"
           ]
           
-          # Configurações de Paralelismo
-          LOTE = 20            # Filmes por requisição
-          MAX_WORKERS = 5      # Requisições simultâneas (1 para cada modelo)
+          LOTE = 20
+          MAX_WORKERS = 5
 
           client = OpenAI(
               api_key=os.environ["NVIDIA_API_KEY"],
@@ -96,17 +100,20 @@ jobs:
                   titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
                   yield arq, titulo
 
-          def classificar_lote(pares, modelo):
+          def classificar_lote(pares, modelo, lote_num, total_lotes):
               entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
               prompt = (
                   "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
                   f"Gêneros permitidos: {', '.join(GENEROS)}\n"
                   "Regras: Use APENAS gêneros da lista. Se não reconhecer, retorne [].\n"
-                  "Responda APENAS o JSON, sem texto antes ou depois.\n\n"
+                  "Responda APENAS o JSON.\n\n"
                   + json.dumps({"filmes": entrada}, ensure_ascii=False)
               )
 
-              for n in range(3): # 3 tentativas por lote
+              tempo_inicio = time.time()
+              log(f"[▶] Iniciando lote {lote_num}/{total_lotes} | Modelo: {modelo}")
+
+              for n in range(3):
                   try:
                       resp = client.chat.completions.create(
                           model=modelo,
@@ -126,42 +133,57 @@ jobs:
                       for i, (arq, tit) in enumerate(pares):
                           gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
                           result[arq] = {"titulo": tit, "generos": gs or ["indefinido"], "fonte": "ia" if gs else "indefinido"}
+                      
+                      tempo_decorrido = time.time() - tempo_inicio
+                      log(f"[✓] Concluído lote {lote_num}/{total_lotes} | Tempo: {tempo_decorrido:.1f}s | Modelo: {modelo}")
                       return result
                   except Exception as e:
                       if "429" in str(e) or "rate" in str(e).lower():
-                          time.sleep(2 ** n) # Backoff para 429
+                          log(f"[!] Rate Limit (429) no lote {lote_num} ({modelo}). Tentativa {n+1}/3. Aguardando {2**n}s...")
+                          time.sleep(2 ** n)
                       else:
-                          print(f"[erro] {modelo} falhou: {e}", flush=True)
+                          log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
                           time.sleep(1)
+              
+              log(f"[x] Lote {lote_num} falhou após 3 tentativas.")
               return {}
 
           pendentes = [(a, t) for a, t in extrair_titulos() if a not in cache or cache[a].get("fonte") == "indefinido"]
-          print(f"[info] Faltam {len(pendentes)} filmes. Iniciando paralelismo...", flush=True)
+          
+          if not pendentes:
+              log("[info] Nenhum filme pendente. Encerrando.")
+              exit(0)
 
-          # Prepara as tarefas (lotes) e associa um modelo a cada uma
+          total_lotes = (len(pendentes) + LOTE - 1) // LOTE
+          log(f"==================================================")
+          log(f"🚀 INICIANDO: {len(pendentes)} filmes em {total_lotes} lotes.")
+          log(f"⚙️  Configuração: {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em rotação.")
+          log(f"==================================================")
+
           tarefas = []
           for i in range(0, len(pendentes), LOTE):
               bloco = pendentes[i:i + LOTE]
-              modelo = MODELOS[(i // LOTE) % len(MODELOS)] # Distribui entre os modelos
-              tarefas.append((bloco, modelo, i))
+              modelo = MODELOS[(i // LOTE) % len(MODELOS)]
+              lote_num = (i // LOTE) + 1
+              tarefas.append((bloco, modelo, lote_num, total_lotes))
 
           processados = 0
-          # Executa em paralelo
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-              futures = [executor.submit(classificar_lote, bloco, modelo) for bloco, modelo, _ in tarefas]
+              futures = [executor.submit(classificar_lote, b, m, n, tot) for b, m, n, tot in tarefas]
               
               for future in as_completed(futures):
                   resultado = future.result()
                   if resultado:
                       cache.update(resultado)
-                      # Salva o cache a cada lote concluído para não perder progresso
                       json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
                   
                   processados += 1
-                  if processados % 5 == 0:
-                      print(f"[info] Lotes concluídos: {processados}/{len(tarefas)}", flush=True)
+                  porcentagem = (processados / total_lotes) * 100
+                  log(f"📊 PROGRESSO GLOBAL: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) finalizados e salvos no JSON.")
 
-          print(f"[ok] Finalizado! Total classificado: {len(cache)}", flush=True)
+          log("==================================================")
+          log(f"🎉 FINALIZADO! Total de filmes no cache: {len(cache)}")
+          log("==================================================")
           PYEOF
 
       - name: Commitar índice atualizado
