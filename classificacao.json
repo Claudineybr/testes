@@ -229,65 +229,66 @@
   "a_fera_2022_2022.html": {
     "titulo": "A Fera (2022)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fera_do_mar_2022_2022.html": {
     "titulo": "A Fera do Mar (2022)",
     "generos": [
-      "indefinido"
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fera_do_pantano_2026_2026.html": {
     "titulo": "A Fera do Pantano (2026)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_festa_da_salsicha_2017_2017.html": {
     "titulo": "A Festa da Salsicha (2017)",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fianca_2024_2024.html": {
     "titulo": "A Fianca (2024)",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_filha_da_noite_2023_2023.html": {
     "titulo": "A Filha da Noite (2023)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_filha_da_noiva_2023_2023.html": {
     "titulo": "A Filha da Noiva (2023)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_filha_do_general_1999_1999.html": {
     "titulo": "A Filha do General (1999)",
     "generos": [
-      "indefinido"
+      "Guerra",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_filha_do_presidente_2004_2004.html": {
     "titulo": "A Filha do Presidente (2004)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t2e5.html": {
     "titulo": "A Casa do Dragao T2E5",
@@ -3364,51 +3365,63 @@
   "a_culpa_e_das_estrelas_2014_2014.html": {
     "titulo": "A Culpa E das Estrelas (2014)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cura_2018_2018.html": {
     "titulo": "A Cura (2018)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_dama_e_o_vagabundo.html": {
     "titulo": "A Dama e o Vagabundo",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Romance",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_dama_e_o_vagabundo_1955_1955.html": {
     "titulo": "A Dama e o Vagabundo (1955)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Romance",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_dama_e_o_vagabundo_2019_2019.html": {
     "titulo": "A Dama e o Vagabundo (2019)",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Comédia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_dama_e_o_vagabundo_ii_as_aventuras_de_banze.html": {
     "titulo": "A Dama e o Vagabundo II: As Aventuras de Banze",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_dama_e_o_vagabundo_ii_as_aventuras_de_banze_2001_2001.html": {
     "titulo": "A Dama e o Vagabundo II: As Aventuras de Banze (2001)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_desconhecida_2026_2026.html": {
     "titulo": "A Desconhecida (2026)",
@@ -3434,296 +3447,358 @@
   "a_entidade.html": {
     "titulo": "A Entidade",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_entidade_2.html": {
     "titulo": "A Entidade 2",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_entidade_2012_2012.html": {
     "titulo": "A Entidade (2012)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_entidade_2_2015_2015.html": {
     "titulo": "A Entidade 2 (2015)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_entrevista.html": {
     "titulo": "A Entrevista",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_2002_2002.html": {
     "titulo": "A Era do Gelo (2002)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_2_2006_2006.html": {
     "titulo": "A Era do Gelo 2 (2006)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_3_2009_2009.html": {
     "titulo": "A Era do Gelo 3 (2009)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_5_o_big_bang_2015_2015.html": {
     "titulo": "A Era do Gelo 5: O Big Bang (2015)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_as_aventuras_de_buck_2022_2022.html": {
     "titulo": "A Era do Gelo: As Aventuras de Buck (2022)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fronteira_2007_2007.html": {
     "titulo": "(A) Fronteira (2007)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fuga_das_galinhas.html": {
     "titulo": "A Fuga das Galinhas",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fuga_das_galinhas_2000_2000.html": {
     "titulo": "A Fuga das Galinhas (2000)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fuga_das_galinhas_a_ameaca_dos_nuggets.html": {
     "titulo": "A Fuga das Galinhas",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fuga_das_galinhas_a_ameaca_dos_nuggets_2023_2023.html": {
     "titulo": "A Fuga das Galinhas: A Ameaca dos Nuggets (2023)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_furia_de_becky_2023_2023.html": {
     "titulo": "A Furia De Becky (2023)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_furia_de_dracula_2023_2023.html": {
     "titulo": "A Furia de Dracula (2023)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_gangue_esta_em_campo_2006_2006.html": {
     "titulo": "A Gangue esta em Campo (2006)",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_garota_da_capa_vermelha.html": {
     "titulo": "A Garota da Capa Vermelha",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_garota_da_capa_vermelha_2011_2011.html": {
     "titulo": "A Garota da Capa Vermelha (2011)",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_garota_de_miller_2024_2024.html": {
     "titulo": "A Garota de Miller (2024)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_garota_ideal_2007_2007.html": {
     "titulo": "A Garota Ideal (2007)",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_garota_mais_linda_do_mundo_2025_2025.html": {
     "titulo": "A Garota Mais Linda do Mundo (2025)",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_grande_inundacao_2025_2025.html": {
     "titulo": "A Grande Inundacao (2025)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_grande_muralha_2016_2016.html": {
     "titulo": "A Grande Muralha (2016)",
     "generos": [
-      "indefinido"
+      "Guerra",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_grande_viagem_da_sua_vida_2025_2025.html": {
     "titulo": "A Grande Viagem da Sua Vida (2025)",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_grande_virada_2010_2010.html": {
     "titulo": "A Grande Virada (2010)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_greve_das_camareiras_2024_2024.html": {
     "titulo": "A Greve das Camareiras (2024)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_gripe_2013_2013.html": {
     "titulo": "A Gripe (2013)",
     "generos": [
-      "indefinido"
+      "Documentário",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_guerra_diante_dos_meus_olhos_2024_2024.html": {
     "titulo": "A Guerra Diante dos Meus Olhos (2024)",
     "generos": [
-      "indefinido"
+      "Documentário",
+      "Guerra"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_era_do_gelo_um_natal_de_mamute_2011_2011.html": {
     "titulo": "A Era do Gelo: Um Natal de Mamute (2011)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escola_do_bem_e_do_mal.html": {
     "titulo": "A Escola do Bem e do Mal",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escola_do_bem_e_do_mal_2022_2022.html": {
     "titulo": "A Escola do Bem e do Mal (2022)",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_2016_2016.html": {
     "titulo": "A Escolha (2016)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_de_natal_2023_2023.html": {
     "titulo": "A Escolha de Natal (2023)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_de_sofia_1982_1982.html": {
     "titulo": "A Escolha de Sofia (1982)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Guerra"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita.html": {
     "titulo": "A Escolha Perfeita",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita_2.html": {
     "titulo": "A Escolha Perfeita 2",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita_2012_2012.html": {
     "titulo": "A Escolha Perfeita (2012)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita_2_2015_2015.html": {
     "titulo": "A Escolha Perfeita 2 (2015)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita_3.html": {
     "titulo": "A Escolha Perfeita 3",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_escolha_perfeita_3_2017_2017.html": {
     "titulo": "A Escolha Perfeita 3 (2017)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Música",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_espera_da_morte_2025_2025.html": {
     "titulo": "A Espera da Morte (2025)",
@@ -3735,9 +3810,11 @@
   "a_espia_que_sabia_de_menos_2015_2015.html": {
     "titulo": "A Espia Que Sabia de Menos (2015)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_esposa_do_meu_marido_t1e1.html": {
     "titulo": "A Esposa do Meu Marido T1E1",
@@ -3784,30 +3861,30 @@
   "a_centopeia_humana_2_2011_2011.html": {
     "titulo": "A Centopeia Humana 2 (2011)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_centopeia_humana_3_2015_2015.html": {
     "titulo": "A Centopeia Humana 3 (2015)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_chamada_2023_2023.html": {
     "titulo": "A Chamada (2023)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_chave_do_problema_2023_2023.html": {
     "titulo": "A Chave do Problema (2023)",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_chave_mestra.html": {
     "titulo": "A Chave Mestra",
@@ -3819,9 +3896,9 @@
   "a_chave_mestra_2005_2005.html": {
     "titulo": "A Chave Mestra (2005)",
     "generos": [
-      "indefinido"
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_chegada.html": {
     "titulo": "A Chegada",
@@ -3833,72 +3910,73 @@
   "a_chegada_2016_2016.html": {
     "titulo": "A Chegada (2016)",
     "generos": [
-      "indefinido"
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cinco_passos_de_voce.html": {
     "titulo": "A Cinco Passos de Voce",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cinco_passos_de_voce_2019_2019.html": {
     "titulo": "A Cinco Passos de Voce (2019)",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_colega_perfeita_2026_2026.html": {
     "titulo": "A Colega Perfeita (2026)",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_colina_escarlate_2015_2015.html": {
     "titulo": "A Colina Escarlate (2015)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_convidada_2023_2023.html": {
     "titulo": "A Convidada (2023)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cor_que_caiu_do_espaco_2020_2020.html": {
     "titulo": "A Cor Que Caiu do Espaco (2020)",
     "generos": [
-      "indefinido"
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_corrida_dos_100_metros_2025_2025.html": {
     "titulo": "A Corrida dos 100 Metros (2025)",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_costureira_2025_2025.html": {
     "titulo": "A Costureira (2025)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_creche_do_papai_2003_2003.html": {
     "titulo": "A Creche do Papai (2003)",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_criada.html": {
     "titulo": "A Criada",
@@ -3910,72 +3988,75 @@
   "a_criada_proibida_2021_2021.html": {
     "titulo": "A Criada Proibida (2021)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_culpa_e_das_estrelas.html": {
     "titulo": "A Culpa e das Estrelas",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fonte_da_juventude.html": {
     "titulo": "A Fonte da Juventude",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fonte_da_juventude_2025_2025.html": {
     "titulo": "A Fonte da Juventude (2025)",
     "generos": [
-      "indefinido"
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_forca_2015_2015.html": {
     "titulo": "A Forca (2015)",
     "generos": [
-      "indefinido"
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_forja_o_poder_da_transformacao.html": {
     "titulo": "A Forja",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_forja_o_poder_da_transformacao_2024_2024.html": {
     "titulo": "A Forja",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_fortuna_de_escobar_2025_2025.html": {
     "titulo": "A Fortuna de Escobar (2025)",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_freira.html": {
     "titulo": "A Freira",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_freira_2.html": {
     "titulo": "A Freira 2",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_freira_2018_2018.html": {
     "titulo": "A Freira (2018)",
@@ -3994,261 +4075,318 @@
   "a_fronteira.html": {
     "titulo": "(A) Fronteira",
     "generos": [
-      "indefinido"
+      "Guerra",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e1.html": {
     "titulo": "A Casa do Dragao T1E1",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e10.html": {
     "titulo": "A Casa do Dragao T1E10",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e2.html": {
     "titulo": "A Casa do Dragao T1E2",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e3.html": {
     "titulo": "A Casa do Dragao T1E3",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e4.html": {
     "titulo": "A Casa do Dragao T1E4",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e5.html": {
     "titulo": "A Casa do Dragao T1E5",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e6.html": {
     "titulo": "A Casa do Dragao T1E6",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e7.html": {
     "titulo": "A Casa do Dragao T1E7",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e8.html": {
     "titulo": "A Casa do Dragao T1E8",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t1e9.html": {
     "titulo": "A Casa do Dragao T1E9",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t2e1.html": {
     "titulo": "A Casa do Dragao T2E1",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t2e2.html": {
     "titulo": "A Casa do Dragao T2E2",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t2e3.html": {
     "titulo": "A Casa do Dragao T2E3",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_do_dragao_t2e4.html": {
     "titulo": "A Casa do Dragao T2E4",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_profunda_2021_2021.html": {
     "titulo": "A Casa Profunda (2021)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_que_jack_construiu_2018_2018.html": {
     "titulo": "A Casa Que Jack Construiu (2018)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_sombria_2021_2021.html": {
     "titulo": "A Casa Sombria (2021)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_caverna_2018_2018.html": {
     "titulo": "A Caverna (2018)",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cela_dos_milagres_2025_2025.html": {
     "titulo": "A Cela dos Milagres (2025)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_centopeia_humana_2009_2009.html": {
     "titulo": "A Centopeia Humana (2009)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e11.html": {
     "titulo": "A Batalha dos 100: Asia T1E11",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e12.html": {
     "titulo": "A Batalha dos 100: Asia T1E12",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e2.html": {
     "titulo": "A Batalha dos 100: Asia T1E2",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e3.html": {
     "titulo": "A Batalha dos 100: Asia T1E3",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e4.html": {
     "titulo": "A Batalha dos 100: Asia T1E4",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e5.html": {
     "titulo": "A Batalha dos 100: Asia T1E5",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e6.html": {
     "titulo": "A Batalha dos 100: Asia T1E6",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e7.html": {
     "titulo": "A Batalha dos 100: Asia T1E7",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e8.html": {
     "titulo": "A Batalha dos 100: Asia T1E8",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_batalha_dos_100_asia_t1e9.html": {
     "titulo": "A Batalha dos 100: Asia T1E9",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_adormecida.html": {
     "titulo": "A Bela Adormecida",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Família",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_adormecida_1959_1959.html": {
     "titulo": "A Bela Adormecida (1959)",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Família",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_e_a_fera.html": {
     "titulo": "A Bela e a Fera",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Família",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_e_a_fera_19.html": {
     "titulo": "A Bela e a Fera 19",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Família",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_e_a_fera_1991_1991.html": {
     "titulo": "A Bela e a Fera (1991)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_e_a_fera_2017_2017.html": {
     "titulo": "A Bela e a Fera (2017)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_caiu_2003_2003.html": {
     "titulo": "A Casa Caiu (2003)",
@@ -4267,9 +4405,9 @@
   "a_casa_de_cera_2005_2005.html": {
     "titulo": "A Casa de Cera (2005)",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_casa_de_tijolos_de_barro_2024_2024.html": {
     "titulo": "A Casa de Tijolos de Barro (2024)",
@@ -4407,30 +4545,38 @@
   "a_guerra_do_amanha_2021_2021.html": {
     "titulo": "A Guerra do Amanha (2021)",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_guerra_dos_dalmatas.html": {
     "titulo": "A Guerra dos Dalmatas",
     "generos": [
-      "indefinido"
+      "Família",
+      "Comédia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_guerra_dos_deuses.html": {
     "titulo": "A Guerra dos Deuses",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_guerra_dos_mundos_2025_2025.html": {
     "titulo": "A Guerra dos Mundos (2025)",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_heranca_2024_2024.html": {
     "titulo": "A Heranca (2024)",
@@ -4449,100 +4595,128 @@
   "a_hipotese_do_amor.html": {
     "titulo": "A Hipotese do Amor",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hipotese_do_amor_2026_2026.html": {
     "titulo": "A Hipotese do Amor (2026)",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_historia_do_som_2025_2025.html": {
     "titulo": "A Historia do Som (2025)",
     "generos": [
-      "indefinido"
+      "Documentário",
+      "Música",
+      "História"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_historia_sem_fim_1984_1984.html": {
     "titulo": "A Historia sem Fim (1984)",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_da_sua_morte.html": {
     "titulo": "A Hora da Sua Morte",
     "generos": [
-      "indefinido"
+      "Faroeste",
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_da_sua_morte_2020_2020.html": {
     "titulo": "A Hora da Sua Morte (2020)",
     "generos": [
-      "indefinido"
+      "Faroeste",
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_descarrego_2019_2019.html": {
     "titulo": "A Hora do Descarrego (2019)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_espanto.html": {
     "titulo": "A Hora do Espanto",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_espanto_2.html": {
     "titulo": "A Hora do Espanto 2",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_mal_2025_2025.html": {
     "titulo": "A Hora do Mal (2025)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo.html": {
     "titulo": "A Hora do Pesadelo",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_1984_1984.html": {
     "titulo": "A Hora do Pesadelo (1984)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_2010_2010.html": {
     "titulo": "A Hora do Pesadelo (2010)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_2_a_vinganca_de_freddy.html": {
     "titulo": "A Hora do Pesadelo 2: A Vinganca de Freddy",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_mansao_bly_t1e3.html": {
     "titulo": "A Maldicao da Mansao Bly T1E3",
@@ -4967,142 +5141,180 @@
   "a_ilha_das_sombras_2023_2023.html": {
     "titulo": "A Ilha das Sombras (2023)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_ilha_do_inverno_2024_2024.html": {
     "titulo": "A Ilha do Inverno (2024)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_incrivel_historia_de_adaline.html": {
     "titulo": "A Incrivel Historia de Adaline",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_incrivel_historia_de_adaline_2015_2015.html": {
     "titulo": "A Incrivel Historia de Adaline (2015)",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_invasora.html": {
     "titulo": "A Invasora",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_invencao_de_hugo_cabret.html": {
     "titulo": "A Invencao de Hugo Cabret",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_invocacao_2025_2025.html": {
     "titulo": "A Invocacao (2025)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_jaula_2022_2022.html": {
     "titulo": "A Jaula (2022)",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_lady_e_o_lobo_o_bicho_ta_solto.html": {
     "titulo": "A Lady e o Lobo: O Bicho ta Solto",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_mae_do_meu_filho_2012_2012.html": {
     "titulo": "A Mae do Meu Filho (2012)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_mae_e_a_maldicao_2025_2025.html": {
     "titulo": "A Mae e a Maldicao (2025)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_magia_comeca_na_rocha_encantada_2025_2025.html": {
     "titulo": "A Magia Comeca na Rocha Encantada (2025)",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_2021_2021.html": {
     "titulo": "A Maldicao (2021)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_casa_winchester_2018_2018.html": {
     "titulo": "A Maldicao da Casa Winchester (2018)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_chorona.html": {
     "titulo": "A Maldicao da Chorona",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_chorona_2019_2019.html": {
     "titulo": "A Maldicao da Chorona (2019)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_floresta_2015_2015.html": {
     "titulo": "A Maldicao da Floresta (2015)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_freira_2019_2019.html": {
     "titulo": "A Maldicao da Freira (2019)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_mansao_bly_t1e1.html": {
     "titulo": "A Maldicao da Mansao Bly T1E1",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_da_mansao_bly_t1e2.html": {
     "titulo": "A Maldicao da Mansao Bly T1E2",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_maldicao_de_bridge_hollow_2022_2022.html": {
     "titulo": "A Maldicao De Bridge Hollow (2022)",
@@ -5387,100 +5599,120 @@
   "a_hora_do_pesadelo_2_a_vinganca_de_freddy_1985_1985.html": {
     "titulo": "A Hora do Pesadelo 2",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_3_os_guerreiros_dos_sonhos.html": {
     "titulo": "A Hora do Pesadelo 3: Os Guerreiros dos Sonhos",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_4_o_mestre_dos_sonhos.html": {
     "titulo": "A Hora do Pesadelo 4: O Mestre dos Sonhos",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_4_o_mestre_dos_sonhos_1988_1988.html": {
     "titulo": "A Hora do Pesadelo 4",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_5_o_maior_horror_de_freddy.html": {
     "titulo": "A Hora do Pesadelo 5: O Maior Horror de Freddy",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_5_o_maior_horror_de_freddy_1989_1989.html": {
     "titulo": "A Hora do Pesadelo 5",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_6_pesadelo_final_a_morte_de_freddy.html": {
     "titulo": "A Hora do Pesadelo 6: Pesadelo Final",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo_6_pesadelo_final_a_morte_de_freddy_1991_1991.html": {
     "titulo": "A Hora do Pesadelo 6",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush.html": {
     "titulo": "A Hora do Rush",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_1998_1998.html": {
     "titulo": "A Hora do Rush (1998)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_2.html": {
     "titulo": "A Hora do Rush 2",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_2_2001_2001.html": {
     "titulo": "A Hora do Rush 2 (2001)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_3.html": {
     "titulo": "A Hora do Rush 3",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_3_2007_2007.html": {
     "titulo": "A Hora do Rush 3 (2007)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_vampiro_2024_2024.html": {
     "titulo": "A Hora Do Vampiro (2024)",
@@ -5499,30 +5731,38 @@
   "a_hora_negra_2006_2006.html": {
     "titulo": "A Hora Negra (2006)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_identidade_bourne_2002_2002.html": {
     "titulo": "A Identidade Bourne (2002)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_ilha_2005_2005.html": {
     "titulo": "A Ilha (2005)",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_ilha_da_fantasia_2021_2021.html": {
     "titulo": "A Ilha da Fantasia (2021)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_presa_2016_2016.html": {
     "titulo": "A Presa (2016)",
