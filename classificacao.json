@@ -2418,9 +2418,10 @@
     "titulo": "A Bela e a Fera 19",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_bela_e_a_fera_1991_1991.html": {
     "titulo": "A Bela e a Fera (1991)",
@@ -2718,7 +2719,7 @@
   },
   "9_t5e3.html": {
     "titulo": "9 T5E3",
-    "tipo": "serie",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -2726,7 +2727,7 @@
   },
   "9_t5e4.html": {
     "titulo": "9 T5E4",
-    "tipo": "serie",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -2734,7 +2735,7 @@
   },
   "9_t5e5.html": {
     "titulo": "9 T5E5",
-    "tipo": "serie",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -2742,7 +2743,7 @@
   },
   "9_t5e6.html": {
     "titulo": "9 T5E6",
-    "tipo": "serie",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -3960,9 +3961,10 @@
     "titulo": "A Familia Buscape (1962)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_familia_do_futuro.html": {
     "titulo": "A Familia do Futuro",
@@ -3988,9 +3990,10 @@
     "titulo": "A Familia Khumalo (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_familia_mitchell_e_a_revolta_das_maquinas.html": {
     "titulo": "A Familia Mitchell e a Revolta das Maquinas",
@@ -4462,9 +4465,10 @@
     "titulo": "A Hora do Rush",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_rush_1998_1998.html": {
     "titulo": "A Hora do Rush (1998)",
@@ -4599,9 +4603,9 @@
     "titulo": "A Invasora",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_invencao_de_hugo_cabret.html": {
     "titulo": "A Invencao de Hugo Cabret",
@@ -4691,9 +4695,10 @@
     "titulo": "A Lenda de Saint Joseph (2023)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "História"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_lenda_do_cavaleiro_sem_cabeca_1999_1999.html": {
     "titulo": "A Lenda do Cavaleiro Sem Cabeca (1999)",
@@ -4739,25 +4744,28 @@
     "titulo": "A Lenda: Em Busca do Medalhao Sagrado",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_lenda_em_busca_do_medalhao_sagrado_2024_2024.html": {
     "titulo": "A Lenda: Em Busca do Medalhao Sagrado (2024)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_leste_de_wall_2025_2025.html": {
     "titulo": "A Leste de Wall (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "História"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_libertacao.html": {
     "titulo": "A Libertacao",
@@ -5395,49 +5403,55 @@
     "titulo": "A Hora da Sua Morte",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_da_sua_morte_2020_2020.html": {
     "titulo": "A Hora da Sua Morte (2020)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_descarrego_2019_2019.html": {
     "titulo": "A Hora do Descarrego (2019)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_espanto.html": {
     "titulo": "A Hora do Espanto",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_espanto_2.html": {
     "titulo": "A Hora do Espanto 2",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_mal_2025_2025.html": {
     "titulo": "A Hora do Mal (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_hora_do_pesadelo.html": {
     "titulo": "A Hora do Pesadelo",
@@ -5580,9 +5594,10 @@
     "titulo": "A Mulher no Jardim",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_mulher_no_jardim_2025_2025.html": {
     "titulo": "A Mulher no Jardim (2025)",
@@ -5825,17 +5840,17 @@
     "titulo": "A Meia",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_meia_irma_feia_2025_2025.html": {
     "titulo": "A Meia",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_melhor_festa_do_ano_2011_2011.html": {
     "titulo": "A Melhor Festa do Ano (2011)",
@@ -6024,9 +6039,9 @@
     "titulo": "A Paisana (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_paixao_de_cristo_2004_2004.html": {
     "titulo": "A Paixao de Cristo (2004)",
@@ -6060,17 +6075,19 @@
     "titulo": "A Paranoia de Lulu (2024)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_paris_errada_2025_2025.html": {
     "titulo": "A Paris Errada (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_passagem_2005_2005.html": {
     "titulo": "A Passagem (2005)",
@@ -6315,9 +6332,9 @@
     "titulo": "A Procura de Martina (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_profecia_2006_2006.html": {
     "titulo": "A Profecia (2006)",
@@ -6333,17 +6350,19 @@
     "titulo": "A Profecia da Lua (2024)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_profecia_de_um_guerreiro_2025_2025.html": {
     "titulo": "A Profecia de um Guerreiro (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_proposta_2007_2007.html": {
     "titulo": "A Proposta (2007)",
@@ -6762,9 +6781,9 @@
     "titulo": "A Torradeira (2026)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_torre_negra_2017_2017.html": {
     "titulo": "A Torre Negra (2017)",
@@ -6788,9 +6807,9 @@
     "titulo": "A Tregua (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_trilha_2009_2009.html": {
     "titulo": "A Trilha (2009)",
@@ -6998,9 +7017,9 @@
     "titulo": "A Raiz do Mal (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_rebeliao_de_1907_2023_1907.html": {
     "titulo": "A Rebeliao de 1907 (2023)",
@@ -7497,9 +7516,10 @@
     "titulo": "A Chave do Problema (2023)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_chave_mestra.html": {
     "titulo": "A Chave Mestra",
@@ -7563,9 +7583,10 @@
     "titulo": "A Colega Perfeita (2026)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_colina_escarlate_2015_2015.html": {
     "titulo": "A Colina Escarlate (2015)",
@@ -7581,9 +7602,10 @@
     "titulo": "A Convidada (2023)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_cor_que_caiu_do_espaco_2020_2020.html": {
     "titulo": "A Cor Que Caiu do Espaco (2020)",
@@ -8332,25 +8354,26 @@
     "titulo": "A Vida Depois",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vida_depois_2021_2021.html": {
     "titulo": "A Vida Depois (2021)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vida_depois_de_voce_2022_2022.html": {
     "titulo": "A Vida Depois de Voce (2022)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vida_e_bela_1997_1997.html": {
     "titulo": "A Vida e Bela (1997)",
@@ -9530,22 +9553,27 @@
   },
   "alquimia_das_almas_t2e3.html": {
     "titulo": "Alquimia das Almas T2E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Romance",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "alvo_da_mafia_2025_2025.html": {
     "titulo": "Alvo Da Mafia (2025)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
       "Crime",
+      "Ação",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "amaldicoada_2016_2016.html": {
     "titulo": "Amaldicoada (2016)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério",
@@ -9555,6 +9583,7 @@
   },
   "amaldicoada_3_o_amuleto_2023_2023.html": {
     "titulo": "Amaldicoada 3",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério",
@@ -9564,6 +9593,7 @@
   },
   "amaldicoados_2005_2005.html": {
     "titulo": "Amaldicoados (2005)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério",
@@ -9573,24 +9603,34 @@
   },
   "amanda_2022_2022.html": {
     "titulo": "Amanda (2022)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
-      "Drama",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "amanhecer_violento_2012_2012.html": {
     "titulo": "Amanhecer Violento (2012)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Guerra",
+      "Crime",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "ameaca_no_ar_2025_2025.html": {
     "titulo": "Ameaca No Ar (2025)",
+    "tipo": "filme",
+    "generos": [
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "ameaca_profunda_2020_2020.html": {
+    "titulo": "Ameaca Profunda (2020)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller",
@@ -9598,108 +9638,111 @@
     ],
     "fonte": "ia"
   },
-  "ameaca_profunda_2020_2020.html": {
-    "titulo": "Ameaca Profunda (2020)",
-    "generos": [
-      "Ação",
-      "Ficção Científica",
-      "Terror"
-    ],
-    "fonte": "ia"
-  },
   "american_dream_um_reality_sangrento_2021_2021.html": {
     "titulo": "American Dream",
+    "tipo": "filme",
     "generos": [
-      "Documentário"
+      "Drama",
+      "Crime"
     ],
     "fonte": "ia"
   },
   "american_gangster_2007_2007.html": {
     "titulo": "American Gangster (2007)",
+    "tipo": "filme",
     "generos": [
       "Crime",
       "Drama",
-      "Thriller"
+      "História"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e1.html": {
     "titulo": "American Horror Story T1E1",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e10.html": {
     "titulo": "American Horror Story T1E10",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e11.html": {
     "titulo": "American Horror Story T1E11",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e12.html": {
     "titulo": "American Horror Story T1E12",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e2.html": {
     "titulo": "American Horror Story T1E2",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e3.html": {
     "titulo": "American Horror Story T1E3",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e4.html": {
     "titulo": "American Horror Story T1E4",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e5.html": {
     "titulo": "American Horror Story T1E5",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t1e6.html": {
     "titulo": "American Horror Story T1E6",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Terror",
+      "Drama",
       "Mistério"
     ],
     "fonte": "ia"
@@ -9715,132 +9758,134 @@
   },
   "alquimia_das_almas_t2e4.html": {
     "titulo": "Alquimia das Almas T2E4",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alquimia_das_almas_t2e5.html": {
     "titulo": "Alquimia das Almas T2E5",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alquimia_das_almas_t2e6.html": {
     "titulo": "Alquimia das Almas T2E6",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alquimia_das_almas_t2e7.html": {
     "titulo": "Alquimia das Almas T2E7",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alquimia_das_almas_t2e8.html": {
     "titulo": "Alquimia das Almas T2E8",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alquimia_das_almas_t2e9.html": {
     "titulo": "Alquimia das Almas T2E9",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
-      "Aventura",
+      "Romance",
       "Drama"
     ],
     "fonte": "ia"
   },
   "alta_frequencia_2000_2000.html": {
     "titulo": "Alta Frequencia (2000)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
-      "Mistério",
-      "Crime"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "alta_tensao_2003_2003.html": {
     "titulo": "Alta Tensao (2003)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
-      "Mistério",
-      "Crime"
+      "Terror",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "altered_2025_2025.html": {
     "titulo": "Altered (2025)",
+    "tipo": "filme",
     "generos": [
-      "Ficção Científica",
-      "Thriller",
-      "Mistério"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "alucinacao_t1e1.html": {
     "titulo": "Alucinacao T1E1",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Mistério",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "alucinacao_t1e2.html": {
     "titulo": "Alucinacao T1E2",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Mistério",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "alucinacao_t1e3.html": {
     "titulo": "Alucinacao T1E3",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Mistério",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "alucinacao_t1e4.html": {
     "titulo": "Alucinacao T1E4",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Mistério",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "aluna_exemplar_e_estrela_porno.html": {
     "titulo": "Aluna Exemplar e Estrela Porno",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Comédia",
-      "Romance"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "alvin_e_os_esquilos_2.html": {
     "titulo": "Alvin e Os Esquilos 2",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -9850,6 +9895,7 @@
   },
   "alvin_e_os_esquilos_2008_2008.html": {
     "titulo": "Alvin e os Esquilos (2008)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -9859,6 +9905,7 @@
   },
   "alvin_e_os_esquilos_2_2009_2009.html": {
     "titulo": "Alvin e os Esquilos 2 (2009)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -9868,6 +9915,7 @@
   },
   "alvin_e_os_esquilos_3.html": {
     "titulo": "Alvin e Os Esquilos 3",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -9877,6 +9925,7 @@
   },
   "alvin_e_os_esquilos_3_2011_2011.html": {
     "titulo": "Alvin e os Esquilos 3 (2011)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -9886,10 +9935,11 @@
   },
   "alvin_e_os_esquilos_na_estrada_2015_2015.html": {
     "titulo": "Alvin e os Esquilos: Na Estrada (2015)",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Comédia",
-      "Família"
+      "Aventura",
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -10283,6 +10333,7 @@
   },
   "american_horror_story_t6e9.html": {
     "titulo": "American Horror Story T6E9",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -10673,41 +10724,53 @@
   },
   "american_horror_story_t8e9.html": {
     "titulo": "American Horror Story T8E9",
+    "tipo": "serie",
     "generos": [
-      "Terror"
+      "Terror",
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "american_pie_2_a_segunda_vez_e_ainda_melhor.html": {
     "titulo": "American Pie 2: A Segunda Vez e Ainda Melhor",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_2_a_segunda_vez_e_ainda_melhor_2001_2001.html": {
     "titulo": "American Pie 2: A Segunda Vez e Ainda Melhor (2001)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_a_primeira_vez_e_inesquecivel.html": {
     "titulo": "American Pie: A Primeira Vez e Inesquecivel",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_a_primeira_vez_e_inesquecivel_1999_1999.html": {
     "titulo": "American Pie: A Primeira Vez e Inesquecivel (1999)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_apresenta_meninas_ao_ataque.html": {
     "titulo": "American Pie Apresenta: Meninas ao Ataque",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10715,6 +10778,7 @@
   },
   "american_pie_apresenta_meninas_ao_ataque_2020_2020.html": {
     "titulo": "American Pie Apresenta: Meninas ao Ataque (2020)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10722,6 +10786,7 @@
   },
   "american_pie_caindo_em_tentacao.html": {
     "titulo": "American Pie: Caindo em Tentacao",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10729,6 +10794,7 @@
   },
   "american_pie_caindo_em_tentacao_2007_2007.html": {
     "titulo": "American Pie: Caindo em Tentacao (2007)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10736,20 +10802,25 @@
   },
   "american_pie_o_casamento.html": {
     "titulo": "American Pie: O Casamento",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_o_casamento_2003_2003.html": {
     "titulo": "American Pie O Casamento (2003)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_o_livro_do_amor.html": {
     "titulo": "American Pie: O Livro do Amor",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10757,6 +10828,7 @@
   },
   "american_pie_o_livro_do_amor_2009_2009.html": {
     "titulo": "American Pie O Livro Do Amor (2009)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10764,20 +10836,25 @@
   },
   "american_pie_o_reencontro.html": {
     "titulo": "American Pie: O Reencontro",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_o_reencontro_2012_2012.html": {
     "titulo": "American Pie O Reencontro (2012)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "american_pie_o_ultimo_stifler_virgem.html": {
     "titulo": "American Pie: O Ultimo Stifler Virgem",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10785,6 +10862,7 @@
   },
   "american_pie_o_ultimo_stifler_virgem_2006_2006.html": {
     "titulo": "American Pie: O Ultimo Stifler Virgem (2006)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10792,6 +10870,7 @@
   },
   "american_pie_tocando_a_maior_zona.html": {
     "titulo": "American Pie: Tocando a Maior Zona",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10799,6 +10878,7 @@
   },
   "american_pie_tocando_a_maior_zona_2005_2005.html": {
     "titulo": "American Pie: Tocando a Maior Zona (2005)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -10806,6 +10886,7 @@
   },
   "americana_2025_2025.html": {
     "titulo": "Americana (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -10813,224 +10894,226 @@
   },
   "amigos_alienigenas.html": {
     "titulo": "Amigos Alienigenas",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "amigos_do_alem_2025_2025.html": {
     "titulo": "Amigos do Alem (2025)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Fantasia",
-      "Romance"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "amizade_colorida.html": {
     "titulo": "Amizade Colorida",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
       "Romance"
     ],
     "fonte": "ia"
   },
   "amizade_colorida_2011_2011.html": {
     "titulo": "Amizade Colorida (2011)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
       "Romance"
     ],
     "fonte": "ia"
   },
   "amizade_desfeita_2015_2015.html": {
     "titulo": "Amizade Desfeita (2015)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério",
-      "Thriller"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "amizade_desfeita_2_dark_web_2018_2018.html": {
     "titulo": "Amizade Desfeita 2: Dark Web (2018)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "amizade_maldita_2019_2019.html": {
     "titulo": "Amizade Maldita (2019)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Thriller"
+      "Terror"
     ],
     "fonte": "ia"
   },
   "amizade_toxica_2025_2025.html": {
     "titulo": "Amizade Toxica (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "amor_911_2012_2012.html": {
     "titulo": "Amor 911 (2012)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance",
-      "Ação"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_a_toda_prova_2011_2011.html": {
     "titulo": "Amor a Toda Prova (2011)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Drama",
       "Romance"
     ],
     "fonte": "ia"
   },
   "amor_bandido_2013_2013.html": {
     "titulo": "Amor Bandido (2013)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance",
-      "Crime"
+      "Crime",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_com_data_marcada_2020_2020.html": {
     "titulo": "Amor com Data Marcada (2020)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
       "Romance"
     ],
     "fonte": "ia"
   },
   "amor_com_fetiche_2022_2022.html": {
     "titulo": "Amor Com Fetiche (2022)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Romance",
-      "Drama"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_de_aluguel_2003_2003.html": {
     "titulo": "Amor de Aluguel (2003)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Romance",
-      "Drama"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_de_ano_novo_2024_2024.html": {
     "titulo": "Amor de Ano Novo (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "amor_de_redencao.html": {
     "titulo": "Amor de Redencao",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance",
-      "Faroeste"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_de_redencao_2022_2022.html": {
     "titulo": "Amor De Redencao (2022)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance",
-      "Faroeste"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_demais_2026_2026.html": {
     "titulo": "Amor Demais (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "amor_e_monstros_2020_2020.html": {
     "titulo": "Amor E Monstros (2020)",
+    "tipo": "filme",
     "generos": [
-      "Aventura",
-      "Comédia",
-      "Ficção Científica"
+      "Fantasia",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "amor_e_outras_drogas_2010_2010.html": {
     "titulo": "Amor e Outras Drogas (2010)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
-      "Drama",
       "Romance"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_os_segredos_de_dumbledore.html": {
     "titulo": "Animais Fantasticos: Os Segredos de Dumbledore",
+    "tipo": "filme",
     "generos": [
+      "Fantasia",
       "Aventura",
-      "Fantasia"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_os_segredos_de_dumbledore_2022_2022.html": {
     "titulo": "Animais Fantasticos: Os Segredos de Dumbledore (2022)",
+    "tipo": "filme",
     "generos": [
+      "Fantasia",
       "Aventura",
-      "Fantasia"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_uma_historia_natural_2022_2022.html": {
     "titulo": "Animais Fantasticos Uma Historia Natural (2022)",
+    "tipo": "filme",
     "generos": [
-      "Documentário",
-      "Família"
+      "Documentário"
     ],
     "fonte": "ia"
   },
   "animais_noturnos_2016_2016.html": {
     "titulo": "Animais Noturnos (2016)",
+    "tipo": "filme",
     "generos": [
-      "Crime",
-      "Thriller"
+      "Drama",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "animais_perigosos_2025_2025.html": {
     "titulo": "Animais Perigosos (2025)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "animais_unidos_jamais_serao_vencidos.html": {
     "titulo": "Animais Unidos Jamais Serao Vencidos",
+    "tipo": "filme",
     "generos": [
-      "Animação",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "animal_2001_2001.html": {
     "titulo": "Animal (2001)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -11038,262 +11121,253 @@
   },
   "aniversario_sangrento.html": {
     "titulo": "Aniversario Sangrento",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "anjo_renegado_t1e1.html": {
     "titulo": "Anjo Renegado T1E1",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e10.html": {
     "titulo": "Anjo Renegado T1E10",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e2.html": {
     "titulo": "Anjo Renegado T1E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e3.html": {
     "titulo": "Anjo Renegado T1E3",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e4.html": {
     "titulo": "Anjo Renegado T1E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e5.html": {
     "titulo": "Anjo Renegado T1E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e6.html": {
     "titulo": "Anjo Renegado T1E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e7.html": {
     "titulo": "Anjo Renegado T1E7",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e8.html": {
     "titulo": "Anjo Renegado T1E8",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t1e9.html": {
     "titulo": "Anjo Renegado T1E9",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e1.html": {
     "titulo": "Anjo Renegado T2E1",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e10.html": {
     "titulo": "Anjo Renegado T2E10",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e2.html": {
     "titulo": "Anjo Renegado T2E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e3.html": {
     "titulo": "Anjo Renegado T2E3",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e4.html": {
     "titulo": "Anjo Renegado T2E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e5.html": {
     "titulo": "Anjo Renegado T2E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e6.html": {
     "titulo": "Anjo Renegado T2E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e7.html": {
     "titulo": "Anjo Renegado T2E7",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e8.html": {
     "titulo": "Anjo Renegado T2E8",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t2e9.html": {
     "titulo": "Anjo Renegado T2E9",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e1.html": {
     "titulo": "Anjo Renegado T3E1",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e10.html": {
     "titulo": "Anjo Renegado T3E10",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e2.html": {
     "titulo": "Anjo Renegado T3E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e4.html": {
     "titulo": "Anjo Renegado T3E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e5.html": {
     "titulo": "Anjo Renegado T3E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e6.html": {
     "titulo": "Anjo Renegado T3E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e7.html": {
     "titulo": "Anjo Renegado T3E7",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Crime",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "anjo_renegado_t3e8.html": {
     "titulo": "Anjo Renegado T3E8",
+    "tipo": "serie",
     "generos": [
-      "Ação",
       "Crime",
-      "Drama"
+      "Drama",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "anjo_renegado_t3e9.html": {
     "titulo": "Anjo Renegado T3E9",
+    "tipo": "serie",
     "generos": [
-      "Ação",
       "Crime",
-      "Drama"
+      "Drama",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "anjos_da_guerra_2026_2026.html": {
     "titulo": "Anjos Da Guerra (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Guerra",
@@ -11303,118 +11377,142 @@
   },
   "anjos_da_lei_2012_2012.html": {
     "titulo": "Anjos Da Lei (2012)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
       "Comédia",
-      "Crime"
+      "Crime",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "anjos_da_lei_2_2014_2014.html": {
     "titulo": "Anjos Da Lei 2 (2014)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
       "Comédia",
-      "Crime"
+      "Crime",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "amor_e_vinho_2025_2025.html": {
     "titulo": "Amor e Vinho (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "amor_enrolado_2025_2025.html": {
     "titulo": "Amor Enrolado (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "amor_sem_medida_2021_2021.html": {
     "titulo": "Amor Sem Medida (2021)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "anaconda.html": {
     "titulo": "Anaconda",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_1997_1997.html": {
     "titulo": "Anaconda (1997)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_2025_2025.html": {
     "titulo": "Anaconda (2025)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_2_a_cacada_pela_orquidea_sangrenta.html": {
     "titulo": "Anaconda 2: A Cacada Pela Orquidea Sangrenta",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_2_a_cacada_pela_orquidea_sangrenta_2003_2003.html": {
     "titulo": "Anaconda 2: A Cacada pela Orquidea Sangrenta (2003)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_3.html": {
     "titulo": "Anaconda 3",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_3_2008_2008.html": {
     "titulo": "Anaconda 3 (2008)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anaconda_4_rastro_de_sangue_2009_2009.html": {
     "titulo": "Anaconda 4: Rastro de Sangue (2009)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
+      "Ação",
+      "Aventura",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anastasia.html": {
     "titulo": "Anastasia",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Família",
-      "Música"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "anemona_2025_2025.html": {
     "titulo": "Anemona (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -11422,24 +11520,27 @@
   },
   "angry_birds_2_o_filme.html": {
     "titulo": "Angry Birds 2: O Filme",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Família",
-      "Comédia"
+      "Comédia",
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "angry_birds_o_filme.html": {
     "titulo": "Angry Birds: O Filme",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Família",
-      "Comédia"
+      "Comédia",
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "animais_em_apuros.html": {
     "titulo": "Animais em Apuros",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -11447,175 +11548,197 @@
   },
   "animais_fantasticos_e_onde_habitam.html": {
     "titulo": "Animais Fantasticos e Onde Habitam",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
-      "Aventura"
+      "Aventura",
+      "Família"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_e_onde_habitam_2016_2016.html": {
     "titulo": "Animais Fantasticos e Onde Habitam (2016)",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
-      "Aventura"
+      "Aventura",
+      "Família"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_os_crimes_de_grindelwald.html": {
     "titulo": "Animais Fantasticos: Os Crimes de Grindelwald",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "animais_fantasticos_os_crimes_de_grindelwald_2018_2018.html": {
     "titulo": "Animais Fantasticos: Os Crimes de Grindelwald (2018)",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e1.html": {
     "titulo": "American Horror Story T7E1",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e10.html": {
     "titulo": "American Horror Story T7E10",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e11.html": {
     "titulo": "American Horror Story T7E11",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e2.html": {
     "titulo": "American Horror Story T7E2",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e3.html": {
     "titulo": "American Horror Story T7E3",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e4.html": {
     "titulo": "American Horror Story T7E4",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e5.html": {
     "titulo": "American Horror Story T7E5",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e6.html": {
     "titulo": "American Horror Story T7E6",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e7.html": {
     "titulo": "American Horror Story T7E7",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e8.html": {
     "titulo": "American Horror Story T7E8",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t7e9.html": {
     "titulo": "American Horror Story T7E9",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t8e1.html": {
     "titulo": "American Horror Story T8E1",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t8e10.html": {
     "titulo": "American Horror Story T8E10",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t8e2.html": {
     "titulo": "American Horror Story T8E2",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t8e3.html": {
     "titulo": "American Horror Story T8E3",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
-      "Thriller"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "american_horror_story_t8e4.html": {
     "titulo": "American Horror Story T8E4",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -11625,6 +11748,7 @@
   },
   "american_horror_story_t8e5.html": {
     "titulo": "American Horror Story T8E5",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -11634,6 +11758,7 @@
   },
   "american_horror_story_t8e6.html": {
     "titulo": "American Horror Story T8E6",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -11643,6 +11768,7 @@
   },
   "american_horror_story_t8e7.html": {
     "titulo": "American Horror Story T8E7",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -11652,6 +11778,7 @@
   },
   "american_horror_story_t8e8.html": {
     "titulo": "American Horror Story T8E8",
+    "tipo": "serie",
     "generos": [
       "Terror",
       "Drama",
@@ -11661,106 +11788,151 @@
   },
   "anonimo_2021_2021.html": {
     "titulo": "Anonimo (2021)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Thriller",
+      "Mistério",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "anonimo_2_2025_2025.html": {
     "titulo": "Anonimo 2 (2025)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Thriller",
+      "Mistério",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "anora.html": {
     "titulo": "Anora",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Comédia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "anora_2025_2025.html": {
     "titulo": "Anora (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Comédia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "antes_da_lua_cheia_2025_2025.html": {
     "titulo": "Antes da Lua Cheia (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "antes_de_dormir_2014_2014.html": {
     "titulo": "Antes de Dormir (2014)",
+    "tipo": "filme",
     "generos": [
+      "Mistério",
+      "Thriller",
       "Drama"
     ],
     "fonte": "ia"
   },
   "antes_que_eu_va_2017_2017.html": {
     "titulo": "Antes Que Eu Va (2017)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Drama",
+      "Mistério",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "antes_so_do_que_mal_casado_2007_2007.html": {
     "titulo": "Antes So Do Que Mal Casado (2007)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Drama",
+      "Romance"
     ],
     "fonte": "ia"
   },
   "anticristo.html": {
     "titulo": "Anticristo",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Drama",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "anticristo_o_exorcismo_de_lara_2023_2023.html": {
     "titulo": "Anticristo, O Exorcismo de Lara (2023)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "anything_for_jackson_2020_2020.html": {
     "titulo": "Anything For Jackson (2020)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "ao_cair_da_noite_2017_2017.html": {
     "titulo": "Ao Cair Da Noite (2017)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "aos_treze_2003_2003.html": {
     "titulo": "Aos Treze (2003)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Drama",
+      "Crime",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "apanhador_de_pesadelos_2020_2020.html": {
     "titulo": "Apanhador de Pesadelos (2020)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "apartamento_212_a_infestacao_2017_2017.html": {
     "titulo": "Apartamento 212 A Infestacao (2017)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -11936,42 +12108,39 @@
   },
   "apenas_um_show_t1e6.html": {
     "titulo": "Apenas Um Show T1E6",
+    "tipo": "serie",
     "generos": [
-      "Animação",
-      "Comédia",
-      "Fantasia"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "apenas_um_show_t1e7.html": {
     "titulo": "Apenas Um Show T1E7",
+    "tipo": "serie",
     "generos": [
-      "Animação",
-      "Comédia",
-      "Fantasia"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "apenas_um_show_t1e8.html": {
     "titulo": "Apenas Um Show T1E8",
+    "tipo": "serie",
     "generos": [
-      "Animação",
-      "Comédia",
-      "Fantasia"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "apenas_um_show_t1e9.html": {
     "titulo": "Apenas Um Show T1E9",
+    "tipo": "serie",
     "generos": [
-      "Animação",
-      "Comédia",
-      "Fantasia"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "apertem_os_cintos_o_piloto_sumiu_1980_1980.html": {
     "titulo": "Apertem os Cintos... O Piloto Sumiu! (1980)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -11979,616 +12148,749 @@
   },
   "armadilha_2024_2024.html": {
     "titulo": "Armadilha (2024)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Thriller"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armadilha_do_destino_2010_2010.html": {
     "titulo": "Armadilha Do Destino (2010)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
+      "Drama",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "armadilha_em_alto_mar_2024_2024.html": {
     "titulo": "Armadilha em Alto Mar (2024)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Thriller"
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armagedom_1998_1998.html": {
     "titulo": "Armagedom (1998)",
+    "tipo": "filme",
     "generos": [
       "Ação",
+      "Aventura",
       "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armas_em_jogo_2020_2020.html": {
     "titulo": "Armas em Jogo (2020)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Comédia"
+      "Comédia",
+      "Crime"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e1.html": {
     "titulo": "Armazem 13 T1E1",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e10.html": {
     "titulo": "Armazem 13 T1E10",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e11.html": {
     "titulo": "Armazem 13 T1E11",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e12.html": {
     "titulo": "Armazem 13 T1E12",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e2.html": {
     "titulo": "Armazem 13 T1E2",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e3.html": {
     "titulo": "Armazem 13 T1E3",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e4.html": {
     "titulo": "Armazem 13 T1E4",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e5.html": {
     "titulo": "Armazem 13 T1E5",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e6.html": {
     "titulo": "Armazem 13 T1E6",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e7.html": {
     "titulo": "Armazem 13 T1E7",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
+      "Mistério",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e8.html": {
     "titulo": "Armazem 13 T1E8",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Ficção Científica",
-      "Aventura"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t1e9.html": {
     "titulo": "Armazem 13 T1E9",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Ficção Científica",
-      "Aventura"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e1.html": {
     "titulo": "Armazem 13 T2E1",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Ficção Científica",
-      "Aventura"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e10.html": {
     "titulo": "Armazem 13 T2E10",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Ficção Científica",
-      "Aventura"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e11.html": {
     "titulo": "Armazem 13 T2E11",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Ficção Científica",
-      "Aventura"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e12.html": {
     "titulo": "Armazem 13 T2E12",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e13.html": {
     "titulo": "Armazem 13 T2E13",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e2.html": {
     "titulo": "Armazem 13 T2E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e3.html": {
     "titulo": "Armazem 13 T2E3",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e4.html": {
     "titulo": "Armazem 13 T2E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e5.html": {
     "titulo": "Armazem 13 T2E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e6.html": {
     "titulo": "Armazem 13 T2E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e7.html": {
     "titulo": "Armazem 13 T2E7",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e8.html": {
     "titulo": "Armazem 13 T2E8",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t2e9.html": {
     "titulo": "Armazem 13 T2E9",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e1.html": {
     "titulo": "Armazem 13 T3E1",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e10.html": {
     "titulo": "Armazem 13 T3E10",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e11.html": {
     "titulo": "Armazem 13 T3E11",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e12.html": {
     "titulo": "Armazem 13 T3E12",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e13.html": {
     "titulo": "Armazem 13 T3E13",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e2.html": {
     "titulo": "Armazem 13 T3E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Fantasia",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e3.html": {
     "titulo": "Armazem 13 T3E3",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Fantasia",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e4.html": {
     "titulo": "Armazem 13 T3E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Fantasia",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e5.html": {
     "titulo": "Armazem 13 T3E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Fantasia",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t3e6.html": {
     "titulo": "Armazem 13 T3E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Fantasia",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_a_evolucao.html": {
     "titulo": "Anjos da Noite: A Evolucao",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_a_evolucao_2006_2006.html": {
     "titulo": "Anjos da Noite",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_a_rebeliao.html": {
     "titulo": "Anjos da Noite: A Rebeliao",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_a_rebeliao_2009_2009.html": {
     "titulo": "Anjos da Noite",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_guerras_de_sangue.html": {
     "titulo": "Anjos da Noite: Guerras de Sangue",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_guerras_de_sangue_2016_2016.html": {
     "titulo": "Anjos da Noite: Guerras de Sangue (2016)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_o_despertar.html": {
     "titulo": "Anjos da Noite: O Despertar",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Ficção Científica",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_o_despertar_2012_2012.html": {
     "titulo": "Anjos Da Noite O Despertar (2012)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Ficção Científica",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_underworld.html": {
     "titulo": "Anjos da Noite Underworld",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_da_noite_underworld_2003_2003.html": {
     "titulo": "Anjos Da Noite Underworld (2003)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Fantasia",
       "Terror"
     ],
     "fonte": "ia"
   },
   "anjos_do_deserto_2024_2024.html": {
     "titulo": "Anjos do Deserto (2024)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Drama",
+      "Guerra",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "anna_e_o_apocalipse_2018_2018.html": {
     "titulo": "Anna e o Apocalipse (2018)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Comédia",
+      "Terror",
+      "Música"
     ],
     "fonte": "ia"
   },
   "annabelle.html": {
     "titulo": "Annabelle",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "annabelle_2014_2014.html": {
     "titulo": "Annabelle (2014)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "annabelle_2_2017_2017.html": {
     "titulo": "Annabelle 2 (2017)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "annabelle_2_a_criacao_do_mal.html": {
     "titulo": "Annabelle 2: A Criacao do Mal",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "annabelle_3_2019_2019.html": {
     "titulo": "Annabelle 3 (2019)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "annabelle_3_de_volta_para_casa.html": {
     "titulo": "Annabelle 3: De Volta para Casa",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "anne_com_um.html": {
     "titulo": "Anne com um \\\\",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "ano_novo_morte_nova_2018_2018.html": {
     "titulo": "Ano Novo, Morte Nova (2018)",
+    "tipo": "filme",
     "generos": [
-      "Terror"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e8.html": {
     "titulo": "Armazem 13 T4E8",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e9.html": {
     "titulo": "Armazem 13 T4E9",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e1.html": {
     "titulo": "Armazem 13 T5E1",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e2.html": {
     "titulo": "Armazem 13 T5E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e3.html": {
     "titulo": "Armazem 13 T5E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e4.html": {
     "titulo": "Armazem 13 T5E4",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e5.html": {
     "titulo": "Armazem 13 T5E5",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t5e6.html": {
     "titulo": "Armazem 13 T5E6",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e1.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E1",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e10.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E10",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e11.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E11",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e12.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E12",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e13.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E13",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e14.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E14",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t1e15.html": {
     "titulo": "Arqueiro Verde (Arrow) T1E15",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Fantasia"
+      "Crime"
     ],
     "fonte": "ia"
   },
@@ -12819,6 +13121,7 @@
   },
   "apertem_os_cintos_o_piloto_sumiu_2_1982_1982.html": {
     "titulo": "Apertem os Cintos... O Piloto Sumiu 2 (1982)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -12826,66 +13129,69 @@
   },
   "apex_2021_2021.html": {
     "titulo": "Apex (2021)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "apocalipse_z_novo_mundo_2026_2026.html": {
     "titulo": "Apocalipse Z: Novo Mundo (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Terror",
-      "Ficção Científica"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "apocalipse_z_o_principio_do_fim.html": {
     "titulo": "Apocalipse Z: O Principio do Fim",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Terror",
-      "Ficção Científica"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "apocalipse_z_o_principio_do_fim_2024_2024.html": {
     "titulo": "Apocalipse Z: O Principio do Fim (2024)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Terror",
-      "Ficção Científica"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "apocalypto_2006_2006.html": {
     "titulo": "Apocalypto (2006)",
+    "tipo": "filme",
     "generos": [
-      "História",
-      "Drama",
+      "Ação",
       "Aventura"
     ],
     "fonte": "ia"
   },
   "apollo_18_2011_2011.html": {
     "titulo": "Apollo 18 (2011)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
       "Ficção Científica",
-      "Thriller"
+      "Terror"
     ],
     "fonte": "ia"
   },
   "aposta_de_alto_risco_2026_2026.html": {
     "titulo": "Aposta de Alto Risco (2026)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
-      "Crime"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "aprovados_2006_2006.html": {
     "titulo": "Aprovados (2006)",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -12893,90 +13199,101 @@
   },
   "aquaman_2018_2018.html": {
     "titulo": "Aquaman (2018)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Aventura"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "aquamarine_2006_2006.html": {
     "titulo": "Aquamarine (2006)",
+    "tipo": "filme",
     "generos": [
+      "Família",
       "Fantasia",
-      "Romance",
-      "Comédia"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "aquelas_que_voces_nao_queimaram.html": {
     "titulo": "Aquelas Que Voces Nao Queimaram",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "aquele_natal.html": {
     "titulo": "Aquele Natal",
+    "tipo": "filme",
     "generos": [
-      "Família",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "aqui_no_mar_descendentes_2_5_2018_2018.html": {
     "titulo": "Aqui no Mar: Descendentes 2.5 (2018)",
+    "tipo": "filme",
     "generos": [
-      "Documentário"
+      "Família",
+      "Fantasia",
+      "Música"
     ],
     "fonte": "ia"
   },
   "aquilo_que_voce_deseja_2024_2024.html": {
     "titulo": "Aquilo que Voce Deseja (2024)",
+    "tipo": "filme",
     "generos": [
-      "Romance",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "ardente_vinganca_2026_2026.html": {
     "titulo": "Ardente Vinganca (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Thriller",
-      "Crime"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "arena_2011_2011.html": {
     "titulo": "Arena (2011)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Drama"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "aristogatas.html": {
     "titulo": "Aristogatas",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Família",
-      "Música"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "aristogatas_1970_1970.html": {
     "titulo": "Aristogatas (1970)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Família",
-      "Música"
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "armadilha_2012_2012.html": {
     "titulo": "Armadilha (2012)",
+    "tipo": "filme",
     "generos": [
+      "Mistério",
       "Thriller",
       "Crime"
     ],
@@ -12984,296 +13301,351 @@
   },
   "arqueiro_verde_arrow_t3e15.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E15",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e16.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E16",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e17.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E17",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e18.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E18",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e19.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E19",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e2.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e20.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E20",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e21.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E21",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e22.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E22",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e23.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E23",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e3.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e4.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E4",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e5.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E5",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e6.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E6",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e7.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E7",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e8.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E8",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e9.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E9",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e1.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E1",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e10.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E10",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e11.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E11",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e12.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E12",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e13.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E13",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e14.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E14",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e15.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E15",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e16.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E16",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e17.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E17",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e18.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E18",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e19.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E19",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e2.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e20.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E20",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e21.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E21",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e23.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E23",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e3.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e4.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E4",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t4e5.html": {
     "titulo": "Arqueiro Verde (Arrow) T4E5",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura",
-      "Crime"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -13322,6 +13694,7 @@
   },
   "armazem_13_t3e7.html": {
     "titulo": "Armazem 13 T3E7",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13331,6 +13704,7 @@
   },
   "armazem_13_t3e8.html": {
     "titulo": "Armazem 13 T3E8",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13340,6 +13714,7 @@
   },
   "armazem_13_t3e9.html": {
     "titulo": "Armazem 13 T3E9",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13349,6 +13724,7 @@
   },
   "armazem_13_t4e1.html": {
     "titulo": "Armazem 13 T4E1",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13358,6 +13734,7 @@
   },
   "armazem_13_t4e10.html": {
     "titulo": "Armazem 13 T4E10",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13367,6 +13744,7 @@
   },
   "armazem_13_t4e11.html": {
     "titulo": "Armazem 13 T4E11",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13376,6 +13754,7 @@
   },
   "armazem_13_t4e12.html": {
     "titulo": "Armazem 13 T4E12",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13385,6 +13764,7 @@
   },
   "armazem_13_t4e13.html": {
     "titulo": "Armazem 13 T4E13",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13394,6 +13774,7 @@
   },
   "armazem_13_t4e14.html": {
     "titulo": "Armazem 13 T4E14",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13403,6 +13784,7 @@
   },
   "armazem_13_t4e15.html": {
     "titulo": "Armazem 13 T4E15",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13412,6 +13794,7 @@
   },
   "armazem_13_t4e16.html": {
     "titulo": "Armazem 13 T4E16",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13421,6 +13804,7 @@
   },
   "armazem_13_t4e17.html": {
     "titulo": "Armazem 13 T4E17",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13430,6 +13814,7 @@
   },
   "armazem_13_t4e18.html": {
     "titulo": "Armazem 13 T4E18",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13439,6 +13824,7 @@
   },
   "armazem_13_t4e19.html": {
     "titulo": "Armazem 13 T4E19",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13448,6 +13834,7 @@
   },
   "armazem_13_t4e2.html": {
     "titulo": "Armazem 13 T4E2",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Fantasia",
@@ -13457,46 +13844,51 @@
   },
   "armazem_13_t4e3.html": {
     "titulo": "Armazem 13 T4E3",
+    "tipo": "serie",
     "generos": [
-      "Ficção Científica",
-      "Fantasia",
-      "Mistério"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e4.html": {
     "titulo": "Armazem 13 T4E4",
+    "tipo": "serie",
     "generos": [
-      "Ficção Científica",
-      "Fantasia",
-      "Mistério"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e5.html": {
     "titulo": "Armazem 13 T4E5",
+    "tipo": "serie",
     "generos": [
-      "Ficção Científica",
-      "Fantasia",
-      "Mistério"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e6.html": {
     "titulo": "Armazem 13 T4E6",
+    "tipo": "serie",
     "generos": [
-      "Ficção Científica",
-      "Fantasia",
-      "Mistério"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "armazem_13_t4e7.html": {
     "titulo": "Armazem 13 T4E7",
+    "tipo": "serie",
     "generos": [
-      "Ficção Científica",
-      "Fantasia",
-      "Mistério"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
@@ -14145,46 +14537,51 @@
   },
   "arqueiro_verde_arrow_t3e10.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E10",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Drama",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e11.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E11",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Drama",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e12.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E12",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Drama",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e13.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E13",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Drama",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "arqueiro_verde_arrow_t3e14.html": {
     "titulo": "Arqueiro Verde (Arrow) T3E14",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Drama",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
