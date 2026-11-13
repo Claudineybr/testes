@@ -42,20 +42,18 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # ---------- LISTA DE MODELOS ATIVOS ----------
-          # Ordem de preferência: principal → rápidos → reservas gerais
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
               "deepseek-ai/deepseek-v4.1-flash",
-              "deepseek-ai/deepseek-v4-flash-0731",
               "nvidia/nemotron-3.5-lightning-30b-a3b",
               "openai/gpt-oss-20b",
               "nvidia/nemotron-3-super-120b-a12b",
               "meta/llama-3.2-90b-vision-instruct",
+              "meta/llama-3.1-8b-instruct"
           ]
 
           LOTE = 20
-          MAX_WORKERS = 3  # Reduzido para 3 threads para não saturar o Ultra
+          MAX_WORKERS = 3
 
           client = OpenAI(
               api_key=os.environ["NVIDIA_API_KEY"],
@@ -103,7 +101,7 @@ jobs:
                   titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
                   yield arq, titulo
 
-          def classificar_lote_com_fallback(pares, lote_num, total_lotes):
+          def classificar_lote_com_fallback(pares, lote_num, total_lotes, modelo_inicial):
               entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
               prompt = (
                   "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
@@ -113,10 +111,18 @@ jobs:
                   + json.dumps({"filmes": entrada}, ensure_ascii=False)
               )
 
-              for modelo in MODELOS:
-                  for tentativa in range(2):
+              # Cria a lista rotacionada de modelos começando pelo 'modelo_inicial'
+              try:
+                  idx_inicial = MODELOS.index(modelo_inicial)
+              except ValueError:
+                  idx_inicial = 0
+              modelos_para_tentar = MODELOS[idx_inicial:] + MODELOS[:idx_inicial]
+
+              log(f"[▶] Lote {lote_num}/{total_lotes} | Iniciando com: {modelo_inicial}")
+
+              for modelo in modelos_para_tentar:
+                  for tentativa in range(4): # Até 4 tentativas no mesmo modelo
                       try:
-                          log(f"[▶] Lote {lote_num}/{total_lotes} | Modelo: {modelo}")
                           resp = client.chat.completions.create(
                               model=modelo,
                               messages=[{"role": "user", "content": prompt}],
@@ -146,22 +152,19 @@ jobs:
                           return result
                       except Exception as e:
                           msg = str(e)
-                          if "410" in msg:
-                              log(f"[!] Modelo {modelo} aposentado (410). Pulando...")
+                          if "410" in msg or "404" in msg:
+                              log(f"[!] Modelo {modelo} indisponível ({msg}). Pulando...")
                               break  # Vai para o próximo modelo
-                          elif "404" in msg:
-                              log(f"[!] Modelo {modelo} indisponível para a conta (404). Pulando...")
-                              break
                           elif "429" in msg:
-                              espera = 2 ** tentativa
+                              espera = 5 * (tentativa + 1) # 5s, 10s, 15s, 20s
                               log(f"[!] Rate limit (429) em {modelo}. Aguardando {espera}s...")
                               time.sleep(espera)
+                              # Não quebra o loop, ele vai tentar o MESMO modelo de novo após esperar
                           else:
                               log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
-                              time.sleep(1)
-
-              # Se todos os modelos falharem, marca os filmes como indefinidos para uma nova tentativa futura
-              log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando {len(pares)} filmes como 'indefinido'.")
+                              break # Erro desconhecido, tenta próximo modelo
+                          
+              log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando filmes como 'indefinido'.")
               result = {}
               for arq, tit in pares:
                   result[arq] = {"titulo": tit, "generos": ["indefinido"], "fonte": "indefinido"}
@@ -177,18 +180,20 @@ jobs:
           total_lotes = (len(pendentes) + LOTE - 1) // LOTE
           log(f"==================================================")
           log(f"🚀 INICIANDO: {len(pendentes)} filmes em {total_lotes} lotes.")
-          log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em fallback.")
+          log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em rotação.")
           log(f"==================================================")
 
           tarefas = []
           for i in range(0, len(pendentes), LOTE):
               bloco = pendentes[i:i + LOTE]
               lote_num = (i // LOTE) + 1
-              tarefas.append((bloco, lote_num, total_lotes))
+              # A ROTAÇÃO ACONTECE AQUI: cada lote começa com um modelo diferente
+              modelo_inicial = MODELOS[(lote_num - 1) % len(MODELOS)]
+              tarefas.append((bloco, lote_num, total_lotes, modelo_inicial))
 
           processados = 0
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-              futures = [executor.submit(classificar_lote_com_fallback, b, n, tot) for b, n, tot in tarefas]
+              futures = [executor.submit(classificar_lote_com_fallback, b, n, tot, m) for b, n, tot, m in tarefas]
 
               for future in as_completed(futures):
                   resultado = future.result()
@@ -199,9 +204,7 @@ jobs:
                   processados += 1
                   porcentagem = (processados / total_lotes) * 100
                   log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) salvos.")
-                  
-                  # PAUSA OBRIGATÓRIA: evita estourar o limite de 40 RPM no modelo principal
-                  time.sleep(1.5)
+                  # A pausa global de 1.5s foi removida. A rotação resolve o problema de burst.
 
           log("==================================================")
           log(f"🎉 FINALIZADO! Total de filmes no cache: {len(cache)}")
