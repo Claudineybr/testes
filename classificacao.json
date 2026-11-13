@@ -1,1 +1,625 @@
-{}
+{
+  "007_casino_royale_2006_2006.html": {
+    "titulo": "007: Casino Royale (2006)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "007_quantum_of_solace_2008_2008.html": {
+    "titulo": "007: Quantum of Solace (2008)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "007_sem_tempo_para_morrer.html": {
+    "titulo": "007: Sem Tempo para Morrer",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "007_sem_tempo_para_morrer_2021_2021.html": {
+    "titulo": "007: Sem Tempo para Morrer (2021)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "007_skyfall_2012_2012.html": {
+    "titulo": "007: Skyfall (2012)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "007_spectre_2015_2015.html": {
+    "titulo": "007 Spectre (2015)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "011ze_nova_geracao_t1e1.html": {
+    "titulo": "011ZE: Nova Geracao T1E1",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e10.html": {
+    "titulo": "011ZE: Nova Geracao T1E10",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e11.html": {
+    "titulo": "011ZE: Nova Geracao T1E11",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e12.html": {
+    "titulo": "011ZE: Nova Geracao T1E12",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e13.html": {
+    "titulo": "011ZE: Nova Geracao T1E13",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e14.html": {
+    "titulo": "011ZE: Nova Geracao T1E14",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e15.html": {
+    "titulo": "011ZE: Nova Geracao T1E15",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e16.html": {
+    "titulo": "011ZE: Nova Geracao T1E16",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e17.html": {
+    "titulo": "011ZE: Nova Geracao T1E17",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e18.html": {
+    "titulo": "011ZE: Nova Geracao T1E18",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e19.html": {
+    "titulo": "011ZE: Nova Geracao T1E19",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e2.html": {
+    "titulo": "011ZE: Nova Geracao T1E2",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e20.html": {
+    "titulo": "011ZE: Nova Geracao T1E20",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "011ze_nova_geracao_t1e3.html": {
+    "titulo": "011ZE: Nova Geracao T1E3",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "1408_2007_2007.html": {
+    "titulo": "1408 (2007)",
+    "generos": [
+      "Terror",
+      "Thriller",
+      "Mistério"
+    ],
+    "fonte": "ia"
+  },
+  "1492_a_conquista_do_paraiso_1992_1992.html": {
+    "titulo": "1492 A Conquista Do Paraiso (1992)",
+    "generos": [
+      "Aventura",
+      "Drama",
+      "História"
+    ],
+    "fonte": "ia"
+  },
+  "14_dias_12_noites_2019_2019.html": {
+    "titulo": "14 Dias, 12 Noites (2019)",
+    "generos": [
+      "Drama"
+    ],
+    "fonte": "ia"
+  },
+  "14_dias_2021_2021.html": {
+    "titulo": "14 Dias (2021)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "15_cameras_2023_2023.html": {
+    "titulo": "15 Cameras (2023)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "15_minutos_2001_2001.html": {
+    "titulo": "15 Minutos (2001)",
+    "generos": [
+      "Crime",
+      "Thriller",
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "15_minutos_de_guerra_2019_2019.html": {
+    "titulo": "15 Minutos de Guerra (2019)",
+    "generos": [
+      "Guerra",
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "16_desejos_2010_2010.html": {
+    "titulo": "16 Desejos (2010)",
+    "generos": [
+      "Comédia",
+      "Família",
+      "Fantasia"
+    ],
+    "fonte": "ia"
+  },
+  "17_outra_vez_2009_2009.html": {
+    "titulo": "17 Outra Vez (2009)",
+    "generos": [
+      "Comédia",
+      "Drama",
+      "Fantasia"
+    ],
+    "fonte": "ia"
+  },
+  "180_2026_2026.html": {
+    "titulo": "180 (2026)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "18_anos_e_ainda_virgem_2009_2009.html": {
+    "titulo": "18 Anos e Ainda Virgem (2009)",
+    "generos": [
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "18_rosas_2026_2026.html": {
+    "titulo": "18 Rosas (2026)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "1911_a_revolucao_2011_1911.html": {
+    "titulo": "1911: A Revolucao (2011)",
+    "generos": [
+      "História",
+      "Guerra",
+      "Drama"
+    ],
+    "fonte": "ia"
+  },
+  "1922_2017_1922.html": {
+    "titulo": "1922 (2017)",
+    "generos": [
+      "Terror",
+      "Drama",
+      "Mistério"
+    ],
+    "fonte": "ia"
+  },
+  "1984_1984.html": {
+    "titulo": "1984",
+    "generos": [
+      "Ficção Científica",
+      "Drama",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "1_milhao_de_seguidores_2024_2024.html": {
+    "titulo": "1 Milhao de Seguidores (2024)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "2001_uma_odisseia_no_espaco_2001.html": {
+    "titulo": "2001: Uma Odisseia no Espaco",
+    "generos": [
+      "Ficção Científica",
+      "Aventura",
+      "Mistério"
+    ],
+    "fonte": "ia"
+  },
+  "2012_2009_2012.html": {
+    "titulo": "2012 (2009)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
+    ],
+    "fonte": "ia"
+  },
+  "2012_2012.html": {
+    "titulo": "2012",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
+    ],
+    "fonte": "ia"
+  },
+  "2019_o_ano_da_extincao_2010_2019.html": {
+    "titulo": "2019: O Ano da Extincao (2010)",
+    "generos": [
+      "Ficção Científica",
+      "Terror",
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "12_dias_de_natal_2020_2020.html": {
+    "titulo": "12 Dias De Natal (2020)",
+    "generos": [
+      "Comédia",
+      "Família",
+      "Romance"
+    ],
+    "fonte": "ia"
+  },
+  "12_feet_deep_2018_2018.html": {
+    "titulo": "12 Feet Deep (2018)",
+    "generos": [
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "12_horas_2012_2012.html": {
+    "titulo": "12 Horas (2012)",
+    "generos": [
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "12_horas_para_o_fim_do_mundo.html": {
+    "titulo": "12 Horas Para o Fim do Mundo",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "12_horas_para_o_fim_do_mundo_2022_2022.html": {
+    "titulo": "12 Horas Para O Fim Do Mundo (2022)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "12_horas_para_sobreviver_o_ano_da_eleicao_2016_2016.html": {
+    "titulo": "12 Horas para Sobreviver: O Ano da Eleicao (2016)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "12_presentes_de_natal_2015_2015.html": {
+    "titulo": "12 Presentes De Natal (2015)",
+    "generos": [
+      "Comédia",
+      "Família",
+      "Romance"
+    ],
+    "fonte": "ia"
+  },
+  "12_rounds_2009_2009.html": {
+    "titulo": "12 Rounds (2009)",
+    "generos": [
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "12_rounds_2_reloaded.html": {
+    "titulo": "12 Rounds 2: Reloaded",
+    "generos": [
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "12_rounds_3_cacada_mortal.html": {
+    "titulo": "12 Rounds 3: Cacada Mortal",
+    "generos": [
+      "Ação",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "1303_apartamento_do_mal_2012_2012.html": {
+    "titulo": "1303 Apartamento Do Mal (2012)",
+    "generos": [
+      "Terror"
+    ],
+    "fonte": "ia"
+  },
+  "13_assassinos_2010_2010.html": {
+    "titulo": "13 Assassinos (2010)",
+    "generos": [
+      "Ação",
+      "Aventura"
+    ],
+    "fonte": "ia"
+  },
+  "13_dias_no_lago_da_morte_2024_2024.html": {
+    "titulo": "13 Dias no Lago da Morte (2024)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "13_exorcismos_2022_2022.html": {
+    "titulo": "13 Exorcismos (2022)",
+    "generos": [
+      "Terror"
+    ],
+    "fonte": "ia"
+  },
+  "13_fantasmas_1960_1960.html": {
+    "titulo": "13 Fantasmas (1960)",
+    "generos": [
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "13_horas_os_soldados_secretos_de_benghazi.html": {
+    "titulo": "13 Horas: Os Soldados Secretos de Benghazi",
+    "generos": [
+      "Ação",
+      "Guerra"
+    ],
+    "fonte": "ia"
+  },
+  "13_horas_os_soldados_secretos_de_benghazi_2016_2016.html": {
+    "titulo": "13 Horas: Os Soldados Secretos de Benghazi (2016)",
+    "generos": [
+      "Ação",
+      "Guerra"
+    ],
+    "fonte": "ia"
+  },
+  "13_minutos_de_tormenta_2021_2021.html": {
+    "titulo": "13 Minutos de Tormenta (2021)",
+    "generos": [
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "13_o_jogador_2010_2010.html": {
+    "titulo": "13: O Jogador (2010)",
+    "generos": [
+      "Drama",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "13o_distrito_2014_2014.html": {
+    "titulo": "13o Distrito (2014)",
+    "generos": [
+      "Ação",
+      "Ficção Científica"
+    ],
+    "fonte": "ia"
+  },
+  "3_turcos_e_um_bebe_2015_2015.html": {
+    "titulo": "3 Turcos E Um Bebe (2015)",
+    "generos": [
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "3_working_days_2024_2024.html": {
+    "titulo": "3 Working Days (2024)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "405_possessao_2020_2020.html": {
+    "titulo": "405 Possessao (2020)",
+    "generos": [
+      "Terror"
+    ],
+    "fonte": "ia"
+  },
+  "40_acres_2025_2025.html": {
+    "titulo": "40 Acres (2025)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "42_a_historia_de_uma_lenda_2013_2013.html": {
+    "titulo": "42: A Historia de uma Lenda (2013)",
+    "generos": [
+      "Drama",
+      "História",
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "438_dias_2019_2019.html": {
+    "titulo": "438 Dias (2019)",
+    "generos": [
+      "Drama",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "47_ronins_2013_2013.html": {
+    "titulo": "47 Ronins (2013)",
+    "generos": [
+      "Ação",
+      "Aventura",
+      "Fantasia"
+    ],
+    "fonte": "ia"
+  },
+  "48_horas_1982_1982.html": {
+    "titulo": "48 Horas (1982)",
+    "generos": [
+      "Ação",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "48_horas_parte_2_1990_1990.html": {
+    "titulo": "48 Horas, Parte 2 (1990)",
+    "generos": [
+      "Ação",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "4_latas_2019_2019.html": {
+    "titulo": "4 Latas (2019)",
+    "generos": [
+      "Aventura",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "4x100_correndo_por_um_sonho_2021_2021.html": {
+    "titulo": "4x100: Correndo por um Sonho (2021)",
+    "generos": [
+      "Drama",
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "500_dias_com_ela_2009_2009.html": {
+    "titulo": "(500) Dias com Ela (2009)",
+    "generos": [
+      "Romance",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "50_2011_2011.html": {
+    "titulo": "50 (2011)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "53_domingos_2026_2026.html": {
+    "titulo": "53 Domingos (2026)",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "55_passos_2018_2018.html": {
+    "titulo": "55 Passos (2018)",
+    "generos": [
+      "Drama",
+      "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "56_dias_t1e1.html": {
+    "titulo": "56 Dias T1E1",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "56_dias_t1e2.html": {
+    "titulo": "56 Dias T1E2",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "56_dias_t1e3.html": {
+    "titulo": "56 Dias T1E3",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "56_dias_t1e4.html": {
+    "titulo": "56 Dias T1E4",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "56_dias_t1e5.html": {
+    "titulo": "56 Dias T1E5",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  }
+}
