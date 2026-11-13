@@ -17,7 +17,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 360 # Aumentado para 6 horas
     steps:
       - uses: actions/checkout@v4
 
@@ -39,18 +39,16 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # --- LISTA ATUALIZADA (Removido o que dava 404) ---
+          # --- LISTA LIMPA (Apenas os modelos que funcionaram) ---
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
               "deepseek-ai/deepseek-v4.1-flash",
-              "nvidia/nemotron-3.5-lightning-30b-a3b",
               "openai/gpt-oss-20b",
-              "meta/llama-3.2-90b-vision-instruct",
-              "meta/llama-3.1-8b-instruct"
+              "meta/llama-3.2-90b-vision-instruct"
           ]
 
           LOTE = 20
-          MAX_WORKERS = 3 # Mantido em 3 para evitar o 429 (Rate Limit)
+          MAX_WORKERS = 3
 
           client = OpenAI(
               api_key=os.environ["NVIDIA_API_KEY"],
@@ -144,13 +142,13 @@ jobs:
                           msg = str(e)
                           if "410" in msg or "404" in msg:
                               log(f"[!] {modelo} indisponível. Pulando...")
-                              break # Pula para o próximo modelo imediatamente
+                              break 
                           elif "429" in msg:
                               log(f"[!] Rate limit (429) em {modelo}. Aguardando {5*(tentativa+1)}s...")
                               time.sleep(5 * (tentativa + 1))
                           elif "JSON vazio" in msg:
                               log(f"[!] {modelo} não retornou JSON válido. Pulando...")
-                              break # Pula para o próximo modelo, não adianta tentar de novo
+                              break 
                           else:
                               log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
                               time.sleep(1)
