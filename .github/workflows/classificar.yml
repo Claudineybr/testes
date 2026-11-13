@@ -17,7 +17,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Limite máximo do GitHub (6 horas)
+    timeout-minutes: 360 # 6 horas (limite máximo do GitHub)
     steps:
       - uses: actions/checkout@v4
 
@@ -39,7 +39,7 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # --- LISTA LIMPA (Apenas os 3 modelos que funcionaram bem) ---
+          # --- LISTA LIMPA (Apenas os 3 modelos estáveis) ---
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
               "openai/gpt-oss-20b",
@@ -175,7 +175,7 @@ jobs:
 
           # --- CONFIGURAÇÃO DA BOMBA RELÓGIO ---
           inicio_execucao = time.time()
-          TEMPO_LIMITE = 330 * 60 # 330 minutos = 5 horas e 30 minutos
+          TEMPO_LIMITE = 330 * 60 # 330 minutos = 5h30m
 
           processados = 0
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -216,5 +216,8 @@ jobs:
             echo "Sem mudanças — nada a commitar."
           else
             git commit -m "chore: atualiza classificacao.json (NVIDIA) [skip ci]"
-            git push
+            # Sincroniza com o repositório remoto para evitar conflitos de push
+            git pull --rebase origin main
+            # Tenta o push. Se a rede falhar, espera 5s e tenta de novo
+            git push || (sleep 5 && git pull --rebase origin main && git push)
           fi
