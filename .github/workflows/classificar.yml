@@ -1,4 +1,4 @@
-name: Classificar filmes com NVIDIA
+name: Classificar filmes e séries com NVIDIA
 
 on:
   workflow_dispatch:
@@ -17,7 +17,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # 6 horas (limite máximo do GitHub)
+    timeout-minutes: 360 # Limite máximo do GitHub (6 horas)
     steps:
       - uses: actions/checkout@v4
 
@@ -60,6 +60,7 @@ jobs:
           PASTA, SAIDA = ".", "classificacao.json"
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
 
+          # --- SCHEMA ATUALIZADO COM O CAMPO "tipo" ---
           SCHEMA = {
               "type": "object",
               "properties": {
@@ -69,9 +70,10 @@ jobs:
                           "type": "object",
                           "properties": {
                               "id":      {"type": "string"},
+                              "tipo":    {"type": "string", "enum": ["filme", "serie"]},
                               "generos": {"type": "array", "items": {"type": "string", "enum": GENEROS}}
                           },
-                          "required": ["id", "generos"],
+                          "required": ["id", "tipo", "generos"],
                       },
                   }
               },
@@ -97,10 +99,13 @@ jobs:
 
           def classificar_lote_com_fallback(pares, lote_num, total_lotes, modelo_inicial):
               entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
+              
               prompt = (
-                  "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
+                  "Classifique cada título em 1 a 3 gêneros da lista fixa e identifique se é um 'filme' ou 'serie'.\n"
                   f"Gêneros permitidos: {', '.join(GENEROS)}\n"
-                  "Regras: Use APENAS gêneros da lista. Se não reconhecer, retorne [].\n"
+                  "Dicas: Se o título contiver 'T1E1', 'Temporada', 'Season', 'Episódio', 'Serie', trate como 'serie'. Caso contrário, 'filme'.\n"
+                  "Regras: Use APENAS os gêneros listados acima. Ignore formatos como 'Dublado' ou 'Legendado'.\n"
+                  "Se não reconhecer o título de jeito nenhum, retorne generos: [].\n"
                   "Responda APENAS o JSON.\n\n"
                   + json.dumps({"filmes": entrada}, ensure_ascii=False)
               )
@@ -124,13 +129,17 @@ jobs:
                               raise ValueError("JSON vazio (modelo pensou demais)")
                               
                           data = json.loads(content)
-                          por_id = {str(x.get("id")): x.get("generos", []) for x in data.get("filmes", [])}
+                          por_id = {str(x.get("id")): x for x in data.get("filmes", [])}
 
                           result = {}
                           for i, (arq, tit) in enumerate(pares):
-                              gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
+                              item = por_id.get(str(i), {})
+                              tipo = item.get("tipo", "filme")
+                              gs = [g for g in item.get("generos", []) if g in GENEROS][:3]
+                              
                               result[arq] = {
                                   "titulo": tit,
+                                  "tipo": tipo,
                                   "generos": gs or ["indefinido"],
                                   "fonte": "ia" if gs else "indefinido",
                               }
@@ -152,17 +161,25 @@ jobs:
                               log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
                               time.sleep(1)
 
-              log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando {len(pares)} filmes como 'indefinido'.")
-              return {arq: {"titulo": tit, "generos": ["indefinido"], "fonte": "indefinido"} for arq, tit in pares}
+              log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando {len(pares)} títulos como 'indefinido'.")
+              return {arq: {"titulo": tit, "tipo": "desconhecido", "generos": ["indefinido"], "fonte": "indefinido"} for arq, tit in pares}
 
-          pendentes = [(a, t) for a, t in extrair_titulos() if a not in cache or cache[a].get("fonte") == "indefinido"]
+          # --- REGRA DE PENDENTES ATUALIZADA ---
+          # Vai reprocessar se: não existe no cache OU está indefinido OU não tem o campo "tipo"
+          pendentes = [
+              (a, t) for a, t in extrair_titulos() 
+              if a not in cache 
+              or cache[a].get("fonte") == "indefinido" 
+              or "tipo" not in cache[a]
+          ]
+          
           if not pendentes:
-              log("[info] Nenhum filme pendente. Encerrando.")
+              log("[info] Nenhum filme ou série pendente. Encerrando.")
               exit(0)
 
           total_lotes = (len(pendentes) + LOTE - 1) // LOTE
           log(f"==================================================")
-          log(f"🚀 INICIANDO: {len(pendentes)} filmes em {total_lotes} lotes.")
+          log(f"🚀 INICIANDO: {len(pendentes)} títulos em {total_lotes} lotes.")
           log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em rotação.")
           log(f"==================================================")
 
@@ -173,21 +190,20 @@ jobs:
               modelo_inicial = MODELOS[(lote_num - 1) % len(MODELOS)]
               tarefas.append((bloco, lote_num, total_lotes, modelo_inicial))
 
-          # --- CONFIGURAÇÃO DA BOMBA RELÓGIO ---
+          # --- BOMBA RELÓGIO ---
           inicio_execucao = time.time()
-          TEMPO_LIMITE = 330 * 60 # 330 minutos = 5h30m
+          TEMPO_LIMITE = 330 * 60 # 5h30m
 
           processados = 0
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
               futures = [executor.submit(classificar_lote_com_fallback, b, n, tot, m) for b, n, tot, m in tarefas]
 
               for future in as_completed(futures):
-                  # Verifica se está na hora de parar e salvar
                   if time.time() - inicio_execucao > TEMPO_LIMITE:
                       log("⏰ Tempo limite de segurança atingido (5h30m). Parando de processar...")
                       for f in futures:
-                          f.cancel() # Cancela os lotes que ainda não começaram
-                      break # Sai do loop para ir para o salvamento final
+                          f.cancel() 
+                      break 
 
                   resultado = future.result()
                   if resultado:
@@ -198,10 +214,10 @@ jobs:
                   porcentagem = (processados / total_lotes) * 100
                   log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) salvos.")
 
-          # --- SALVAMENTO FINAL ANTES DO COMMIT ---
+          # --- SALVAMENTO FINAL ---
           json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
           log("==================================================")
-          log(f"🎉 FINALIZADO! Total de filmes no cache: {len(cache)}")
+          log(f"🎉 FINALIZADO! Total de títulos no cache: {len(cache)}")
           log("💾 JSON salvo. O passo de commit fará o push.")
           log("==================================================")
           PYEOF
@@ -215,9 +231,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
           else
-            git commit -m "chore: atualiza classificacao.json (NVIDIA) [skip ci]"
-            # Sincroniza com o repositório remoto para evitar conflitos de push
-            git pull --rebase origin main
-            # Tenta o push. Se a rede falhar, espera 5s e tenta de novo
-            git push || (sleep 5 && git pull --rebase origin main && git push)
+            git commit -m "chore: atualiza classificacao com tipo (filme/serie) [skip ci]"
+            # O -X ours resolve o conflito mantendo a versão do bot, sem quebrar o JSON
+            git pull origin main -X ours --no-rebase
+            git push
           fi
