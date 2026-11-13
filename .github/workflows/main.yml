@@ -1,19 +1,17 @@
 name: Classificar filmes com Grok
 
 on:
+  workflow_dispatch: # Só roda quando você clicar em "Run workflow"
   push:
     paths:
       - '**.html'
-      - '.github/workflows/classificar.yml'
-  workflow_dispatch:
-  schedule:
-    - cron: '0 3 * * 0'
 
 permissions:
   contents: write
 
+# MUDANÇA AQUI: Grupo diferente para não esperar a NVIDIA
 concurrency:
-  group: classificar
+  group: grok-classificar
   cancel-in-progress: false
 
 jobs:
@@ -42,10 +40,10 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # NOTA: Se 'grok-4.7' der erro 404, troque para 'grok-2-1212' ou 'grok-beta'
+          # Se 'grok-4.7' der erro 404, troque para 'grok-2-1212'
           MODELO = "grok-4.7" 
           LOTE = 20
-          MAX_WORKERS = 5 # Reduzido para 5 para evitar gargalos na xAI
+          MAX_WORKERS = 5 
 
           client = OpenAI(
               api_key=os.environ["XAI_API_KEY"],
@@ -58,7 +56,6 @@ jobs:
           PASTA, SAIDA = ".", "classificacao.json"
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
 
-          # Schema simplificado para o Grok não rejeitar (removido o enum)
           SCHEMA = {
               "type": "object",
               "properties": {
@@ -116,7 +113,7 @@ jobs:
                               "json_schema": {
                                   "name": "ClassificacaoFilmes", 
                                   "schema": SCHEMA,
-                                  "strict": False  # <--- A MÁGICA PARA O GROK FUNCIONAR
+                                  "strict": False
                               }
                           },
                       )
@@ -126,7 +123,6 @@ jobs:
 
                       result = {}
                       for i, (arq, tit) in enumerate(pares):
-                          # Como tiramos o enum do schema, filtramos os gêneros "alucinados" aqui no Python
                           gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
                           result[arq] = {
                               "titulo": tit,
@@ -136,7 +132,6 @@ jobs:
                       log(f"[✓] Lote {lote_num}/{total_lotes} concluído.")
                       return result
                   except Exception as e:
-                      # Log detalhado do erro da xAI
                       msg = str(e)
                       if hasattr(e, 'response') and e.response is not None:
                           msg += f" | Detalhes: {e.response.text}"
@@ -155,7 +150,7 @@ jobs:
 
           total_lotes = (len(pendentes) + LOTE - 1) // LOTE
           log(f"==================================================")
-          log(f"🚀 INICIANDO: {len(pendentes)} filmes em {total_lotes} lotes.")
+          log(f"🚀 INICIANDO GROK: {len(pendentes)} filmes em {total_lotes} lotes.")
           log(f"⚙️  {MAX_WORKERS} threads paralelas usando {MODELO}.")
           log(f"==================================================")
 
@@ -193,6 +188,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
           else
-            git commit -m "chore: atualiza classificacao.json [skip ci]"
+            git commit -m "chore: atualiza classificacao.json (Grok) [skip ci]"
             git push
           fi
