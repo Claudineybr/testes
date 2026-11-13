@@ -20,8 +20,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-
+    timeout-minutes: 120          # 14789 filmes podem precisar de mais tempo
     steps:
       - uses: actions/checkout@v4
 
@@ -51,7 +50,7 @@ jobs:
           GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
                      "Família","Fantasia","História","Terror","Música","Mistério","Romance",
                      "Ficção Científica","Thriller","Guerra","Faroeste"]
-          PASTA, SAIDA, LOTE = ".", "classificacao.json", 40
+          PASTA, SAIDA, LOTE = ".", "classificacao.json", 20
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
 
           SCHEMA = {
@@ -84,7 +83,6 @@ jobs:
                   if not arq.endswith(".html"):
                       continue
                   if arq in IGNORAR:
-                      print(f"[info] {arq}: ignorado (blocklist)")
                       continue
                   total += 1
                   soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
@@ -113,7 +111,13 @@ jobs:
                   messages=[{"role": "user", "content": prompt}],
                   temperature=0,
                   max_tokens=4096,
-                  extra_body={"nvext": {"guided_json": SCHEMA}},
+                  response_format={
+                      "type": "json_schema",
+                      "json_schema": {
+                          "name": "ClassificacaoFilmes",
+                          "schema": SCHEMA,
+                      },
+                  },
               )
               saida = json.loads(resp.choices[0].message.content)["filmes"]
               por_id = {str(x["id"]): x.get("generos", []) for x in saida}
@@ -127,6 +131,20 @@ jobs:
                   }
               return result
 
+          def classificar_com_retry(pares, tentativas=5):
+              for n in range(tentativas):
+                  try:
+                      return classificar_lote(pares)
+                  except Exception as e:
+                      if "429" in str(e) or "rate" in str(e).lower():
+                          espera = 2 ** n
+                          print(f"[aviso] 429 no lote — esperando {espera}s (tentativa {n+1}/{tentativas})")
+                          time.sleep(espera)
+                      else:
+                          raise
+              print(f"[erro] lote falhou após {tentativas} tentativas")
+              return {}
+
           pendentes = [(a, t) for a, t in extrair_titulos()
                        if a not in cache or cache[a].get("fonte") == "indefinido"]
 
@@ -137,19 +155,14 @@ jobs:
           for i in range(0, len(pendentes), LOTE):
               bloco = pendentes[i:i + LOTE]
               print(f"[info] lote {i//LOTE + 1}: {len(bloco)} filmes")
-              try:
-                  cache.update(classificar_lote(bloco))
-              except Exception as e:
-                  print(f"[erro] lote {i} falhou ({e}) — caindo para 1 a 1")
-                  for par in bloco:
-                      try:
-                          cache.update(classificar_lote([par]))
-                      except Exception as e2:
-                          print(f"  [erro] {par[1]}: {e2}")
-                      time.sleep(0.5)
-              json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
-              print(f"[info] progresso: {min(i + LOTE, len(pendentes))}/{len(pendentes)}")
-              time.sleep(1.0)
+              resultado = classificar_com_retry(bloco)
+              if resultado:
+                  cache.update(resultado)
+                  json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+                  print(f"[info] progresso: {min(i + LOTE, len(pendentes))}/{len(pendentes)}")
+              else:
+                  print(f"[aviso] lote {i} não foi classificado — pulando")
+              time.sleep(2.0)   # 40 RPM → 1 req a cada 1,5 s; 2 s de margem
 
           indef = sum(1 for v in cache.values() if v["fonte"] == "indefinido")
           print(f"[ok] total no índice: {len(cache)}, indefinidos: {indef}")
