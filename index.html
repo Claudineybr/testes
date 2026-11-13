@@ -8,7 +8,7 @@
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background: #0a1512; color: #fff; min-height: 100vh; overflow-x: hidden; }
     
-    /* ================= FUNDO COM SLIDESHOW ================= */
+    /* ================= FUNDO COM SLIDESHOW (FOTOS ESTÁTICAS) ================= */
     .bg-container {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -2; background-size: cover; background-position: center; background-repeat: no-repeat;
@@ -17,7 +17,7 @@
     .bg-overlay {
       position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
       z-index: -1; 
-      background: linear-gradient(rgba(10, 15, 12, 0.4), rgba(10, 15, 12, 0.65)); 
+      background: linear-gradient(rgba(10, 15, 12, 0.45), rgba(10, 15, 12, 0.7)); 
     }
     
     /* HEADER NATALINO */
@@ -85,6 +85,7 @@
     .btn-original { background: transparent; color: rgba(255, 255, 255, 0.6); text-decoration: none; padding: 10px 20px; border-radius: 8px; font-size: 0.9rem; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.2); transition: 0.3s; }
     .btn-original:hover { background: rgba(255, 255, 255, 0.1); color: #fff; border-color: #fff; }
 
+    /* NEVE */
     #snow-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9999; overflow: hidden; }
     .snowflake { position: absolute; top: -10px; color: #fff; font-size: 1.5em; font-family: Arial, sans-serif; user-select: none; pointer-events: none; animation: fall linear forwards; text-shadow: 0 0 5px rgba(255, 255, 255, 0.8); }
     @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
@@ -160,13 +161,13 @@
   </div>
 
   <script>
-    // ================= SLIDESHOW DE FUNDO (TODOS OS GIFS) =================
+    // ================= SLIDESHOW DE FUNDO (SÓ AS 5 FOTOS APROVADAS) =================
     const fundos = [
-      'https://i.giphy.com/media/gNke2UrUTopOg/giphy.gif', // Árvore
-      'https://i.giphy.com/media/N7bZmGrhsQ440hF5Yh/giphy.gif', // Papai Noel
-      'https://media.tenor.com/5DqO32h4n0UAAAAM/merry-christmas-happy-holidays.gif', // Luzes
-      'https://i.giphy.com/media/l3q2Z6S6nU4w8/giphy.gif', // Neve
-      'https://i.giphy.com/media/Z4MPq7Mq4R18Q/giphy.gif' // Enfeites
+      'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920&q=80&auto=format&fit=crop', // 1 - Árvore
+      'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920&q=80&auto=format&fit=crop', // 3 - Floresta
+      'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920&q=80&auto=format&fit=crop', // 4 - Bolas
+      'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1920&q=80&auto=format&fit=crop', // 7 - Presentes
+      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=1920&q=80&auto=format&fit=crop'  // 8 - Neve
     ];
 
     let indiceFundoAtual = 0;
@@ -174,7 +175,6 @@
 
     function trocarFundo() {
       const url = fundos[indiceFundoAtual];
-      // Cria uma imagem em memória para não piscar a tela na troca
       const img = new Image();
       img.src = url;
       img.onload = () => {
@@ -183,7 +183,7 @@
       };
     }
     trocarFundo();
-    setInterval(trocarFundo, 10000); // Troca a cada 10 segundos
+    setInterval(trocarFundo, 10000);
 
     // ================= LÓGICA DA NEVE =================
     function createSnow() {
