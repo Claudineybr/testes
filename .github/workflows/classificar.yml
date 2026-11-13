@@ -37,10 +37,119 @@ jobs:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
           NVIDIA_MODELO: ${{ vars.NVIDIA_MODELO || 'nvidia/nemotron-3-ultra-550b-a55b' }}
         run: |
-          cat > /tmp/classificar.py <<'PYEOF'
-          # ... (conteúdo idêntico ao da resposta anterior)
+          python - <<'PYEOF'
+          import json, os, re, time
+          from bs4 import BeautifulSoup
+          from openai import OpenAI
+
+          client = OpenAI(
+              api_key=os.environ["NVIDIA_API_KEY"],
+              base_url="https://integrate.api.nvidia.com/v1",
+          )
+          MODELO = os.getenv("NVIDIA_MODELO", "nvidia/nemotron-3-ultra-550b-a55b")
+
+          GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
+                     "Família","Fantasia","História","Terror","Música","Mistério","Romance",
+                     "Ficção Científica","Thriller","Guerra","Faroeste"]
+          PASTA, SAIDA, LOTE = "filmes", "classificacao.json", 40
+
+          SCHEMA = {
+              "type": "object",
+              "properties": {
+                  "filmes": {
+                      "type": "array",
+                      "items": {
+                          "type": "object",
+                          "properties": {
+                              "id":      {"type": "string"},
+                              "generos": {"type": "array",
+                                          "items": {"type": "string", "enum": GENEROS}},
+                          },
+                          "required": ["id", "generos"],
+                      },
+                  }
+              },
+              "required": ["filmes"],
+          }
+
+          cache = json.load(open(SAIDA, encoding="utf-8")) if os.path.exists(SAIDA) else {}
+
+          def extrair_titulos():
+              if not os.path.isdir(PASTA):
+                  print(f"[aviso] pasta '{PASTA}' não existe no repo")
+                  return
+              total, com_titulo = 0, 0
+              for arq in sorted(os.listdir(PASTA)):
+                  if not arq.endswith(".html"):
+                      continue
+                  total += 1
+                  soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
+                  el = soup.select_one("h1, .titulo, title")
+                  if not el:
+                      print(f"[aviso] {arq}: nenhum seletor 'h1, .titulo, title' encontrado")
+                      continue
+                  com_titulo += 1
+                  titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
+                  yield arq, titulo
+              print(f"[info] {total} HTMLs em '{PASTA}', {com_titulo} com título extraído")
+
+          def classificar_lote(pares):
+              entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
+              prompt = (
+                  "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
+                  f"Gêneros permitidos: {', '.join(GENEROS)}\n"
+                  "Regras:\n"
+                  "- Use APENAS gêneros da lista, escritos exatamente como estão.\n"
+                  "- Se não reconhecer o filme, retorne 'generos': [].\n"
+                  "- Não invente. Não explique.\n\n"
+                  + json.dumps({"filmes": entrada}, ensure_ascii=False)
+              )
+              resp = client.chat.completions.create(
+                  model=MODELO,
+                  messages=[{"role": "user", "content": prompt}],
+                  temperature=0,
+                  max_tokens=4096,
+                  extra_body={"nvext": {"guided_json": SCHEMA}},
+              )
+              saida = json.loads(resp.choices[0].message.content)["filmes"]
+              por_id = {str(x["id"]): x.get("generos", []) for x in saida}
+              result = {}
+              for i, (arq, tit) in enumerate(pares):
+                  gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
+                  result[arq] = {
+                      "titulo": tit,
+                      "generos": gs or ["indefinido"],
+                      "fonte": "ia" if gs else "indefinido",
+                  }
+              return result
+
+          pendentes = [(a, t) for a, t in extrair_titulos()
+                       if a not in cache or cache[a].get("fonte") == "indefinido"]
+
+          print(f"[info] pendentes para classificar: {len(pendentes)}")
+          if not pendentes:
+              print("[info] nada a fazer. Encerrando.")
+
+          for i in range(0, len(pendentes), LOTE):
+              bloco = pendentes[i:i + LOTE]
+              print(f"[info] lote {i//LOTE + 1}: {len(bloco)} filmes")
+              try:
+                  cache.update(classificar_lote(bloco))
+              except Exception as e:
+                  print(f"[erro] lote {i} falhou ({e}) — caindo para 1 a 1")
+                  for par in bloco:
+                      try:
+                          cache.update(classificar_lote([par]))
+                      except Exception as e2:
+                          print(f"  [erro] {par[1]}: {e2}")
+                      time.sleep(0.5)
+              json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+              print(f"[info] progresso: {min(i + LOTE, len(pendentes))}/{len(pendentes)}")
+              time.sleep(1.0)
+
+          indef = sum(1 for v in cache.values() if v["fonte"] == "indefinido")
+          print(f"[ok] total no índice: {len(cache)}, indefinidos: {indef}")
           PYEOF
-          python /tmp/classificar.py
 
       - name: Commitar índice atualizado
         if: always()
