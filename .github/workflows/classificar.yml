@@ -1,0 +1,155 @@
+name: Classificar filmes
+
+on:
+  push:
+    paths:
+      - 'filmes/**'
+      - '.github/workflows/classificar.yml'
+  workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 0'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: classificar
+  cancel-in-progress: false
+
+jobs:
+  classificar:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Instalar deps
+        run: pip install beautifulsoup4 openai
+
+      - name: Rodar classificador
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          NVIDIA_MODELO: ${{ vars.NVIDIA_MODELO || 'nvidia/nemotron-3-ultra-550b-a55b' }}
+        run: |
+          cat > /tmp/classificar.py <<'PYEOF'
+          import json, os, re, time
+          from bs4 import BeautifulSoup
+          from openai import OpenAI
+
+          client = OpenAI(
+              api_key=os.environ["NVIDIA_API_KEY"],
+              base_url="https://integrate.api.nvidia.com/v1",
+          )
+          MODELO = os.getenv("NVIDIA_MODELO", "nvidia/nemotron-3-ultra-550b-a55b")
+
+          GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
+                     "Família","Fantasia","História","Terror","Música","Mistério","Romance",
+                     "Ficção Científica","Thriller","Guerra","Faroeste"]
+          PASTA, SAIDA, LOTE = "filmes", "classificacao.json", 40
+
+          SCHEMA = {
+              "type": "object",
+              "properties": {
+                  "filmes": {
+                      "type": "array",
+                      "items": {
+                          "type": "object",
+                          "properties": {
+                              "id":      {"type": "string"},
+                              "generos": {"type": "array",
+                                          "items": {"type": "string", "enum": GENEROS}},
+                          },
+                          "required": ["id", "generos"],
+                      },
+                  }
+              },
+              "required": ["filmes"],
+          }
+
+          cache = json.load(open(SAIDA, encoding="utf-8")) if os.path.exists(SAIDA) else {}
+
+          def extrair_titulos():
+              if not os.path.isdir(PASTA):
+                  return
+              for arq in sorted(os.listdir(PASTA)):
+                  if not arq.endswith(".html"):
+                      continue
+                  soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
+                  el = soup.select_one("h1, .titulo, title")
+                  if not el:
+                      continue
+                  titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
+                  yield arq, titulo
+
+          def classificar_lote(pares):
+              entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
+              prompt = (
+                  "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
+                  f"Gêneros permitidos: {', '.join(GENEROS)}\n"
+                  "Regras:\n"
+                  "- Use APENAS gêneros da lista, escritos exatamente como estão.\n"
+                  "- Se não reconhecer o filme, retorne 'generos': [].\n"
+                  "- Não invente. Não explique.\n\n"
+                  + json.dumps({"filmes": entrada}, ensure_ascii=False)
+              )
+              resp = client.chat.completions.create(
+                  model=MODELO,
+                  messages=[{"role": "user", "content": prompt}],
+                  temperature=0,
+                  max_tokens=4096,
+                  extra_body={"nvext": {"guided_json": SCHEMA}},
+              )
+              saida = json.loads(resp.choices[0].message.content)["filmes"]
+              por_id = {str(x["id"]): x.get("generos", []) for x in saida}
+              result = {}
+              for i, (arq, tit) in enumerate(pares):
+                  gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
+                  result[arq] = {
+                      "titulo": tit,
+                      "generos": gs or ["indefinido"],
+                      "fonte": "ia" if gs else "indefinido",
+                  }
+              return result
+
+          pendentes = [(a, t) for a, t in extrair_titulos()
+                       if a not in cache or cache[a].get("fonte") == "indefinido"]
+
+          for i in range(0, len(pendentes), LOTE):
+              bloco = pendentes[i:i + LOTE]
+              try:
+                  cache.update(classificar_lote(bloco))
+              except Exception as e:
+                  print(f"lote {i} falhou ({e}) — caindo para 1 a 1")
+                  for par in bloco:
+                      try:
+                          cache.update(classificar_lote([par]))
+                      except Exception as e2:
+                          print(f"  {par[1]}: {e2}")
+                      time.sleep(0.5)
+              json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+              print(f"{min(i + LOTE, len(pendentes))}/{len(pendentes)}")
+              time.sleep(1.0)
+
+          print("indefinidos:", sum(1 for v in cache.values() if v["fonte"] == "indefinido"))
+          PYEOF
+          python /tmp/classificar.py
+
+      - name: Commitar índice atualizado
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add classificacao.json
+          if git diff --cached --quiet; then
+            echo "Sem mudanças — nada a commitar."
+          else
+            git commit -m "chore: atualiza classificacao.json [skip ci]"
+            git push
+          fi
