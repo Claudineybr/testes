@@ -32,7 +32,6 @@ jobs:
           
           # 1. Clona a fonte original e o catálogo de novos
           git clone --depth 1 https://github.com/Claudineybr/api_pobreflix_filmes.git "$T/origem" || true
-          git clone --depth 1 https://github.com/Claudineybr/catalogocompleto2.git "$T/novos"
           
           # 2. Roda o script Python de filtragem, padronização e reconstrução
           cat > "$T/filtrar.py" << 'PYEOF'

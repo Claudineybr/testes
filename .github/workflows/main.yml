@@ -1,0 +1,193 @@
+name: Classificar filmes com Grok
+
+on:
+  workflow_dispatch: # Só roda quando você clicar em "Run workflow"
+  push:
+    paths:
+      - '**.html'
+
+permissions:
+  contents: write
+
+# MUDANÇA AQUI: Grupo diferente para não esperar a NVIDIA
+concurrency:
+  group: grok-classificar
+  cancel-in-progress: false
+
+jobs:
+  classificar:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar deps
+        run: pip install beautifulsoup4 openai
+
+      - name: Rodar classificador
+        env:
+          XAI_API_KEY: ${{ secrets.XAI_API_KEY }}
+          PYTHONUNBUFFERED: "1"
+        run: |
+          python -u - <<'PYEOF'
+          import json, os, re, time, threading
+          from bs4 import BeautifulSoup
+          from openai import OpenAI
+          from concurrent.futures import ThreadPoolExecutor, as_completed
+
+          # Se 'grok-4.7' der erro 404, troque para 'grok-2-1212'
+          MODELO = "grok-4.7" 
+          LOTE = 20
+          MAX_WORKERS = 5 
+
+          client = OpenAI(
+              api_key=os.environ["XAI_API_KEY"],
+              base_url="https://api.x.ai/v1",
+          )
+
+          GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
+                     "Família","Fantasia","História","Terror","Música","Mistério","Romance",
+                     "Ficção Científica","Thriller","Guerra","Faroeste"]
+          PASTA, SAIDA = ".", "classificacao.json"
+          IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
+
+          SCHEMA = {
+              "type": "object",
+              "properties": {
+                  "filmes": {
+                      "type": "array",
+                      "items": {
+                          "type": "object",
+                          "properties": {
+                              "id":      {"type": "string"},
+                              "generos": {"type": "array", "items": {"type": "string"}}
+                          },
+                          "required": ["id", "generos"],
+                      },
+                  }
+              },
+              "required": ["filmes"],
+          }
+
+          cache = json.load(open(SAIDA, encoding="utf-8")) if os.path.exists(SAIDA) else {}
+
+          log_lock = threading.Lock()
+          def log(msg):
+              with log_lock:
+                  print(msg, flush=True)
+
+          def extrair_titulos():
+              if not os.path.isdir(PASTA): return
+              for arq in sorted(os.listdir(PASTA)):
+                  if not arq.endswith(".html") or arq in IGNORAR: continue
+                  soup = BeautifulSoup(open(os.path.join(PASTA, arq), encoding="utf-8"), "html.parser")
+                  el = soup.select_one("h1, .titulo, title")
+                  if not el: continue
+                  titulo = re.sub(r"\s*[-|–].*$", "", el.get_text(strip=True)).strip()
+                  yield arq, titulo
+
+          def classificar_lote(pares, lote_num, total_lotes):
+              entrada = [{"id": str(i), "titulo": t} for i, (_, t) in enumerate(pares)]
+              prompt = (
+                  "Classifique cada filme em 1 a 3 gêneros da lista fixa.\n"
+                  f"Gêneros permitidos: {', '.join(GENEROS)}\n"
+                  "Regras: Use APENAS os gêneros listados acima. Se não reconhecer, retorne []."
+                  "Responda APENAS o JSON, sem texto antes ou depois.\n\n"
+                  + json.dumps({"filmes": entrada}, ensure_ascii=False)
+              )
+
+              for tentativa in range(3):
+                  try:
+                      resp = client.chat.completions.create(
+                          model=MODELO,
+                          messages=[{"role": "user", "content": prompt}],
+                          temperature=0,
+                          max_tokens=4096,
+                          response_format={
+                              "type": "json_schema", 
+                              "json_schema": {
+                                  "name": "ClassificacaoFilmes", 
+                                  "schema": SCHEMA,
+                                  "strict": False
+                              }
+                          },
+                      )
+                      content = resp.choices[0].message.content
+                      data = json.loads(content)
+                      por_id = {str(x.get("id")): x.get("generos", []) for x in data.get("filmes", [])}
+
+                      result = {}
+                      for i, (arq, tit) in enumerate(pares):
+                          gs = [g for g in por_id.get(str(i), []) if g in GENEROS][:3]
+                          result[arq] = {
+                              "titulo": tit,
+                              "generos": gs or ["indefinido"],
+                              "fonte": "ia" if gs else "indefinido",
+                          }
+                      log(f"[✓] Lote {lote_num}/{total_lotes} concluído.")
+                      return result
+                  except Exception as e:
+                      msg = str(e)
+                      if hasattr(e, 'response') and e.response is not None:
+                          msg += f" | Detalhes: {e.response.text}"
+                      
+                      log(f"[!] Erro no lote {lote_num}: {msg}. Tentando novamente...")
+                      time.sleep(2 ** tentativa)
+
+              log(f"[x] Lote {lote_num} falhou.")
+              return {arq: {"titulo": tit, "generos": ["indefinido"], "fonte": "indefinido"} for arq, tit in pares}
+
+          pendentes = [(a, t) for a, t in extrair_titulos() if a not in cache or cache[a].get("fonte") == "indefinido"]
+
+          if not pendentes:
+              log("[info] Nenhum filme pendente. Encerrando.")
+              exit(0)
+
+          total_lotes = (len(pendentes) + LOTE - 1) // LOTE
+          log(f"==================================================")
+          log(f"🚀 INICIANDO GROK: {len(pendentes)} filmes em {total_lotes} lotes.")
+          log(f"⚙️  {MAX_WORKERS} threads paralelas usando {MODELO}.")
+          log(f"==================================================")
+
+          tarefas = []
+          for i in range(0, len(pendentes), LOTE):
+              bloco = pendentes[i:i + LOTE]
+              lote_num = (i // LOTE) + 1
+              tarefas.append((bloco, lote_num, total_lotes))
+
+          processados = 0
+          with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+              futures = [executor.submit(classificar_lote, b, n, tot) for b, n, tot in tarefas]
+
+              for future in as_completed(futures):
+                  resultado = future.result()
+                  if resultado:
+                      cache.update(resultado)
+                      json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
+
+                  processados += 1
+                  porcentagem = (processados / total_lotes) * 100
+                  log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) salvos.")
+
+          log("==================================================")
+          log(f"🎉 FINALIZADO! Total de filmes no cache: {len(cache)}")
+          log("==================================================")
+          PYEOF
+
+      - name: Commitar índice atualizado
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add classificacao.json
+          if git diff --cached --quiet; then
+            echo "Sem mudanças — nada a commitar."
+          else
+            git commit -m "chore: atualiza classificacao.json (Grok) [skip ci]"
+            git push
+          fi
