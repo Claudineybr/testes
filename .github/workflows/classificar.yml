@@ -17,7 +17,7 @@ jobs:
   classificar:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    timeout-minutes: 360 # Aumentado para 6 horas
+    timeout-minutes: 360 # Limite máximo do GitHub (6 horas)
     steps:
       - uses: actions/checkout@v4
 
@@ -39,10 +39,9 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # --- LISTA LIMPA (Apenas os modelos que funcionaram) ---
+          # --- LISTA LIMPA (Apenas os 3 modelos que funcionaram bem) ---
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
-              "deepseek-ai/deepseek-v4.1-flash",
               "openai/gpt-oss-20b",
               "meta/llama-3.2-90b-vision-instruct"
           ]
@@ -174,11 +173,22 @@ jobs:
               modelo_inicial = MODELOS[(lote_num - 1) % len(MODELOS)]
               tarefas.append((bloco, lote_num, total_lotes, modelo_inicial))
 
+          # --- CONFIGURAÇÃO DA BOMBA RELÓGIO ---
+          inicio_execucao = time.time()
+          TEMPO_LIMITE = 330 * 60 # 330 minutos = 5 horas e 30 minutos
+
           processados = 0
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
               futures = [executor.submit(classificar_lote_com_fallback, b, n, tot, m) for b, n, tot, m in tarefas]
 
               for future in as_completed(futures):
+                  # Verifica se está na hora de parar e salvar
+                  if time.time() - inicio_execucao > TEMPO_LIMITE:
+                      log("⏰ Tempo limite de segurança atingido (5h30m). Parando de processar...")
+                      for f in futures:
+                          f.cancel() # Cancela os lotes que ainda não começaram
+                      break # Sai do loop para ir para o salvamento final
+
                   resultado = future.result()
                   if resultado:
                       cache.update(resultado)
@@ -188,8 +198,11 @@ jobs:
                   porcentagem = (processados / total_lotes) * 100
                   log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) salvos.")
 
+          # --- SALVAMENTO FINAL ANTES DO COMMIT ---
+          json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
           log("==================================================")
           log(f"🎉 FINALIZADO! Total de filmes no cache: {len(cache)}")
+          log("💾 JSON salvo. O passo de commit fará o push.")
           log("==================================================")
           PYEOF
 
