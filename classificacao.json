@@ -2138,9 +2138,9 @@
   "23_000_vidas_2026_2026.html": {
     "titulo": "23.000 Vidas (2026)",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "24_horas_de_furia_2006_2006.html": {
     "titulo": "24 Horas de Furia (2006)",
@@ -2154,9 +2154,10 @@
   "27_noites_2025_2025.html": {
     "titulo": "27 Noites (2025)",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "2_dias_em_nova_york_2012_2012.html": {
     "titulo": "2 Dias em Nova York (2012)",
@@ -3177,6 +3178,186 @@
       "Terror",
       "Mistério",
       "Thriller"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e1.html": {
+    "titulo": "A Casa Da Coruja T1E1",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e10.html": {
+    "titulo": "A Casa Da Coruja T1E10",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e11.html": {
+    "titulo": "A Casa Da Coruja T1E11",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e12.html": {
+    "titulo": "A Casa Da Coruja T1E12",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e13.html": {
+    "titulo": "A Casa Da Coruja T1E13",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e14.html": {
+    "titulo": "A Casa Da Coruja T1E14",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e15.html": {
+    "titulo": "A Casa Da Coruja T1E15",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e16.html": {
+    "titulo": "A Casa Da Coruja T1E16",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e17.html": {
+    "titulo": "A Casa Da Coruja T1E17",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e18.html": {
+    "titulo": "A Casa Da Coruja T1E18",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e19.html": {
+    "titulo": "A Casa Da Coruja T1E19",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e2.html": {
+    "titulo": "A Casa Da Coruja T1E2",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e3.html": {
+    "titulo": "A Casa Da Coruja T1E3",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e4.html": {
+    "titulo": "A Casa Da Coruja T1E4",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e5.html": {
+    "titulo": "A Casa Da Coruja T1E5",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e6.html": {
+    "titulo": "A Casa Da Coruja T1E6",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e7.html": {
+    "titulo": "A Casa Da Coruja T1E7",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e8.html": {
+    "titulo": "A Casa Da Coruja T1E8",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_da_coruja_t1e9.html": {
+    "titulo": "A Casa Da Coruja T1E9",
+    "generos": [
+      "Animação",
+      "Fantasia",
+      "Comédia"
+    ],
+    "fonte": "ia"
+  },
+  "a_casa_de_cera.html": {
+    "titulo": "A Casa De Cera",
+    "generos": [
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   }
