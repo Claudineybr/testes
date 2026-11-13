@@ -1,4 +1,2 @@
-filmes_erros.json
-series_erros.json
 catalogo.json
 serie.html
