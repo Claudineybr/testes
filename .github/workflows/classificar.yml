@@ -39,15 +39,18 @@ jobs:
           from openai import OpenAI
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
-          # --- LISTA LIMPA (Apenas os 3 modelos estáveis) ---
+          # --- TURBO MODE: 6 MODELOS EM ROTAÇÃO ---
           MODELOS = [
               "nvidia/nemotron-3-ultra-550b-a55b",
               "openai/gpt-oss-20b",
-              "meta/llama-3.2-90b-vision-instruct"
+              "meta/llama-3.2-90b-vision-instruct",
+              "meta/llama-3.3-70b-instruct",
+              "mistralai/mixtral-8x22b-instruct-v0.1",
+              "deepseek-ai/deepseek-v4.1-flash" 
           ]
 
           LOTE = 20
-          MAX_WORKERS = 3
+          MAX_WORKERS = 6 # <-- Aumentado para 6 threads paralelas
 
           client = OpenAI(
               api_key=os.environ["NVIDIA_API_KEY"],
@@ -60,7 +63,6 @@ jobs:
           PASTA, SAIDA = ".", "classificacao.json"
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html"}
 
-          # --- SCHEMA ATUALIZADO COM O CAMPO "tipo" ---
           SCHEMA = {
               "type": "object",
               "properties": {
@@ -164,8 +166,6 @@ jobs:
               log(f"[x] Lote {lote_num} falhou em todos os modelos. Marcando {len(pares)} títulos como 'indefinido'.")
               return {arq: {"titulo": tit, "tipo": "desconhecido", "generos": ["indefinido"], "fonte": "indefinido"} for arq, tit in pares}
 
-          # --- REGRA DE PENDENTES ATUALIZADA ---
-          # Vai reprocessar se: não existe no cache OU está indefinido OU não tem o campo "tipo"
           pendentes = [
               (a, t) for a, t in extrair_titulos() 
               if a not in cache 
@@ -179,7 +179,7 @@ jobs:
 
           total_lotes = (len(pendentes) + LOTE - 1) // LOTE
           log(f"==================================================")
-          log(f"🚀 INICIANDO: {len(pendentes)} títulos em {total_lotes} lotes.")
+          log(f"🚀 INICIANDO TURBO: {len(pendentes)} títulos em {total_lotes} lotes.")
           log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos em rotação.")
           log(f"==================================================")
 
@@ -190,7 +190,6 @@ jobs:
               modelo_inicial = MODELOS[(lote_num - 1) % len(MODELOS)]
               tarefas.append((bloco, lote_num, total_lotes, modelo_inicial))
 
-          # --- BOMBA RELÓGIO ---
           inicio_execucao = time.time()
           TEMPO_LIMITE = 330 * 60 # 5h30m
 
@@ -214,7 +213,6 @@ jobs:
                   porcentagem = (processados / total_lotes) * 100
                   log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({porcentagem:.1f}%) salvos.")
 
-          # --- SALVAMENTO FINAL ---
           json.dump(cache, open(SAIDA, "w", encoding="utf-8"), ensure_ascii=False, indent=2)
           log("==================================================")
           log(f"🎉 FINALIZADO! Total de títulos no cache: {len(cache)}")
@@ -231,8 +229,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
           else
-            git commit -m "chore: atualiza classificacao com tipo (filme/serie) [skip ci]"
-            # O -X ours resolve o conflito mantendo a versão do bot, sem quebrar o JSON
+            git commit -m "chore: atualiza classificacao (Turbo 6 IAs) [skip ci]"
             git pull origin main -X ours --no-rebase
             git push
           fi
