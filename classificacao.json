@@ -1990,7 +1990,7 @@
   },
   "9_t4e9.html": {
     "titulo": "9 T4E9",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -1998,7 +1998,7 @@
   },
   "9_t5e1.html": {
     "titulo": "9 T5E1",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2006,7 +2006,7 @@
   },
   "9_t5e10.html": {
     "titulo": "9 T5E10",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2014,7 +2014,7 @@
   },
   "9_t5e11.html": {
     "titulo": "9 T5E11",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2022,7 +2022,7 @@
   },
   "9_t5e12.html": {
     "titulo": "9 T5E12",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2030,7 +2030,7 @@
   },
   "9_t5e13.html": {
     "titulo": "9 T5E13",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2038,7 +2038,7 @@
   },
   "9_t5e14.html": {
     "titulo": "9 T5E14",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2046,7 +2046,7 @@
   },
   "9_t5e15.html": {
     "titulo": "9 T5E15",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2618,7 +2618,7 @@
   },
   "9_t5e16.html": {
     "titulo": "9 T5E16",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2626,7 +2626,7 @@
   },
   "9_t5e17.html": {
     "titulo": "9 T5E17",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2634,7 +2634,7 @@
   },
   "9_t5e18.html": {
     "titulo": "9 T5E18",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2642,7 +2642,7 @@
   },
   "9_t5e2.html": {
     "titulo": "9 T5E2",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2650,7 +2650,7 @@
   },
   "9_t5e3.html": {
     "titulo": "9 T5E3",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2658,7 +2658,7 @@
   },
   "9_t5e4.html": {
     "titulo": "9 T5E4",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2666,7 +2666,7 @@
   },
   "9_t5e5.html": {
     "titulo": "9 T5E5",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2674,7 +2674,7 @@
   },
   "9_t5e6.html": {
     "titulo": "9 T5E6",
-    "tipo": "filme",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -7025,57 +7025,69 @@
     "titulo": "A Vida Secreta de Zoe (2014)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vigia_2022_2022.html": {
     "titulo": "A Vigia (2022)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vinganca_de_cinderela_2024_2024.html": {
     "titulo": "A Vinganca de Cinderela (2024)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vinganca_de_popeye_2025_2025.html": {
     "titulo": "A Vinganca de Popeye (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vinganca_nao_e_um_jogo_2024_2024.html": {
     "titulo": "A Vinganca Nao e um Jogo (2024)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Ação",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_virgem_da_pedreira_2025_2025.html": {
     "titulo": "A Virgem da Pedreira (2025)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_visita.html": {
     "titulo": "A Visita",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_visita_2015_2015.html": {
     "titulo": "A Visita (2015)",
@@ -7091,9 +7103,11 @@
     "titulo": "A Viuva das Sombras (2020)",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_vizinha_da_mulher_na_janela_t1e1.html": {
     "titulo": "A Vizinha da Mulher na Janela T1E1",
@@ -7951,9 +7965,10 @@
     "titulo": "Ainda Estou Aqui",
     "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "História"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "ainda_estou_aqui_2024_2024.html": {
     "titulo": "Ainda Estou Aqui (2024)",
@@ -8256,6 +8271,7 @@
   },
   "alexandre_e_a_viagem_terrivel_horrivel_espantosa_e_horrorosa_2025_2025.html": {
     "titulo": "Alexandre e a Viagem Terrivel, Horrivel, Espantosa e Horrorosa (2025)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
       "Família",
@@ -8265,96 +8281,109 @@
   },
   "alfa_2018_2018.html": {
     "titulo": "Alfa (2018)",
+    "tipo": "filme",
     "generos": [
-      "Aventura",
-      "Drama",
-      "História"
+      "Ficção Científica",
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e1.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E1",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e2.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E2",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e3.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E3",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e4.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E4",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e5.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E5",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e6.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E6",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e7.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E7",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "algo_horrivel_vai_acontecer_t1e8.html": {
     "titulo": "Algo Horrivel Vai Acontecer T1E8",
+    "tipo": "serie",
     "generos": [
       "Terror",
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "alguem_avisa.html": {
     "titulo": "Alguem Avisa?",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "alguem_avisa_2020_2020.html": {
     "titulo": "Alguem Avisa? (2020)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Comédia",
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -8548,52 +8577,67 @@
   },
   "alem_do_direito_t1e9.html": {
     "titulo": "Alem do Direito T1E9",
+    "tipo": "serie",
     "generos": [
+      "Drama",
       "Crime",
-      "Drama"
+      "Mistério"
     ],
     "fonte": "ia"
   },
   "alem_dos_limites_da_morte_2024_2024.html": {
     "titulo": "Alem Dos Limites Da Morte (2024)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Aventura"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "alerta_ambar.html": {
     "titulo": "Alerta Ambar",
+    "tipo": "filme",
     "generos": [
-      "Thriller"
+      "Thriller",
+      "Crime",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "alerta_apocalipse.html": {
     "titulo": "Alerta Apocalipse",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Ficção Científica",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "alerta_apocalipse_2026_2026.html": {
     "titulo": "Alerta Apocalipse (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Ficção Científica",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "alerta_de_risco_2024_2024.html": {
     "titulo": "Alerta de Risco (2024)",
+    "tipo": "filme",
     "generos": [
-      "Thriller"
+      "Thriller",
+      "Ação",
+      "Crime"
     ],
     "fonte": "ia"
   },
   "alerta_maximo_2023_2023.html": {
     "titulo": "Alerta Maximo (2023)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller"
@@ -8602,21 +8646,26 @@
   },
   "alerta_vermelho_2021_2021.html": {
     "titulo": "Alerta Vermelho (2021)",
+    "tipo": "filme",
     "generos": [
-      "Thriller"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_trevas_2023_2023.html": {
     "titulo": "Alice no Pais das Trevas (2023)",
+    "tipo": "filme",
     "generos": [
-      "Aventura",
-      "Fantasia"
+      "Terror",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_trevas_2024_2024.html": {
     "titulo": "Alice no Pais das Trevas (2024)",
+    "tipo": "filme",
     "generos": [
       "Aventura",
       "Fantasia"
@@ -8625,6 +8674,7 @@
   },
   "alice_subservience.html": {
     "titulo": "Alice: Subservience",
+    "tipo": "filme",
     "generos": [
       "Aventura",
       "Fantasia"
@@ -8633,6 +8683,7 @@
   },
   "alice_subservience_2024_2024.html": {
     "titulo": "Alice: Subservience (2024)",
+    "tipo": "filme",
     "generos": [
       "Aventura",
       "Fantasia"
@@ -8641,6 +8692,7 @@
   },
   "alien_3_a_desforra_1992_1992.html": {
     "titulo": "Alien 3",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8649,6 +8701,7 @@
   },
   "alien_a_ressurreicao_1997_1997.html": {
     "titulo": "Alien: A Ressurreicao (1997)",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8657,6 +8710,7 @@
   },
   "alien_covenant_2017_2017.html": {
     "titulo": "Alien Covenant (2017)",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8665,62 +8719,70 @@
   },
   "alien_earth_t1e1.html": {
     "titulo": "Alien Earth T1E1",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e2.html": {
     "titulo": "Alien Earth T1E2",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e3.html": {
     "titulo": "Alien Earth T1E3",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e4.html": {
     "titulo": "Alien Earth T1E4",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e5.html": {
     "titulo": "Alien Earth T1E5",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e6.html": {
     "titulo": "Alien Earth T1E6",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_earth_t1e7.html": {
     "titulo": "Alien Earth T1E7",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "alien_o_8_o_passageiro_1979_1979.html": {
     "titulo": "Alien",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8729,6 +8791,7 @@
   },
   "alien_romulus.html": {
     "titulo": "Alien: Romulus",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8737,6 +8800,7 @@
   },
   "alien_romulus_2024_2024.html": {
     "titulo": "Alien Romulus (2024)",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Terror"
@@ -8745,34 +8809,37 @@
   },
   "alien_vs_predador_2004_2004.html": {
     "titulo": "Alien vs. Predador (2004)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "alien_vs_predador_2_2002_2002.html": {
     "titulo": "Alien Vs Predador 2 (2002)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "aliens_o_resgate_1986_1986.html": {
     "titulo": "Aliens: O Resgate (1986)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Ação"
     ],
     "fonte": "ia"
   },
   "alita_anjo_de_combate_2019_2019.html": {
     "titulo": "Alita: Anjo de Combate (2019)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
       "Ficção Científica",
-      "Aventura"
+      "Ação"
     ],
     "fonte": "ia"
   },
@@ -9763,72 +9830,78 @@
   },
   "alice_in_borderland_t3e3.html": {
     "titulo": "Alice in Borderland T3E3",
+    "tipo": "serie",
     "generos": [
       "Thriller",
       "Ação",
-      "Mistério"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "alice_in_borderland_t3e4.html": {
     "titulo": "Alice in Borderland T3E4",
+    "tipo": "serie",
     "generos": [
       "Thriller",
       "Ação",
-      "Mistério"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "alice_in_borderland_t3e5.html": {
     "titulo": "Alice in Borderland T3E5",
+    "tipo": "serie",
     "generos": [
       "Thriller",
       "Ação",
-      "Mistério"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "alice_in_borderland_t3e6.html": {
     "titulo": "Alice in Borderland T3E6",
+    "tipo": "serie",
     "generos": [
       "Thriller",
       "Ação",
-      "Mistério"
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_maravilhas.html": {
     "titulo": "Alice no Pais das Maravilhas",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
-      "Aventura",
-      "Família"
+      "Família",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_maravilhas_1951_1951.html": {
     "titulo": "Alice No Pais Das Maravilhas (1951)",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
-      "Aventura",
       "Família"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_maravilhas_2010_2010.html": {
     "titulo": "Alice no Pais das Maravilhas (2010)",
+    "tipo": "filme",
     "generos": [
       "Fantasia",
-      "Aventura",
-      "Família"
+      "Família",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "alice_no_pais_das_trevas.html": {
     "titulo": "Alice no Pais das Trevas",
+    "tipo": "filme",
     "generos": [
       "Terror",
-      "Thriller",
       "Drama"
     ],
     "fonte": "ia"
