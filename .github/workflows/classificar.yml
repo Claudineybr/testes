@@ -296,6 +296,7 @@ jobs:
                       if not nome or tem_titulo_cortado(u["arqs"][0], nome):
                           nome = capitalizar(palavras_do_arquivo(u["arqs"][0]))
                       u["nome"] = nome
+                  u["nome"] = corrigido(u["arqs"][0]) or u["nome"]
               return unidades
 
           def generos_da_serie(arqs):
@@ -323,6 +324,30 @@ jobs:
                           herdados += 1
               return herdados
 
+          CORRIGIDOS = {}
+
+          def carregar_corrigidos():
+              """titulos.json (workflow 'Corrigir titulos com IA'): nomes com acento, melhores para a IA reconhecer."""
+              try:
+                  with open("titulos.json", encoding="utf-8") as f:
+                      dados = json.load(f)
+              except (OSError, ValueError):
+                  return {}
+              return {k: v["titulo"] for k, v in dados.items() if isinstance(v, dict) and v.get("titulo")}
+
+          def corrigido(arq):
+              k = ("serie:" + prefixo_serie(arq).lower()) if eh_serie(arq) else arq[:-5]
+              return CORRIGIDOS.get(k)
+
+          def nome_tentado(e):
+              """Nome que foi enviado à IA da última vez que ela não soube."""
+              return e.get("nome") or re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", e.get("titulo", ""), flags=re.I).strip()
+
+          def renomeado(u, es):
+              """Indefinido cujo nome mudou (título corrigido): vale tentar de novo, mesmo sem tentativas sobrando."""
+              c = corrigido(u["arqs"][0])
+              return bool(c) and any(e and e.get("fonte") == "indefinido" and nome_tentado(e) != c for e in es)
+
           def pendente(u):
               """Esta unidade precisa ir para a IA?"""
               if RX_FILTRO and not any(RX_FILTRO.search(a) for a in u["arqs"]):
@@ -341,7 +366,7 @@ jobs:
                   return False
               if MODO == "novos":
                   tentativas = max([e.get("tentativas", 0) for e in es if e] or [0])
-                  if tentativas >= MAX_TENTATIVAS:
+                  if tentativas >= MAX_TENTATIVAS and not renomeado(u, es):
                       return False       # a IA já disse "não sei" demais; só o modo "indefinidos"/"tudo" tenta de novo
               return True
 
@@ -358,7 +383,7 @@ jobs:
                   else:
                       tent = (e or {}).get("tentativas", 0) + 1
                       cache[arq] = {"titulo": titulos[arq], "tipo": u["tipo"], "generos": ["indefinido"],
-                                    "fonte": "indefinido", "tentativas": tent}
+                                    "fonte": "indefinido", "tentativas": tent, "nome": u["nome"]}
 
           # ==================================================================
           # IA
@@ -450,7 +475,8 @@ jobs:
 
           n_tipo, n_titulo = corrigir_cache()
           n_podados = podar(set(arquivos))
-          titulos = {a: descobrir_titulo(a) for a in arquivos}
+          CORRIGIDOS = carregar_corrigidos()
+          titulos = {a: (corrigido(a) if not eh_serie(a) and corrigido(a) else descobrir_titulo(a)) for a in arquivos}
           unidades = montar_unidades(arquivos, titulos)
           n_herdados = herdar_series(unidades, titulos)
           log(f"🧹 Correções sem IA: {n_tipo} tipos, {n_titulo} títulos cortados, {n_herdados} episódios herdaram gêneros da série, {n_podados} entradas removidas.")
