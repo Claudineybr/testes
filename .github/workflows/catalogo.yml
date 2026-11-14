@@ -59,7 +59,10 @@ jobs:
               if not m:
                   return None
               t = htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1) or m.group(2) or "")).strip()
+              t = re.sub(r"\s*[-|–—]?\s*[^\w\s]*\s*clau(\s*flix)?\s*$", "", t, flags=re.I)   # "- 🍿Clau"
               t = SUFIXOS.sub("", t)
+              t = re.sub(r"(\(\d{4}\))(\s*[-|–—]\s*\1)+", r"\1", t)                         # "(2010) - (2010)"
+              t = re.sub(r"[\s\-|–—]+$", "", t)
               t = re.sub(r"\s*[-|–]?\s*(T\d+E\d+|\d+x\d+)\s*$", "", t, flags=re.I).strip()
               t = re.sub(r"\s*\(?\b(\d{4})\b\)?\s+\(?\1\)?$", r" (\1)", t).strip()
               sem_ano = re.sub(r"\(\d{4}\)|\b\d{4}\b", "", t)
@@ -83,6 +86,11 @@ jobs:
 
 
           def main():
+              try:
+                  tit = json.load(open("titulos.json", encoding="utf-8"))
+              except (OSError, ValueError):
+                  tit = {}
+              corrigido = lambda k: (tit.get(k) or {}).get("titulo")
               itens, sem_video = [], 0
               for caminho, arquivo in listar():
                   slug = arquivo[:-5]
@@ -96,11 +104,11 @@ jobs:
                   m = RX_EP.match(slug)
                   if m:
                       t = int(m.group(2) or m.group(4)); e = int(m.group(3) or m.group(5))
-                      serie = do_html(conteudo, norm(m.group(1))) or do_arquivo(m.group(1))
+                      serie = corrigido("serie:" + m.group(1).lower()) or do_html(conteudo, norm(m.group(1))) or do_arquivo(m.group(1))
                       titulo = f"{serie} - T{t}E{e:02d}"
                   else:
                       t = e = 1
-                      serie = titulo = do_html(conteudo, norm(re.sub(r"_(\d{4})_\1$", r"_\1", slug))) or do_arquivo(slug)
+                      serie = titulo = corrigido(slug) or do_html(conteudo, norm(re.sub(r"_(\d{4})_\1$", r"_\1", slug))) or do_arquivo(slug)
                   itens.append({"titulo": titulo, "serie": serie, "temporada": t, "episodio": e,
                                 "link": caminho, "thumbnailUrl": thumb, "videoUrl": video})
               itens.sort(key=lambda x: (x["serie"].lower(), x["temporada"], x["episodio"], x["link"]))
