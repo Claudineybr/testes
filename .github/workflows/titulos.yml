@@ -3,6 +3,8 @@ name: Corrigir titulos com IA
 # Fila: cada execução corrige um pedaço dos títulos (acentos/maiúsculas) e, se sobrar, se reagenda sozinha.
 # Resultado em titulos.json (o gerador do catálogo usa esse arquivo).
 #   pendentes  só o que falta (padrão; é o que a fila usa)
+#   tudo       refaz TODOS os títulos (a fila continua sozinha até acabar; nada é apagado,
+#              a entrada só é trocada quando a IA responde)
 #   refazer    refaz os títulos que contêm o texto do campo "filtro"
 "on":
   workflow_dispatch:
@@ -13,9 +15,15 @@ name: Corrigir titulos com IA
         default: pendentes
         options:
           - pendentes
+          - tudo
           - refazer
       filtro:
         description: "Só títulos/arquivos que contenham este texto (obrigatório no modo refazer)"
+        type: string
+        required: false
+        default: ""
+      rodada:
+        description: "NÃO PREENCHER (usado pela fila para continuar o modo tudo)"
         type: string
         required: false
         default: ""
@@ -54,6 +62,7 @@ jobs:
           MODO: ${{ inputs.modo || 'pendentes' }}
           FILTRO: ${{ inputs.filtro || '' }}
           LIMITE: ${{ inputs.limite || '0' }}
+          RODADA: ${{ inputs.rodada || github.run_id }}
           PYTHONUNBUFFERED: "1"
         run: |
           python -u - <<'PYEOF'
@@ -121,6 +130,7 @@ jobs:
           MODO = os.environ.get("MODO") or "pendentes"
           FILTRO = (os.environ.get("FILTRO") or "").lower().strip()
           LIMITE = int(os.environ.get("LIMITE") or 0)
+          RODADA = os.environ.get("RODADA") or "r0"   # identifica uma passada do modo "tudo" (a fila continua nela)
           PAUSA = int(os.environ.get("PAUSA") or 30)
           MODELOS = [
               # Só os que responderam sem travar no log real (os outros davam timeout ou 404).
@@ -234,6 +244,8 @@ jobs:
 
           def pendente(chave, orig, cache):
               e = cache.get(chave)
+              if MODO == "tudo":
+                  return e is None or e.get("rodada") != RODADA
               if e is None or e.get("original") != orig:
                   return True
               return e.get("fonte") == "mantido" and e.get("tentativas", 0) < MAX_TENTATIVAS
@@ -245,10 +257,12 @@ jobs:
               if certo:
                   cache[chave] = {"titulo": certo, "original": orig, "fonte": "ia"}
               elif antigo.get("fonte") == "ia" and antigo.get("original") == orig:
-                  pass
+                  pass                                    # já tinha título bom: nunca troca por pior
               else:
                   cache[chave] = {"titulo": orig, "original": orig, "fonte": "mantido",
                                   "tentativas": antigo.get("tentativas", 0) + 1 if antigo.get("original") == orig else 1}
+              if MODO == "tudo":
+                  cache[chave]["rodada"] = RODADA
 
 
           if os.path.exists(SAIDA):
@@ -315,6 +329,10 @@ jobs:
           log(f"🎉 {feitos} respondidos ({mudaram} corrigidos), {restantes} ainda na fila.")
           saida_gh(continuar="true" if (restantes > 0 and feitos > 0 and MODO != "refazer") else "false",
                    restantes=restantes)
+          if MODO == "tudo" and restantes == 0:
+              for e in cache.values():
+                  e.pop("rodada", None)       # passada concluída: tira a marca para não poluir o arquivo
+              salvar(cache)
           sys.exit(0 if feitos else 1)
           PYEOF
 
@@ -344,6 +362,8 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           LIMITE: ${{ inputs.limite || '0' }}
+          MODO: ${{ inputs.modo || 'pendentes' }}
+          RODADA: ${{ inputs.rodada || github.run_id }}
         run: |
           echo "Ainda faltam ${{ steps.fila.outputs.restantes }} títulos. Agendando a próxima rodada..."
-          gh workflow run "${{ github.workflow }}" --ref "$GITHUB_REF_NAME" -f modo=pendentes -f limite="$LIMITE"
+          gh workflow run "${{ github.workflow }}" --ref "$GITHUB_REF_NAME" -f modo="$MODO" -f rodada="$RODADA" -f limite="$LIMITE"
