@@ -288,6 +288,7 @@
   },
   "180_2026_2026.html": {
     "titulo": "180 (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -303,6 +304,7 @@
   },
   "18_rosas_2026_2026.html": {
     "titulo": "18 Rosas (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -672,6 +674,7 @@
   },
   "50_2011_2011.html": {
     "titulo": "50 (2011)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -679,6 +682,7 @@
   },
   "53_domingos_2026_2026.html": {
     "titulo": "53 Domingos (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -1248,31 +1252,43 @@
   },
   "9_t3e16.html": {
     "titulo": "9 T3E16",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t3e17.html": {
     "titulo": "9 T3E17",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t3e18.html": {
     "titulo": "9 T3E18",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t3e2.html": {
     "titulo": "9 T3E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t3e3.html": {
     "titulo": "9 T3E3",
@@ -2050,59 +2066,83 @@
   },
   "9_t4e9.html": {
     "titulo": "9 T4E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e1.html": {
     "titulo": "9 T5E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e10.html": {
     "titulo": "9 T5E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e11.html": {
     "titulo": "9 T5E11",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e12.html": {
     "titulo": "9 T5E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e13.html": {
     "titulo": "9 T5E13",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e14.html": {
     "titulo": "9 T5E14",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e15.html": {
     "titulo": "9 T5E15",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "a_aventura_da_minha_vida_2020_2020.html": {
     "titulo": "A Aventura da Minha Vida (2020)",
@@ -2671,34 +2711,47 @@
   },
   "9_t5e16.html": {
     "titulo": "9 T5E16",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e17.html": {
     "titulo": "9 T5E17",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e18.html": {
     "titulo": "9 T5E18",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e2.html": {
     "titulo": "9 T5E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "9_t5e3.html": {
     "titulo": "9 T5E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2706,6 +2759,7 @@
   },
   "9_t5e4.html": {
     "titulo": "9 T5E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2713,6 +2767,7 @@
   },
   "9_t5e5.html": {
     "titulo": "9 T5E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2720,6 +2775,7 @@
   },
   "9_t5e6.html": {
     "titulo": "9 T5E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2727,6 +2783,7 @@
   },
   "9_t5e7.html": {
     "titulo": "9 T5E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2734,6 +2791,7 @@
   },
   "9_t5e8.html": {
     "titulo": "9 T5E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -2741,6 +2799,7 @@
   },
   "9_t5e9.html": {
     "titulo": "9 T5E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -7429,6 +7488,7 @@
   },
   "abrir_player.html": {
     "titulo": "Abrir Player",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -7737,6 +7797,7 @@
   },
   "adeus_june_2025_2025.html": {
     "titulo": "Adeus, June (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -8358,6 +8419,7 @@
   },
   "a_vida_e_um_banquete_2024_2024.html": {
     "titulo": "A Vida e um Banquete (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -9078,6 +9140,7 @@
   },
   "alma_em_chamas_2025_2025.html": {
     "titulo": "Alma em chamas (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -9806,6 +9869,7 @@
   },
   "altered_2025_2025.html": {
     "titulo": "Altered (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -9813,6 +9877,7 @@
   },
   "alucinacao_t1e1.html": {
     "titulo": "Alucinacao T1E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -9820,6 +9885,7 @@
   },
   "alucinacao_t1e2.html": {
     "titulo": "Alucinacao T1E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -9827,6 +9893,7 @@
   },
   "alucinacao_t1e3.html": {
     "titulo": "Alucinacao T1E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -9834,6 +9901,7 @@
   },
   "alucinacao_t1e4.html": {
     "titulo": "Alucinacao T1E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -9841,6 +9909,7 @@
   },
   "aluna_exemplar_e_estrela_porno.html": {
     "titulo": "Aluna Exemplar e Estrela Porno",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -10849,6 +10918,7 @@
   },
   "americana_2025_2025.html": {
     "titulo": "Americana (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -10865,6 +10935,7 @@
   },
   "amigos_do_alem_2025_2025.html": {
     "titulo": "Amigos do Alem (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -11512,6 +11583,7 @@
   },
   "anemona_2025_2025.html": {
     "titulo": "Anemona (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18364,17 +18436,19 @@
   },
   "beauty_in_black_t1e7.html": {
     "titulo": "Beauty in Black T1E7",
+    "tipo": "serie",
     "generos": [
-      "Terror"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "beauty_in_black_t1e8.html": {
     "titulo": "Beauty in Black T1E8",
+    "tipo": "serie",
     "generos": [
-      "Terror"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "bee_movie_a_historia_de_uma_abelha_2007_2007.html": {
     "titulo": "Bee Movie",
@@ -18405,6 +18479,7 @@
   },
   "beezel_a_devoradora_de_almas_2024_2024.html": {
     "titulo": "Beezel",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18475,6 +18550,7 @@
   },
   "bem_vinda_a_quixeramobim_2022_2022.html": {
     "titulo": "Bem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18482,6 +18558,7 @@
   },
   "bem_vindo_a_morte_subita.html": {
     "titulo": "Bem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18489,6 +18566,7 @@
   },
   "bem_vindo_a_tarzana_2021_2021.html": {
     "titulo": "Bem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18496,6 +18574,7 @@
   },
   "bem_vindo_ao_circulo_2020_2020.html": {
     "titulo": "Bem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18503,6 +18582,7 @@
   },
   "bem_vindo_ao_crime_2020_2020.html": {
     "titulo": "Bem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -18805,6 +18885,7 @@
   },
   "bibi_2023_2023.html": {
     "titulo": "Bibi (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -23933,6 +24014,7 @@
   },
   "boca_de_fumo_2025_2025.html": {
     "titulo": "Boca de Fumo (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -23940,6 +24022,7 @@
   },
   "bola_pra_cima_2026_2026.html": {
     "titulo": "Bola Pra Cima (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -24146,46 +24229,57 @@
   },
   "bordertown_t1e5.html": {
     "titulo": "Bordertown T1E5",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "bordertown_t1e6.html": {
     "titulo": "Bordertown T1E6",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "bordertown_t1e7.html": {
     "titulo": "Bordertown T1E7",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "bordertown_t1e8.html": {
     "titulo": "Bordertown T1E8",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "bordertown_t1e9.html": {
     "titulo": "Bordertown T1E9",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "bordertown_t2e1.html": {
     "titulo": "Bordertown T2E1",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24194,6 +24288,7 @@
   },
   "bordertown_t2e10.html": {
     "titulo": "Bordertown T2E10",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24202,6 +24297,7 @@
   },
   "bordertown_t2e2.html": {
     "titulo": "Bordertown T2E2",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24210,6 +24306,7 @@
   },
   "bordertown_t2e3.html": {
     "titulo": "Bordertown T2E3",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24218,6 +24315,7 @@
   },
   "bordertown_t2e4.html": {
     "titulo": "Bordertown T2E4",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24226,6 +24324,7 @@
   },
   "bordertown_t2e5.html": {
     "titulo": "Bordertown T2E5",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24234,6 +24333,7 @@
   },
   "bordertown_t2e6.html": {
     "titulo": "Bordertown T2E6",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24242,6 +24342,7 @@
   },
   "bordertown_t2e7.html": {
     "titulo": "Bordertown T2E7",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24250,6 +24351,7 @@
   },
   "bordertown_t2e8.html": {
     "titulo": "Bordertown T2E8",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24258,6 +24360,7 @@
   },
   "bordertown_t2e9.html": {
     "titulo": "Bordertown T2E9",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24266,6 +24369,7 @@
   },
   "bordertown_t3e1.html": {
     "titulo": "Bordertown T3E1",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24274,6 +24378,7 @@
   },
   "bordertown_t3e10.html": {
     "titulo": "Bordertown T3E10",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24282,6 +24387,7 @@
   },
   "bordertown_t3e2.html": {
     "titulo": "Bordertown T3E2",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24290,6 +24396,7 @@
   },
   "bordertown_t3e3.html": {
     "titulo": "Bordertown T3E3",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Drama"
@@ -24491,9 +24598,11 @@
   },
   "bordertown_t1e4.html": {
     "titulo": "Bordertown T1E4",
+    "tipo": "serie",
     "generos": [
       "Crime",
-      "Drama"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -25259,6 +25368,7 @@
   },
   "bom_garoto.html": {
     "titulo": "Bom Garoto",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -25266,6 +25376,7 @@
   },
   "bom_garoto_2022_2022.html": {
     "titulo": "Bom Garoto (2022)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -25273,6 +25384,7 @@
   },
   "bom_garoto_2026_2026.html": {
     "titulo": "Bom Garoto (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -25700,6 +25812,7 @@
   },
   "caca_fantasmas_2016_2016.html": {
     "titulo": "Caca",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -25707,6 +25820,7 @@
   },
   "caca_fantasmas_o_legado_2021_2021.html": {
     "titulo": "Caca",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -26215,6 +26329,7 @@
   },
   "c_i_c_central_de_inteligencia_cearense_2025_2025.html": {
     "titulo": "C.I.C.",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -26348,6 +26463,7 @@
   },
   "cacadores_de_emocao_1991_1991.html": {
     "titulo": "Cacadores De Emocao (1991)",
+    "tipo": "filme",
     "generos": [
       "Drama"
     ],
@@ -26399,6 +26515,7 @@
   },
   "cada_um_tem_a_gemea_que_merece.html": {
     "titulo": "Cada um Tem a Gemea que Merece",
+    "tipo": "filme",
     "generos": [
       "Comédia"
     ],
@@ -26406,9 +26523,9 @@
   },
   "cada_um_tem_a_gemea_que_merece_2011_2011.html": {
     "titulo": "Cada um Tem a Gemea que Merece (2011)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Romance"
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -26732,8 +26849,10 @@
   },
   "caramelo_2025_2025.html": {
     "titulo": "Caramelo (2025)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
+      "Drama",
       "Romance"
     ],
     "fonte": "ia"
@@ -26780,9 +26899,11 @@
   },
   "carga_mortal_2018_2018.html": {
     "titulo": "Carga Mortal (2018)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Thriller"
+      "Aventura",
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -26996,7 +27117,10 @@
   },
   "casa_de_dinamite_2025_2025.html": {
     "titulo": "Casa de Dinamite (2025)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Aventura",
       "Comédia"
     ],
     "fonte": "ia"
@@ -27032,10 +27156,11 @@
   },
   "caju_meu_amigo_2026_2026.html": {
     "titulo": "Caju, Meu Amigo (2026)",
+    "tipo": "filme",
     "generos": [
-      "Animação",
+      "Ação",
       "Aventura",
-      "Família"
+      "Animação"
     ],
     "fonte": "ia"
   },
@@ -27050,7 +27175,10 @@
   },
   "camaleoes_2023_2023.html": {
     "titulo": "Camaleoes (2023)",
+    "tipo": "filme",
     "generos": [
+      "Ação",
+      "Aventura",
       "Comédia"
     ],
     "fonte": "ia"
@@ -27066,8 +27194,10 @@
   },
   "caminhos_do_crime_2026_2026.html": {
     "titulo": "Caminhos Do Crime (2026)",
+    "tipo": "filme",
     "generos": [
       "Crime",
+      "Drama",
       "Thriller"
     ],
     "fonte": "ia"
@@ -27114,19 +27244,21 @@
   },
   "camp_rock_3.html": {
     "titulo": "Camp Rock 3",
+    "tipo": "filme",
     "generos": [
       "Comédia",
-      "Música",
-      "Romance"
+      "Drama",
+      "Música"
     ],
     "fonte": "ia"
   },
   "camp_rock_3_2026_2026.html": {
     "titulo": "Camp Rock 3 (2026)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
-      "Música",
-      "Romance"
+      "Drama",
+      "Música"
     ],
     "fonte": "ia"
   },
@@ -27140,6 +27272,7 @@
   },
   "campo_do_medo_2019_18.html": {
     "titulo": "campo",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -27147,6 +27280,7 @@
   },
   "cancer_com_ascendente_em_virgem_2025_2025.html": {
     "titulo": "Cancer com Ascendente em Virgem (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -27173,9 +27307,11 @@
   },
   "caos_e_destruicao_2025_2025.html": {
     "titulo": "Caos e Destruicao (2025)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
@@ -27372,14 +27508,17 @@
   },
   "casamento_em_familia_2023_2023.html": {
     "titulo": "Casamento em Familia (2023)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
+      "Drama",
       "Romance"
     ],
     "fonte": "ia"
   },
   "casamento_sangrento.html": {
     "titulo": "Casamento Sangrento",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -27388,6 +27527,7 @@
   },
   "casamento_sangrento_2019_2019.html": {
     "titulo": "Casamento Sangrento (2019)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -27396,6 +27536,7 @@
   },
   "casamento_sangrento_a_viuva.html": {
     "titulo": "Casamento Sangrento: A Viuva",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -27404,6 +27545,7 @@
   },
   "casamento_sangrento_a_viuva_2026_2026.html": {
     "titulo": "Casamento Sangrento: A Viuva (2026)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -27412,8 +27554,10 @@
   },
   "casas_de_vidro_2020_2020.html": {
     "titulo": "Casas de Vidro (2020)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Drama",
+      "Romance"
     ],
     "fonte": "ia"
   },
@@ -27428,14 +27572,17 @@
   },
   "caso_eloa_refem_ao_vivo_2025_2025.html": {
     "titulo": "Caso Eloa: Refem ao Vivo (2025)",
+    "tipo": "filme",
     "generos": [
       "Crime",
+      "Drama",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "castelo_do_medo_2010_2010.html": {
     "titulo": "Castelo do Medo (2010)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério"
@@ -27444,10 +27591,13 @@
   },
   "castigos_da_traicao_2024_2024.html": {
     "titulo": "Castigos da Traicao (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Crime",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "castores_zumbis_2014_2014.html": {
     "titulo": "Castores Zumbis (2014)",
@@ -27460,6 +27610,7 @@
   },
   "catalogo.html": {
     "titulo": "catalogo",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -28112,6 +28263,7 @@
   },
   "circulo_de_fogo_2001_2001.html": {
     "titulo": "Circulo De Fogo (2001)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -28301,6 +28453,7 @@
   },
   "clika_sonho_e_perigo_2026_2026.html": {
     "titulo": "Clika Sonho E Perigo (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -29065,6 +29218,7 @@
   },
   "codigo_alarum_2025_2025.html": {
     "titulo": "Codigo Alarum (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -29072,6 +29226,7 @@
   },
   "codigo_de_conduta_2009_2009.html": {
     "titulo": "Codigo de Conduta (2009)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -29079,6 +29234,7 @@
   },
   "codigo_preto_2025_2025.html": {
     "titulo": "Codigo Preto (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -29086,6 +29242,7 @@
   },
   "codigo_vinganca_2026_2026.html": {
     "titulo": "Codigo: Vinganca (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -29753,59 +29910,83 @@
   },
   "contagem_regressiva_t1e2.html": {
     "titulo": "Contagem Regressiva T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e3.html": {
     "titulo": "Contagem Regressiva T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e4.html": {
     "titulo": "Contagem Regressiva T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e5.html": {
     "titulo": "Contagem Regressiva T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e6.html": {
     "titulo": "Contagem Regressiva T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e7.html": {
     "titulo": "Contagem Regressiva T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e8.html": {
     "titulo": "Contagem Regressiva T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contagem_regressiva_t1e9.html": {
     "titulo": "Contagem Regressiva T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "contato_1997_1997.html": {
     "titulo": "Contato (1997)",
@@ -29855,6 +30036,7 @@
   },
   "continue_assistindo.html": {
     "titulo": "Continue Assistindo",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -30082,10 +30264,13 @@
   },
   "contagem_regressiva_t1e12.html": {
     "titulo": "Contagem Regressiva T1E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "coraline_e_o_mundo_secreto.html": {
     "titulo": "Coraline e o Mundo Secreto",
@@ -30225,24 +30410,31 @@
   },
   "corrente_implacavel_t1e1.html": {
     "titulo": "Corrente Implacavel T1E1",
-    "generos": [
-      "indefinido"
-    ],
-    "fonte": "indefinido"
-  },
-  "corrente_implacavel_t1e2.html": {
-    "titulo": "Corrente Implacavel T1E2",
-    "generos": [
-      "indefinido"
-    ],
-    "fonte": "indefinido"
-  },
-  "corrente_implacavel_t1e3.html": {
-    "titulo": "Corrente Implacavel T1E3",
+    "tipo": "serie",
     "generos": [
       "Crime",
       "Thriller",
-      "Drama"
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "corrente_implacavel_t1e2.html": {
+    "titulo": "Corrente Implacavel T1E2",
+    "tipo": "serie",
+    "generos": [
+      "Crime",
+      "Thriller",
+      "Ação"
+    ],
+    "fonte": "ia"
+  },
+  "corrente_implacavel_t1e3.html": {
+    "titulo": "Corrente Implacavel T1E3",
+    "tipo": "serie",
+    "generos": [
+      "Crime",
+      "Thriller",
+      "Ação"
     ],
     "fonte": "ia"
   },
@@ -30734,6 +30926,7 @@
   },
   "corta_fogo_2026_2026.html": {
     "titulo": "Corta",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -30962,55 +31155,61 @@
   },
   "dan_da_dan_t1e1.html": {
     "titulo": "Dan Da Dan T1E1",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "dan_da_dan_t1e10.html": {
     "titulo": "Dan Da Dan T1E10",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "dan_da_dan_t1e11.html": {
     "titulo": "Dan Da Dan T1E11",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "dan_da_dan_t1e12.html": {
     "titulo": "Dan Da Dan T1E12",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "dan_da_dan_t1e2.html": {
     "titulo": "Dan Da Dan T1E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "dan_da_dan_t1e3.html": {
     "titulo": "Dan Da Dan T1E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Fantasia",
-      "Comédia"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
@@ -32203,6 +32402,7 @@
   },
   "de_volta_ao_mar_2025_2025.html": {
     "titulo": "De Volta ao Mar (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -32210,6 +32410,7 @@
   },
   "de_volta_ao_sitio_uma_nova_aventura_2025_2025.html": {
     "titulo": "De Volta ao Sitio",
+    "tipo": "filme",
     "generos": [
       "Família",
       "Aventura",
@@ -32219,12 +32420,11 @@
   },
   "de_volta_aos_anos_90_2026_2026.html": {
     "titulo": "De Volta Aos Anos 90 (2026)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "de_volta_para_o_futuro_1985_1985.html": {
     "titulo": "De Volta para o Futuro (1985)",
@@ -32837,10 +33037,11 @@
   },
   "demon_city_2025_2025.html": {
     "titulo": "Demon City (2025)",
+    "tipo": "filme",
     "generos": [
-      "Animação",
       "Ação",
-      "Fantasia"
+      "Fantasia",
+      "Aventura"
     ],
     "fonte": "ia"
   },
@@ -33158,10 +33359,12 @@
   },
   "depois_da_tempestade_2001_2001.html": {
     "titulo": "Depois da Tempestade (2001)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "depois_da_terra.html": {
     "titulo": "Depois da Terra",
@@ -33185,6 +33388,7 @@
   },
   "depois_do_apocalipse.html": {
     "titulo": "Depois do Apocalipse",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Ação",
@@ -33194,6 +33398,7 @@
   },
   "depois_do_apocalipse_2018_2018.html": {
     "titulo": "Depois do Apocalipse (2018)",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Ação",
@@ -33203,17 +33408,17 @@
   },
   "depois_do_fogo_2025_2025.html": {
     "titulo": "Depois do Fogo (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "depois_do_universo_2022_2022.html": {
     "titulo": "Depois Do Universo (2022)",
+    "tipo": "filme",
     "generos": [
       "Romance",
-      "Comédia",
       "Drama"
     ],
     "fonte": "ia"
@@ -33228,10 +33433,10 @@
   },
   "depois_que_morri_todos_me_amam_2025_2025.html": {
     "titulo": "Depois que Morri, Todos me Amam (2025)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
-      "Fantasia",
-      "Romance"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -33246,6 +33451,7 @@
   },
   "desafios_2025_2025.html": {
     "titulo": "Desafios (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -33263,6 +33469,7 @@
   },
   "desce_2019_2019.html": {
     "titulo": "Desce? (2019)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -33730,17 +33937,19 @@
   },
   "desenhos_2025_2025.html": {
     "titulo": "Desenhos (2025)",
+    "tipo": "filme",
     "generos": [
-      "Animação"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "desespero_profundo_2024_2024.html": {
     "titulo": "Desespero Profundo (2024)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "desgraca_ao_seu_dispor_t1e1.html": {
     "titulo": "Desgraca ao seu Dispor T1E1",
@@ -33904,17 +34113,19 @@
   },
   "desligue_2026_2026.html": {
     "titulo": "Desligue (2026)",
+    "tipo": "filme",
     "generos": [
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "deslizando_pela_vida_2_2025_2025.html": {
     "titulo": "Deslizando pela Vida 2 (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "demon_slayer_kimetsu_no_yaiba_t2e4.html": {
     "titulo": "Demon Slayer: Kimetsu no Yaiba T2E4",
@@ -34172,13 +34383,17 @@
   },
   "desejo_sombrio_t1e1.html": {
     "titulo": "Desejo Sombrio T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Romance",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "desejo_sombrio_t1e10.html": {
     "titulo": "Desejo Sombrio T1E10",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34186,6 +34401,7 @@
   },
   "desejo_sombrio_t1e11.html": {
     "titulo": "Desejo Sombrio T1E11",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34193,6 +34409,7 @@
   },
   "desejo_sombrio_t1e12.html": {
     "titulo": "Desejo Sombrio T1E12",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34200,6 +34417,7 @@
   },
   "desejo_sombrio_t1e13.html": {
     "titulo": "Desejo Sombrio T1E13",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34207,6 +34425,7 @@
   },
   "desejo_sombrio_t1e14.html": {
     "titulo": "Desejo Sombrio T1E14",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34214,6 +34433,7 @@
   },
   "desejo_sombrio_t1e15.html": {
     "titulo": "Desejo Sombrio T1E15",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34221,6 +34441,7 @@
   },
   "desejo_sombrio_t1e16.html": {
     "titulo": "Desejo Sombrio T1E16",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34228,6 +34449,7 @@
   },
   "desejo_sombrio_t1e17.html": {
     "titulo": "Desejo Sombrio T1E17",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34235,6 +34457,7 @@
   },
   "desejo_sombrio_t1e18.html": {
     "titulo": "Desejo Sombrio T1E18",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34242,6 +34465,7 @@
   },
   "desejo_sombrio_t1e2.html": {
     "titulo": "Desejo Sombrio T1E2",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34249,6 +34473,7 @@
   },
   "desejo_sombrio_t1e3.html": {
     "titulo": "Desejo Sombrio T1E3",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34256,6 +34481,7 @@
   },
   "desejo_sombrio_t1e4.html": {
     "titulo": "Desejo Sombrio T1E4",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -34492,10 +34718,11 @@
   },
   "deu_a_louca_em_hollywood.html": {
     "titulo": "Deu a Louca em Hollywood",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "deu_a_louca_na_branca_de_neve.html": {
     "titulo": "Deu a Louca na Branca de Neve",
@@ -34568,10 +34795,11 @@
   },
   "deu_preguica_2024_2024.html": {
     "titulo": "Deu Preguica (2024)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "deus_nao_esta_morto_2014_2014.html": {
     "titulo": "Deus Nao Esta Morto (2014)",
@@ -34617,14 +34845,15 @@
   },
   "devorador_2026_2026.html": {
     "titulo": "Devorador (2026)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Thriller"
+      "Terror"
     ],
     "fonte": "ia"
   },
   "devoradores_de_estrelas.html": {
     "titulo": "Devoradores de Estrelas",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Aventura"
@@ -34633,6 +34862,7 @@
   },
   "devoradores_de_estrelas_2026_2026.html": {
     "titulo": "Devoradores de Estrelas (2026)",
+    "tipo": "filme",
     "generos": [
       "Ficção Científica",
       "Aventura"
@@ -34750,10 +34980,11 @@
   },
   "destemida_2023_2023.html": {
     "titulo": "Destemida (2023)",
+    "tipo": "filme",
     "generos": [
-      "Ação"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "destinos_a_deriva_2023_2023.html": {
     "titulo": "Destinos a Deriva (2023)",
@@ -34767,11 +34998,11 @@
   },
   "destinos_opostos_2023_2023.html": {
     "titulo": "Destinos Opostos (2023)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "destruicao_final_2.html": {
     "titulo": "Destruicao Final 2",
@@ -41806,6 +42037,7 @@
   },
   "drive_2019_2019.html": {
     "titulo": "Drive (2019)",
+    "tipo": "filme",
     "generos": [
       "Crime",
       "Drama",
@@ -41981,6 +42213,7 @@
   },
   "dupla_perigosa_2026_2026.html": {
     "titulo": "Dupla Perigosa (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Comédia"
@@ -42008,6 +42241,7 @@
   },
   "duro_de_atuar.html": {
     "titulo": "Duro de Atuar",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -42015,6 +42249,7 @@
   },
   "duro_de_atuar_2023_2023.html": {
     "titulo": "Duro de Atuar (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -42022,6 +42257,7 @@
   },
   "duro_de_atuar_2_2024_2024.html": {
     "titulo": "Duro de Atuar 2 (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -42029,6 +42265,7 @@
   },
   "duro_de_casar_2025_2025.html": {
     "titulo": "Duro de Casar (2025)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
       "Romance"
@@ -42084,9 +42321,10 @@
   },
   "duvide_do_que_ouve_2024_2024.html": {
     "titulo": "Duvide do que Ouve (2024)",
+    "tipo": "filme",
     "generos": [
-      "Mistério",
-      "Thriller"
+      "Thriller",
+      "Mistério"
     ],
     "fonte": "ia"
   },
@@ -42555,6 +42793,7 @@
   },
   "elementos.html": {
     "titulo": "Elementos",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -42564,6 +42803,7 @@
   },
   "elementos_2023_2023.html": {
     "titulo": "Elementos (2023)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
@@ -42573,6 +42813,7 @@
   },
   "elio_2025_2025.html": {
     "titulo": "Elio (2025)",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Aventura",
@@ -43524,6 +43765,7 @@
   },
   "e_o_fim.html": {
     "titulo": "E o Fim",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -43531,6 +43773,7 @@
   },
   "e_preciso_um_vilarejo_2026_2026.html": {
     "titulo": "E Preciso Um Vilarejo (2026)",
+    "tipo": "filme",
     "generos": [
       "Drama",
       "Família"
@@ -43569,14 +43812,15 @@
   },
   "eclipse_mortal_2000_2000.html": {
     "titulo": "Eclipse Mortal (2000)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "ecos_na_escuridao_2018_2018.html": {
     "titulo": "Ecos na Escuridao (2018)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério"
@@ -43615,6 +43859,7 @@
   },
   "edificio_n_2022_2022.html": {
     "titulo": "Edificio N (2022)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -44025,6 +44270,7 @@
   },
   "ensurados_2023_2023.html": {
     "titulo": "Ensurados (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -44062,18 +44308,19 @@
   },
   "enterrando_os_mortos_2026_2026.html": {
     "titulo": "Enterrando os Mortos (2026)",
+    "tipo": "filme",
     "generos": [
       "Terror",
-      "Thriller",
-      "Mistério"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "enterre_me_quando_eu_morrer_2025_2025.html": {
     "titulo": "Enterre",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -44107,19 +44354,21 @@
   },
   "entre_amigas_de_volta_ao_passado_2023_2023.html": {
     "titulo": "Entre Amigas: De Volta ao Passado (2023)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
       "Drama",
-      "Fantasia"
+      "Romance"
     ],
     "fonte": "ia"
   },
   "entre_armas_e_brinquedos_2020_2020.html": {
     "titulo": "Entre Armas e Brinquedos (2020)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Comédia",
-      "Família"
+      "Aventura"
     ],
     "fonte": "ia"
   },
@@ -44155,6 +44404,7 @@
   },
   "entre_nos_uma_dose_extra_de_amor_2025_2025.html": {
     "titulo": "Entre Nos: Uma Dose Extra de Amor (2025)",
+    "tipo": "filme",
     "generos": [
       "Romance",
       "Comédia",
@@ -44174,6 +44424,7 @@
   },
   "entre_piadas_e_cigarros_2023_2023.html": {
     "titulo": "Entre Piadas e Cigarros (2023)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
       "Drama"
@@ -44182,6 +44433,7 @@
   },
   "entre_tiros_e_beijos_2021_2021.html": {
     "titulo": "Entre Tiros e Beijos (2021)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Romance",
@@ -46003,9 +46255,10 @@
   },
   "esta_sou_eu_2026_2026.html": {
     "titulo": "Esta Sou Eu (2026)",
+    "tipo": "filme",
     "generos": [
       "Drama",
-      "Música"
+      "Romance"
     ],
     "fonte": "ia"
   },
@@ -47315,10 +47568,11 @@
   },
   "estrada_florestal_825_2025_2025.html": {
     "titulo": "Estrada Florestal 825 (2025)",
+    "tipo": "filme",
     "generos": [
       "Terror",
-      "Thriller",
-      "Mistério"
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -47352,15 +47606,17 @@
   },
   "estudante_exemplar_2023_2023.html": {
     "titulo": "Estudante Exemplar (2023)",
+    "tipo": "filme",
     "generos": [
       "Thriller",
-      "Drama",
-      "Crime"
+      "Crime",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "eternidade_2025_2025.html": {
     "titulo": "Eternidade (2025)",
+    "tipo": "filme",
     "generos": [
       "Romance",
       "Drama",
@@ -47370,10 +47626,11 @@
   },
   "eterno_831_2022_2022.html": {
     "titulo": "Eterno 831 (2022)",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Ação",
-      "Ficção Científica"
+      "Ficção Científica",
+      "Ação"
     ],
     "fonte": "ia"
   },
@@ -47734,19 +47991,21 @@
   },
   "exterminio_o_templo_dos_ossos.html": {
     "titulo": "Exterminio: O Templo dos Ossos",
+    "tipo": "filme",
     "generos": [
+      "Terror",
       "Ação",
-      "Aventura",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "exterminio_o_templo_dos_ossos_2026_2026.html": {
     "titulo": "Exterminio: O Templo dos Ossos (2026)",
+    "tipo": "filme",
     "generos": [
+      "Terror",
       "Ação",
-      "Aventura",
-      "Terror"
+      "Aventura"
     ],
     "fonte": "ia"
   },
@@ -47801,9 +48060,10 @@
   },
   "faca_ela_voltar.html": {
     "titulo": "Faca Ela Voltar",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
       "Terror",
+      "Thriller",
       "Mistério"
     ],
     "fonte": "ia"
@@ -48559,19 +48819,21 @@
   },
   "faca_ela_voltar_2025_2025.html": {
     "titulo": "Faca Ela Voltar (2025)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
       "Terror",
+      "Thriller",
       "Mistério"
     ],
     "fonte": "ia"
   },
   "faces_da_verdade_2008_2008.html": {
     "titulo": "Faces da Verdade (2008)",
+    "tipo": "filme",
     "generos": [
       "Drama",
-      "Mistério",
-      "Crime"
+      "Crime",
+      "Mistério"
     ],
     "fonte": "ia"
   },
@@ -48604,6 +48866,7 @@
   },
   "fallen_luz_e_sombra_t1e1.html": {
     "titulo": "Fallen: Luz e Sombra T1E1",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
       "Romance",
@@ -48613,6 +48876,7 @@
   },
   "fallen_luz_e_sombra_t1e2.html": {
     "titulo": "Fallen: Luz e Sombra T1E2",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
       "Romance",
@@ -48622,6 +48886,7 @@
   },
   "fallen_luz_e_sombra_t1e3.html": {
     "titulo": "Fallen: Luz e Sombra T1E3",
+    "tipo": "serie",
     "generos": [
       "Fantasia",
       "Romance",
@@ -48631,15 +48896,17 @@
   },
   "fallen_luz_e_sombra_t1e4.html": {
     "titulo": "Fallen: Luz e Sombra T1E4",
+    "tipo": "serie",
     "generos": [
-      "Drama",
       "Fantasia",
-      "Romance"
+      "Romance",
+      "Drama"
     ],
     "fonte": "ia"
   },
   "fallen_luz_e_sombra_t1e5.html": {
     "titulo": "Fallen: Luz e Sombra T1E5",
+    "tipo": "serie",
     "generos": [
       "Drama",
       "Fantasia",
@@ -48649,6 +48916,7 @@
   },
   "fallen_luz_e_sombra_t1e6.html": {
     "titulo": "Fallen: Luz e Sombra T1E6",
+    "tipo": "serie",
     "generos": [
       "Drama",
       "Fantasia",
@@ -48658,6 +48926,7 @@
   },
   "fallen_luz_e_sombra_t1e7.html": {
     "titulo": "Fallen: Luz e Sombra T1E7",
+    "tipo": "serie",
     "generos": [
       "Drama",
       "Fantasia",
@@ -48667,6 +48936,7 @@
   },
   "fallen_luz_e_sombra_t1e8.html": {
     "titulo": "Fallen: Luz e Sombra T1E8",
+    "tipo": "serie",
     "generos": [
       "Drama",
       "Fantasia",
@@ -50113,10 +50383,10 @@
   },
   "filhos_do_verao_2023_2023.html": {
     "titulo": "Filhos do Verao (2023)",
+    "tipo": "filme",
     "generos": [
       "Drama",
-      "Romance",
-      "Mistério"
+      "Romance"
     ],
     "fonte": "ia"
   },
@@ -50441,12 +50711,11 @@
   },
   "forca_g.html": {
     "titulo": "Forca",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Thriller",
-      "Crime"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "forcas_hostis_2023_2023.html": {
     "titulo": "Forcas Hostis (2023)",
@@ -50516,10 +50785,11 @@
   },
   "frangoelho_e_o_hamster_das_trevas.html": {
     "titulo": "Frangoelho e o Hamster das Trevas",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Comédia",
-      "Aventura"
+      "Aventura",
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -51872,12 +52142,11 @@
   },
   "frozen_hot_boys_2025_2025.html": {
     "titulo": "Frozen Hot Boys (2025)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Romance",
-      "Música"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "frozen_ii.html": {
     "titulo": "Frozen II",
@@ -51920,12 +52189,11 @@
   },
   "frutas_proibidas_2026_2026.html": {
     "titulo": "Frutas Proibidas (2026)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "fuga_da_alemanha_2024_2024.html": {
     "titulo": "Fuga da Alemanha (2024)",
@@ -51939,12 +52207,11 @@
   },
   "fuga_da_meia_noite_2021_2021.html": {
     "titulo": "Fuga da Meia",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Aventura",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "fuga_fatal_2025_2025.html": {
     "titulo": "Fuga Fatal (2025)",
@@ -54749,12 +55016,11 @@
   },
   "game_star_a_jogada_final_2020_2020.html": {
     "titulo": "Game Star: A Jogada Final (2020)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Thriller",
-      "Crime"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "gamer_jogo_mortal_2009_2009.html": {
     "titulo": "Gamer Jogo Mortal (2009)",
@@ -54828,21 +55094,21 @@
   },
   "garfield_um_super_heroi_animal.html": {
     "titulo": "Garfield: Um Super",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Comédia",
-      "Família"
+      "Ação",
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "garota_de_fora_t1e1.html": {
     "titulo": "Garota de Fora T1E1",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Mistério",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "garota_de_fora_t1e10.html": {
     "titulo": "Garota de Fora T1E10",
@@ -55185,10 +55451,11 @@
   },
   "goat_2025_2025.html": {
     "titulo": "Goat (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
       "Ação",
-      "Thriller"
+      "Thriller",
+      "Ficção Científica"
     ],
     "fonte": "ia"
   },
@@ -56456,21 +56723,21 @@
   },
   "golpe_de_sorte_2023_2023.html": {
     "titulo": "Golpe de Sorte (2023)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
       "Crime",
-      "Romance"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "golpe_de_superacao_2025_2025.html": {
     "titulo": "Golpe de Superacao (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "golpe_duplo_2015_2015.html": {
     "titulo": "Golpe Duplo (2015)",
@@ -56484,12 +56751,11 @@
   },
   "golpe_explosivo_2026_2026.html": {
     "titulo": "Golpe Explosivo (2026)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Crime",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "gonjiam_manicomio_assombrado_2018_2018.html": {
     "titulo": "Gonjiam: Manicomio Assombrado (2018)",
@@ -56532,11 +56798,11 @@
   },
   "gosto_infernal_2025_2025.html": {
     "titulo": "Gosto Infernal (2025)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "gran_turismo_de_jogador_a_corredor.html": {
     "titulo": "Gran Turismo: De Jogador a Corredor",
@@ -57618,19 +57884,19 @@
   },
   "guerreiras_do_k_pop.html": {
     "titulo": "Guerreiras do K",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "guerreiras_do_k_pop_2025_2025.html": {
     "titulo": "Guerreiras do K",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "guerreiro_2011_2011.html": {
     "titulo": "Guerreiro (2011)",
@@ -57643,18 +57909,18 @@
   },
   "guerreiros_do_basquete_2024_2024.html": {
     "titulo": "Guerreiros do Basquete (2024)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Comédia"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "guilty_pleasure_2024_2024.html": {
     "titulo": "Guilty Pleasure (2024)",
+    "tipo": "filme",
     "generos": [
       "Romance",
-      "Drama",
-      "Comédia"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -58431,6 +58697,7 @@
   },
   "halloween_a_lenda_de_jack_2018_2018.html": {
     "titulo": "Halloween A Lenda De Jack (2018)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério"
@@ -59621,8 +59888,9 @@
   },
   "histeria_2000_2000.html": {
     "titulo": "Histeria (2000)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
+      "Thriller",
       "Drama"
     ],
     "fonte": "ia"
@@ -60746,10 +61014,10 @@
   },
   "ilha_do_renascimento_2024_2024.html": {
     "titulo": "Ilha do Renascimento (2024)",
+    "tipo": "filme",
     "generos": [
       "Aventura",
-      "Drama",
-      "Fantasia"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -61065,10 +61333,10 @@
   },
   "hungria_a_escolha_de_um_sonho_2026_2026.html": {
     "titulo": "Hungria: A Escolha de um Sonho (2026)",
+    "tipo": "filme",
     "generos": [
       "Documentário",
-      "Drama",
-      "História"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -61225,9 +61493,10 @@
   },
   "imortais_2024_2024.html": {
     "titulo": "Imortais (2024)",
+    "tipo": "filme",
     "generos": [
-      "Fantasia",
       "Ação",
+      "Fantasia",
       "Aventura"
     ],
     "fonte": "ia"
@@ -61252,9 +61521,10 @@
   },
   "imported_2025_2025.html": {
     "titulo": "Imported (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Crime"
+      "Comédia",
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -61333,94 +61603,117 @@
   },
   "invasao_t1e1.html": {
     "titulo": "Invasao T1E1",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e10.html": {
     "titulo": "Invasao T1E10",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e2.html": {
     "titulo": "Invasao T1E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e3.html": {
     "titulo": "Invasao T1E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e4.html": {
     "titulo": "Invasao T1E4",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e5.html": {
     "titulo": "Invasao T1E5",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e6.html": {
     "titulo": "Invasao T1E6",
+    "tipo": "serie",
     "generos": [
       "Ação",
+      "Ficção Científica",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e7.html": {
     "titulo": "Invasao T1E7",
+    "tipo": "serie",
     "generos": [
+      "Ação",
       "Ficção Científica",
-      "Ação"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e8.html": {
     "titulo": "Invasao T1E8",
+    "tipo": "serie",
     "generos": [
+      "Ação",
       "Ficção Científica",
-      "Ação"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t1e9.html": {
     "titulo": "Invasao T1E9",
+    "tipo": "serie",
     "generos": [
+      "Ação",
       "Ficção Científica",
-      "Ação"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t2e1.html": {
     "titulo": "Invasao T2E1",
+    "tipo": "serie",
     "generos": [
+      "Ação",
       "Ficção Científica",
-      "Ação"
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "invasao_t2e10.html": {
     "titulo": "Invasao T2E10",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61429,6 +61722,7 @@
   },
   "invasao_t2e2.html": {
     "titulo": "Invasao T2E2",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61437,6 +61731,7 @@
   },
   "invasao_t2e3.html": {
     "titulo": "Invasao T2E3",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61445,6 +61740,7 @@
   },
   "invasao_t2e4.html": {
     "titulo": "Invasao T2E4",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61453,6 +61749,7 @@
   },
   "invasao_t2e5.html": {
     "titulo": "Invasao T2E5",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61461,6 +61758,7 @@
   },
   "invasao_t2e6.html": {
     "titulo": "Invasao T2E6",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61469,6 +61767,7 @@
   },
   "invasao_t2e7.html": {
     "titulo": "Invasao T2E7",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -61477,6 +61776,7 @@
   },
   "invasao_t2e8.html": {
     "titulo": "Invasao T2E8",
+    "tipo": "serie",
     "generos": [
       "Ficção Científica",
       "Ação"
@@ -62054,9 +62354,9 @@
   },
   "isca_2024_2024.html": {
     "titulo": "Isca (2024)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Mistério"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -62412,10 +62712,10 @@
   },
   "invasao_a_venezuela_2024_2024.html": {
     "titulo": "Invasao a Venezuela (2024)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Guerra",
-      "Drama"
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -62448,17 +62748,19 @@
   },
   "jogo_sujo.html": {
     "titulo": "Jogo Sujo",
+    "tipo": "filme",
     "generos": [
       "Crime",
-      "Thriller"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "jogo_sujo_2025_2025.html": {
     "titulo": "Jogo Sujo (2025)",
+    "tipo": "filme",
     "generos": [
       "Crime",
-      "Thriller"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -62673,6 +62975,7 @@
   },
   "jenifer_instinto_assassino_2005_2005.html": {
     "titulo": "Jenifer",
+    "tipo": "filme",
     "generos": [
       "Drama"
     ],
@@ -62981,54 +63284,61 @@
   },
   "jovens_milionarios_t1e8.html": {
     "titulo": "Jovens Milionarios T1E8",
+    "tipo": "serie",
     "generos": [
-      "Comédia",
-      "Drama"
+      "Drama",
+      "Comédia"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e1.html": {
     "titulo": "Jovens Recrutas T1E1",
+    "tipo": "serie",
     "generos": [
-      "Guerra",
+      "Ação",
       "Drama"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e2.html": {
     "titulo": "Jovens Recrutas T1E2",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e3.html": {
     "titulo": "Jovens Recrutas T1E3",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e4.html": {
     "titulo": "Jovens Recrutas T1E4",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e5.html": {
     "titulo": "Jovens Recrutas T1E5",
+    "tipo": "serie",
     "generos": [
       "Ação",
-      "Aventura"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "jovens_recrutas_t1e6.html": {
     "titulo": "Jovens Recrutas T1E6",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura"
@@ -63037,6 +63347,7 @@
   },
   "jovens_recrutas_t1e7.html": {
     "titulo": "Jovens Recrutas T1E7",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura"
@@ -63045,6 +63356,7 @@
   },
   "jovens_recrutas_t1e8.html": {
     "titulo": "Jovens Recrutas T1E8",
+    "tipo": "serie",
     "generos": [
       "Ação",
       "Aventura"
@@ -63346,9 +63658,10 @@
   },
   "jovens_milionarios_t1e7.html": {
     "titulo": "Jovens Milionarios T1E7",
+    "tipo": "serie",
     "generos": [
-      "Comédia",
-      "Drama"
+      "Drama",
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -64259,9 +64572,9 @@
   },
   "ja_era_hora_2023_2023.html": {
     "titulo": "Ja Era Hora (2023)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Romance"
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -64923,6 +65236,7 @@
   },
   "la_captura_2026_2026.html": {
     "titulo": "La Captura (2026)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller"
@@ -64949,6 +65263,7 @@
   },
   "kayara_a_princesa_inca_2025_2025.html": {
     "titulo": "Kayara",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -65164,6 +65479,7 @@
   },
   "k_9_d_p_um_policial_bom_pra_cachorro_2002_2002.html": {
     "titulo": "K",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -65171,6 +65487,7 @@
   },
   "k_o_2025_2025.html": {
     "titulo": "K.O (2025)",
+    "tipo": "filme",
     "generos": [
       "Ação"
     ],
@@ -65697,6 +66014,7 @@
   },
   "la_fora.html": {
     "titulo": "La Fora",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -66687,6 +67005,7 @@
   },
   "legiao_de_herois_2016_2016.html": {
     "titulo": "Legiao de Herois (2016)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Aventura",
@@ -67599,6 +67918,7 @@
   },
   "leo.html": {
     "titulo": "Leo",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -67606,6 +67926,7 @@
   },
   "leo_2023_2023.html": {
     "titulo": "Leo (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -67843,9 +68164,10 @@
   },
   "lindas_e_letais_2026_2026.html": {
     "titulo": "Lindas E Letais (2026)",
+    "tipo": "filme",
     "generos": [
       "Comédia",
-      "Romance"
+      "Ação"
     ],
     "fonte": "ia"
   },
@@ -67870,6 +68192,7 @@
   },
   "little_brother_2026_2026.html": {
     "titulo": "Little Brother (2026)",
+    "tipo": "filme",
     "generos": [
       "Drama"
     ],
@@ -67885,6 +68208,7 @@
   },
   "livrai_nos_do_mal_2014_2014.html": {
     "titulo": "Livrai",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -70170,6 +70494,7 @@
   },
   "lua_de_fel.html": {
     "titulo": "Lua de Fel",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -70757,10 +71082,11 @@
   },
   "lukas_2018_2018.html": {
     "titulo": "Lukas (2018)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "lulu_a_rinoceronte_2025_2025.html": {
     "titulo": "Lulu, a Rinoceronte (2025)",
@@ -71153,10 +71479,11 @@
   },
   "manas_2025_2025.html": {
     "titulo": "Manas (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "mandando_bala.html": {
     "titulo": "Mandando Bala",
@@ -71574,8 +71901,9 @@
   },
   "luz_camera_acao_2023_2023.html": {
     "titulo": "Luz, Camera, Acao (2023)",
+    "tipo": "filme",
     "generos": [
-      "Documentário"
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -71621,10 +71949,11 @@
   },
   "ma_influencia_2025_2025.html": {
     "titulo": "Ma Influencia (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "maboroshi.html": {
     "titulo": "maboroshi",
@@ -71957,13 +72286,16 @@
   },
   "mar_branco_2025_2025.html": {
     "titulo": "Mar Branco (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Ação",
+      "Aventura"
     ],
     "fonte": "ia"
   },
   "mar_em_chamas_2021_2021.html": {
     "titulo": "Mar em Chamas (2021)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller"
@@ -71972,6 +72304,7 @@
   },
   "mar_em_furia_2000_2000.html": {
     "titulo": "Mar em Furia (2000)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller"
@@ -71990,9 +72323,10 @@
   },
   "marcando_territorio_2016_2016.html": {
     "titulo": "Marcando Territorio (2016)",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Crime"
     ],
     "fonte": "ia"
   },
@@ -72284,6 +72618,7 @@
   },
   "mansao_mal_assombrada_2003_2003.html": {
     "titulo": "Mansao Mal",
+    "tipo": "filme",
     "generos": [
       "Terror"
     ],
@@ -72291,6 +72626,7 @@
   },
   "mantis_2025_2025.html": {
     "titulo": "Mantis (2025)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Thriller"
@@ -72319,13 +72655,16 @@
   },
   "manutencao_necessaria_2025_2025.html": {
     "titulo": "Manutencao Necessaria (2025)",
+    "tipo": "filme",
     "generos": [
-      "Comédia"
+      "Ação",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "maquina_de_guerra_2026_2026.html": {
     "titulo": "Maquina De Guerra (2026)",
+    "tipo": "filme",
     "generos": [
       "Guerra",
       "Ação"
@@ -72502,10 +72841,12 @@
   },
   "mate_a_se_conseguir_2023_2023.html": {
     "titulo": "Mate",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "matilda.html": {
     "titulo": "Matilda",
@@ -72830,59 +73171,83 @@
   },
   "marvel_t1e3.html": {
     "titulo": "Marvel T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e4.html": {
     "titulo": "Marvel T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e5.html": {
     "titulo": "Marvel T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e6.html": {
     "titulo": "Marvel T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e7.html": {
     "titulo": "Marvel T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e8.html": {
     "titulo": "Marvel T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t1e9.html": {
     "titulo": "Marvel T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t2e1.html": {
     "titulo": "Marvel T2E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "marvel_t2e10.html": {
     "titulo": "Marvel T2E10",
@@ -72896,10 +73261,12 @@
   },
   "matilha_voraz_2025_2025.html": {
     "titulo": "Matilha Voraz (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "matria_2023_2023.html": {
     "titulo": "Matria (2023)",
@@ -72931,10 +73298,12 @@
   },
   "matrix_generation.html": {
     "titulo": "Matrix generation",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "matrix_reloaded.html": {
     "titulo": "Matrix Reloaded",
@@ -73048,10 +73417,12 @@
   },
   "mayday_2026_2026.html": {
     "titulo": "Mayday (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "maze_runner_a_cura_mortal.html": {
     "titulo": "Maze Runner: A Cura Mortal",
@@ -73085,10 +73456,13 @@
   },
   "megatubarao_2018_2018.html": {
     "titulo": "Megatubarao (2018)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Ficção Científica"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "melancia_cintilante_t1e1.html": {
     "titulo": "Melancia Cintilante T1E1",
@@ -73329,17 +73703,21 @@
   },
   "medo_da_verdade_2007_2007.html": {
     "titulo": "Medo Da Verdade (2007)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "medo_no_pacifico_2024_2024.html": {
     "titulo": "Medo no Pacifico (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "medo_profundo.html": {
     "titulo": "Medo Profundo",
@@ -73437,10 +73815,13 @@
   },
   "megatubarao.html": {
     "titulo": "Megatubarao",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "menina_de_ouro_2004_2004.html": {
     "titulo": "Menina de Ouro (2004)",
@@ -73527,6 +73908,7 @@
   },
   "merv_2025_2025.html": {
     "titulo": "Merv (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -74255,6 +74637,7 @@
   },
   "mikaela_2025_2025.html": {
     "titulo": "Mikaela (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -74307,10 +74690,13 @@
   },
   "minha_amiga_palma.html": {
     "titulo": "Minha Amiga Palma",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Família",
+      "Comédia",
+      "Animação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "minha_babysitter_e_um_vampiro_2010_2010.html": {
     "titulo": "Minha Babysitter E Um Vampiro (2010)",
@@ -74746,10 +75132,13 @@
   },
   "missao_tita_2024_2024.html": {
     "titulo": "Missao Tita (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Aventura",
+      "Família",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "misterio_em_paris_2023_2023.html": {
     "titulo": "Misterio em Paris (2023)",
@@ -74772,10 +75161,12 @@
   },
   "misterios_da_carne.html": {
     "titulo": "Misterios da Carne",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Documentário",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "moana.html": {
     "titulo": "Moana",
@@ -75232,10 +75623,13 @@
   },
   "mouseboat_massacre_no_barco_2025_2025.html": {
     "titulo": "Mouseboat",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "movimento_de_jesus_2023_2023.html": {
     "titulo": "Movimento de Jesus (2023)",
@@ -75268,10 +75662,12 @@
   },
   "mudanca_de_habito_1992_1992.html": {
     "titulo": "Mudanca de Habito (1992)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mufasa_o_rei_leao.html": {
     "titulo": "Mufasa: O Rei Leao",
@@ -75344,17 +75740,20 @@
   },
   "mulher_2022_2022.html": {
     "titulo": "Mulher? (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mulher_gato.html": {
     "titulo": "Mulher",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mulher_maravilha_2017_2017.html": {
     "titulo": "Mulher Maravilha (2017)",
@@ -75377,10 +75776,13 @@
   },
   "mundo_em_caos.html": {
     "titulo": "Mundo em Caos",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Thriller",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mundo_estranho.html": {
     "titulo": "Mundo Estranho",
@@ -75404,10 +75806,13 @@
   },
   "murder_mouse_parque_da_morte_2025_2025.html": {
     "titulo": "Murder Mouse Parque Da Morte (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Terror",
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mushuku_tensei_t1e1.html": {
     "titulo": "Mushuku Tensei T1E1",
@@ -75650,10 +76055,13 @@
   },
   "missao_refugio_2026_2026.html": {
     "titulo": "Missao Refugio (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "mushuku_tensei_t2e11.html": {
     "titulo": "Mushuku Tensei T2E11",
@@ -76457,17 +76865,22 @@
   },
   "nao_alimente_as_criancas_2025_2025.html": {
     "titulo": "Nao Alimente As Criancas (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_apaguem_as_luzes_2024_2024.html": {
     "titulo": "Nao Apaguem as Luzes (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_bata_duas_vezes_2017_2017.html": {
     "titulo": "Nao Bata Duas Vezes (2017)",
@@ -76481,24 +76894,31 @@
   },
   "nao_deseje_boa_sorte_2026_2026.html": {
     "titulo": "Nao Deseje Boa Sorte (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_estamos_sos_2016_2016.html": {
     "titulo": "Nao Estamos Sos (2016)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_estou_sozinha_2024_2024.html": {
     "titulo": "Nao Estou Sozinha (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_fale_o_mal.html": {
     "titulo": "Nao Fale o Mal",
@@ -76532,10 +76952,13 @@
   },
   "nao_feche_os_olhos_2020_2020.html": {
     "titulo": "Nao Feche Os Olhos (2020)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_nao_olhe_2022_2022.html": {
     "titulo": "Nao Nao Olhe (2022)",
@@ -76579,10 +77002,12 @@
   },
   "nao_quero_te_perder_2024_2024.html": {
     "titulo": "Nao Quero Te Perder (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_se_mexa.html": {
     "titulo": "Nao Se Mexa",
@@ -76604,10 +77029,12 @@
   },
   "nao_solte_2024_2024.html": {
     "titulo": "Nao Solte! (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nao_tenha_medo_do_escuro.html": {
     "titulo": "Nao Tenha Medo do Escuro",
@@ -79605,10 +80032,13 @@
   },
   "naruto_shippuden_t7e7.html": {
     "titulo": "Naruto Shippuden T7E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Animação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "naruto_shippuden_t4e8.html": {
     "titulo": "Naruto Shippuden T4E8",
@@ -80212,24 +80642,33 @@
   },
   "naruto_shippuden_t7e8.html": {
     "titulo": "Naruto Shippuden T7E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Animação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "naruto_shippuden_t8e1.html": {
     "titulo": "Naruto Shippuden T8E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Animação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "naruto_shippuden_t8e10.html": {
     "titulo": "Naruto Shippuden T8E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Animação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "naruto_shippuden_t8e11.html": {
     "titulo": "Naruto Shippuden T8E11",
@@ -80583,66 +81022,93 @@
   },
   "nascer_da_lua_t1e17.html": {
     "titulo": "Nascer da Lua T1E17",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e18.html": {
     "titulo": "Nascer da Lua T1E18",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e2.html": {
     "titulo": "Nascer da Lua T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e3.html": {
     "titulo": "Nascer da Lua T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e4.html": {
     "titulo": "Nascer da Lua T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e6.html": {
     "titulo": "Nascer da Lua T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e7.html": {
     "titulo": "Nascer da Lua T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e8.html": {
     "titulo": "Nascer da Lua T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascer_da_lua_t1e9.html": {
     "titulo": "Nascer da Lua T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "nascido_para_correr_2011_2011.html": {
     "titulo": "Nascido Para Correr (2011)",
@@ -80655,9 +81121,9 @@
   },
   "nascido_para_esquiar_2022_2022.html": {
     "titulo": "Nascido para Esquiar (2022)",
+    "tipo": "filme",
     "generos": [
-      "Aventura",
-      "Família"
+      "Documentário"
     ],
     "fonte": "ia"
   },
@@ -81455,27 +81921,31 @@
   },
   "o11ze_t1e60.html": {
     "titulo": "O11ZE T1E60",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e61.html": {
     "titulo": "O11ZE T1E61",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e62.html": {
     "titulo": "O11ZE T1E62",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e63.html": {
     "titulo": "O11ZE T1E63",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81483,6 +81953,7 @@
   },
   "o11ze_t1e64.html": {
     "titulo": "O11ZE T1E64",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81490,6 +81961,7 @@
   },
   "o11ze_t1e65.html": {
     "titulo": "O11ZE T1E65",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81497,6 +81969,7 @@
   },
   "o11ze_t1e66.html": {
     "titulo": "O11ZE T1E66",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81504,6 +81977,7 @@
   },
   "o11ze_t1e67.html": {
     "titulo": "O11ZE T1E67",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81511,6 +81985,7 @@
   },
   "o11ze_t1e68.html": {
     "titulo": "O11ZE T1E68",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81518,6 +81993,7 @@
   },
   "o11ze_t1e69.html": {
     "titulo": "O11ZE T1E69",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81525,6 +82001,7 @@
   },
   "o11ze_t1e7.html": {
     "titulo": "O11ZE T1E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81532,6 +82009,7 @@
   },
   "o11ze_t1e70.html": {
     "titulo": "O11ZE T1E70",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81539,6 +82017,7 @@
   },
   "o11ze_t1e71.html": {
     "titulo": "O11ZE T1E71",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81546,6 +82025,7 @@
   },
   "o11ze_t1e72.html": {
     "titulo": "O11ZE T1E72",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81553,6 +82033,7 @@
   },
   "o11ze_t1e73.html": {
     "titulo": "O11ZE T1E73",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81560,6 +82041,7 @@
   },
   "o11ze_t1e74.html": {
     "titulo": "O11ZE T1E74",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81567,6 +82049,7 @@
   },
   "o11ze_t1e75.html": {
     "titulo": "O11ZE T1E75",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81574,6 +82057,7 @@
   },
   "o11ze_t1e76.html": {
     "titulo": "O11ZE T1E76",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81581,6 +82065,7 @@
   },
   "o11ze_t1e77.html": {
     "titulo": "O11ZE T1E77",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81588,6 +82073,7 @@
   },
   "o11ze_t1e78.html": {
     "titulo": "O11ZE T1E78",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -81851,6 +82337,7 @@
   },
   "o_aniversario_2025_2025.html": {
     "titulo": "O Aniversario (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -81985,6 +82472,7 @@
   },
   "o_atirador_sem_nacao_2026_13_2026.html": {
     "titulo": "O Atirador Sem Nacao 2026 13",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -82476,6 +82964,7 @@
   },
   "o_afinador_2026_2026.html": {
     "titulo": "O Afinador (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -82729,6 +83218,7 @@
   },
   "o11ze_t1e42.html": {
     "titulo": "O11ZE T1E42",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -82736,6 +83226,7 @@
   },
   "o11ze_t1e43.html": {
     "titulo": "O11ZE T1E43",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -82743,6 +83234,7 @@
   },
   "o11ze_t1e44.html": {
     "titulo": "O11ZE T1E44",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -82750,125 +83242,143 @@
   },
   "o11ze_t1e45.html": {
     "titulo": "O11ZE T1E45",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e46.html": {
     "titulo": "O11ZE T1E46",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e47.html": {
     "titulo": "O11ZE T1E47",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e48.html": {
     "titulo": "O11ZE T1E48",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e49.html": {
     "titulo": "O11ZE T1E49",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e5.html": {
     "titulo": "O11ZE T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e50.html": {
     "titulo": "O11ZE T1E50",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e51.html": {
     "titulo": "O11ZE T1E51",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e52.html": {
     "titulo": "O11ZE T1E52",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e53.html": {
     "titulo": "O11ZE T1E53",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e54.html": {
     "titulo": "O11ZE T1E54",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e55.html": {
     "titulo": "O11ZE T1E55",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e56.html": {
     "titulo": "O11ZE T1E56",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e57.html": {
     "titulo": "O11ZE T1E57",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e58.html": {
     "titulo": "O11ZE T1E58",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e59.html": {
     "titulo": "O11ZE T1E59",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o11ze_t1e6.html": {
     "titulo": "O11ZE T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_cuco_de_cristal_t1e2.html": {
     "titulo": "O Cuco de Cristal T1E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -82876,6 +83386,7 @@
   },
   "o_cuco_de_cristal_t1e3.html": {
     "titulo": "O Cuco de Cristal T1E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -82883,27 +83394,27 @@
   },
   "o_cuco_de_cristal_t1e4.html": {
     "titulo": "O Cuco de Cristal T1E4",
+    "tipo": "serie",
     "generos": [
-      "Fantasia",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_cuco_de_cristal_t1e5.html": {
     "titulo": "O Cuco de Cristal T1E5",
+    "tipo": "serie",
     "generos": [
-      "Fantasia",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_cuco_de_cristal_t1e6.html": {
     "titulo": "O Cuco de Cristal T1E6",
+    "tipo": "serie",
     "generos": [
-      "Fantasia",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_culpado_2021_2021.html": {
     "titulo": "O Culpado (2021)",
@@ -83163,10 +83674,11 @@
   },
   "o_drama_2026_2026.html": {
     "titulo": "O Drama (2026)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_duble_2024_2024.html": {
     "titulo": "O Duble (2024)",
@@ -83180,20 +83692,19 @@
   },
   "o_elixir_2025_2025.html": {
     "titulo": "O Elixir (2025)",
+    "tipo": "filme",
     "generos": [
-      "Fantasia",
-      "Romance"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_encanto_da_sereia_2025_2025.html": {
     "titulo": "O Encanto Da Sereia (2025)",
+    "tipo": "filme",
     "generos": [
-      "Fantasia",
-      "Aventura",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_enforcador_2024_2024.html": {
     "titulo": "O Enforcador (2024)",
@@ -83623,11 +84134,11 @@
   },
   "o_estranho_na_minha_casa_2025_2025.html": {
     "titulo": "O Estranho na Minha Casa (2025)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_eternauta_t1e1.html": {
     "titulo": "O Eternauta T1E1",
@@ -83811,118 +84322,119 @@
   },
   "o11ze_t1e24.html": {
     "titulo": "O11ZE T1E24",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e25.html": {
     "titulo": "O11ZE T1E25",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e26.html": {
     "titulo": "O11ZE T1E26",
+    "tipo": "serie",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e27.html": {
     "titulo": "O11ZE T1E27",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e28.html": {
     "titulo": "O11ZE T1E28",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e29.html": {
     "titulo": "O11ZE T1E29",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e3.html": {
     "titulo": "O11ZE T1E3",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e30.html": {
     "titulo": "O11ZE T1E30",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e31.html": {
     "titulo": "O11ZE T1E31",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e32.html": {
     "titulo": "O11ZE T1E32",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e33.html": {
     "titulo": "O11ZE T1E33",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e34.html": {
     "titulo": "O11ZE T1E34",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e35.html": {
     "titulo": "O11ZE T1E35",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e36.html": {
     "titulo": "O11ZE T1E36",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o11ze_t1e37.html": {
     "titulo": "O11ZE T1E37",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -83930,6 +84442,7 @@
   },
   "o11ze_t1e38.html": {
     "titulo": "O11ZE T1E38",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -83937,6 +84450,7 @@
   },
   "o11ze_t1e39.html": {
     "titulo": "O11ZE T1E39",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -83944,6 +84458,7 @@
   },
   "o11ze_t1e4.html": {
     "titulo": "O11ZE T1E4",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -83951,6 +84466,7 @@
   },
   "o11ze_t1e40.html": {
     "titulo": "O11ZE T1E40",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -83958,6 +84474,7 @@
   },
   "o11ze_t1e41.html": {
     "titulo": "O11ZE T1E41",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84161,11 +84678,11 @@
   },
   "o_dia_da_castracao_2025_2025.html": {
     "titulo": "O Dia da Castracao (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_dia_depois_de_amanha_2004_2004.html": {
     "titulo": "O Dia Depois de Amanha (2004)",
@@ -84337,13 +84854,16 @@
   },
   "o_comando_2022_2022.html": {
     "titulo": "O Comando (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_combinado_nao_sai_caro_2025_2025.html": {
     "titulo": "O Combinado Nao Sai Caro (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84351,6 +84871,7 @@
   },
   "o_confronto.html": {
     "titulo": "O Confronto",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84358,6 +84879,7 @@
   },
   "o_confronto_2001_2001.html": {
     "titulo": "O Confronto (2001)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84445,6 +84967,7 @@
   },
   "o_corpo_2024_2024.html": {
     "titulo": "O Corpo (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84452,10 +84975,11 @@
   },
   "o_corpo_aberto_2022_2022.html": {
     "titulo": "O Corpo Aberto (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_corvo.html": {
     "titulo": "O Corvo",
@@ -84489,6 +85013,7 @@
   },
   "o_covil_2021_2021.html": {
     "titulo": "O Covil (2021)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -84622,59 +85147,83 @@
   },
   "o_jogo_da_morte_t1e1.html": {
     "titulo": "O Jogo Da Morte T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e2.html": {
     "titulo": "O Jogo Da Morte T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e3.html": {
     "titulo": "O Jogo Da Morte T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e4.html": {
     "titulo": "O Jogo Da Morte T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e5.html": {
     "titulo": "O Jogo Da Morte T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e6.html": {
     "titulo": "O Jogo Da Morte T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e7.html": {
     "titulo": "O Jogo Da Morte T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_jogo_da_morte_t1e8.html": {
     "titulo": "O Jogo Da Morte T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_exterminador_do_futuro_a_salvacao_2009_2009.html": {
     "titulo": "O Exterminador do Futuro: A Salvacao (2009)",
@@ -84708,9 +85257,11 @@
   },
   "o_fabricante_de_lagrimas.html": {
     "titulo": "O Fabricante de Lagrimas",
+    "tipo": "filme",
     "generos": [
+      "Romance",
       "Drama",
-      "Romance"
+      "Fantasia"
     ],
     "fonte": "ia"
   },
@@ -84826,8 +85377,10 @@
   },
   "o_fim_da_rua.html": {
     "titulo": "O Fim da Rua",
+    "tipo": "filme",
     "generos": [
-      "Crime",
+      "Terror",
+      "Mistério",
       "Thriller"
     ],
     "fonte": "ia"
@@ -86793,28 +87346,33 @@
   },
   "o_pranto_do_mal_2024_2024.html": {
     "titulo": "O Pranto do Mal (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_preco_da_traicao_2010_2010.html": {
     "titulo": "O Preco da Traicao (2010)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "Drama",
+      "Crime"
     ],
     "fonte": "ia"
   },
   "o_preco_de_um_corpo_2023_2023.html": {
     "titulo": "O Preco De Um Corpo (2023)",
+    "tipo": "filme",
     "generos": [
-      "Thriller",
-      "Crime"
+      "Drama",
+      "Thriller"
     ],
     "fonte": "ia"
   },
   "o_preco_de_uma_vida_2022_2022.html": {
     "titulo": "O Preco de uma Vida (2022)",
+    "tipo": "filme",
     "generos": [
       "Drama"
     ],
@@ -86822,14 +87380,15 @@
   },
   "o_preco_do_amanha_2011_2011.html": {
     "titulo": "O Preco Do Amanha (2011)",
+    "tipo": "filme",
     "generos": [
-      "Documentário",
-      "Guerra"
+      "Drama"
     ],
     "fonte": "ia"
   },
   "o_preco_do_prazer_2021_2021.html": {
     "titulo": "O Preco do Prazer (2021)",
+    "tipo": "filme",
     "generos": [
       "Drama",
       "Romance"
@@ -86968,10 +87527,13 @@
   },
   "o_pergaminho_vermelho_2020_2020.html": {
     "titulo": "O Pergaminho Vermelho (2020)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_perigo_bate_a_porta_2016_2016.html": {
     "titulo": "O Perigo Bate a Porta (2016)",
@@ -87024,10 +87586,12 @@
   },
   "o_plano_perfeito_2_2019_2019.html": {
     "titulo": "O Plano Perfeito 2 (2019)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_poco.html": {
     "titulo": "O Poco",
@@ -87071,24 +87635,28 @@
   },
   "o_poco_das_trevas_2024_2024.html": {
     "titulo": "O Poco das Trevas (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_poder_de_acreditar_2024_2024.html": {
     "titulo": "O Poder de Acreditar (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_poder_do_pecado_2023_2023.html": {
     "titulo": "O Poder Do Pecado (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_noivo_da_minha_melhor_amiga_2011_2011.html": {
     "titulo": "O Noivo Da Minha Melhor Amiga (2011)",
@@ -87130,6 +87698,7 @@
   },
   "o_onibus_perdido_2025_2025.html": {
     "titulo": "O Onibus Perdido (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -87147,10 +87716,13 @@
   },
   "o_outro_lado_do_lago_2018_2018.html": {
     "titulo": "O Outro Lado do Lago (2018)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_pacote_2018_2018.html": {
     "titulo": "O Pacote (2018)",
@@ -87239,17 +87811,23 @@
   },
   "o_passado_bate_a_porta_2024_2024.html": {
     "titulo": "O Passado Bate a Porta (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_passado_nunca_morre_2026_2026.html": {
     "titulo": "O Passado Nunca Morre (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_pequenino.html": {
     "titulo": "O Pequenino",
@@ -87513,6 +88091,7 @@
   },
   "o_chamado_4_2023_2023.html": {
     "titulo": "O Chamado 4 (2023)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Mistério"
@@ -87541,9 +88120,9 @@
   },
   "o_chamado_vs_o_grito_2016_2016.html": {
     "titulo": "O Chamado vs. O Grito (2016)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério"
+      "Terror"
     ],
     "fonte": "ia"
   },
@@ -87796,6 +88375,7 @@
   },
   "o_quebra_nozes_e_os_quatro_reinos_2018_2018.html": {
     "titulo": "O Quebra",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -87889,6 +88469,7 @@
   },
   "o_momento_2026_2026.html": {
     "titulo": "O Momento (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -87956,10 +88537,13 @@
   },
   "o_mundo_depois_de_nos.html": {
     "titulo": "O Mundo Depois de Nos",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_mundo_dos_pequeninos.html": {
     "titulo": "O Mundo dos Pequeninos",
@@ -88427,6 +89011,7 @@
   },
   "o_tempo_que_nos_resta_2025_2025.html": {
     "titulo": "O Tempo Que Nos Resta (2025)",
+    "tipo": "filme",
     "generos": [
       "Drama"
     ],
@@ -88434,10 +89019,11 @@
   },
   "o_terno_de_dois_bilhoes_de_dolares_2002_2002.html": {
     "titulo": "O Terno de Dois Bilhoes de Dolares (2002)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_touro_ferdinando.html": {
     "titulo": "O Touro Ferdinando",
@@ -88511,17 +89097,19 @@
   },
   "o_ultimo_acordo_2023_2023.html": {
     "titulo": "O Ultimo Acordo (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_ultimo_azul_2025_2025.html": {
     "titulo": "O Ultimo Azul (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_ultimo_cacador_de_bruxas_2013_2013.html": {
     "titulo": "O Ultimo Cacador de Bruxas (2013)",
@@ -88535,10 +89123,11 @@
   },
   "o_ultimo_conquistador_2026_2026.html": {
     "titulo": "O Ultimo Conquistador (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "o_ultimo_desafio_2013_2013.html": {
     "titulo": "O Ultimo Desafio (2013)",
@@ -89054,6 +89643,7 @@
   },
   "o_som_da_morte_2026_2026.html": {
     "titulo": "O Som da Morte (2026)",
+    "tipo": "filme",
     "generos": [
       "Terror",
       "Thriller"
@@ -89062,6 +89652,7 @@
   },
   "o_sono_da_morte.html": {
     "titulo": "O Sono da Morte",
+    "tipo": "filme",
     "generos": [
       "Terror"
     ],
@@ -89069,6 +89660,7 @@
   },
   "o_sono_da_morte_2016_2016.html": {
     "titulo": "O Sono da Morte (2016)",
+    "tipo": "filme",
     "generos": [
       "Terror"
     ],
@@ -89076,9 +89668,9 @@
   },
   "o_sorveteiro_2026_2026.html": {
     "titulo": "O Sorveteiro (2026)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Família"
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -89103,6 +89695,7 @@
   },
   "o_t_h_e_r_presenca_maligna_2025_2025.html": {
     "titulo": "O.T.H.E.R",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -89932,10 +90525,11 @@
   },
   "opus_2025_2025.html": {
     "titulo": "Opus (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "orange_is_the_new_black_t1e1.html": {
     "titulo": "Orange Is the New Black T1E1",
@@ -90038,10 +90632,12 @@
   },
   "orange_is_the_new_black_t1e8.html": {
     "titulo": "Orange Is the New Black T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t2e4.html": {
     "titulo": "Origem T2E4",
@@ -90703,101 +91299,140 @@
   },
   "origem_t1e1.html": {
     "titulo": "Origem T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e10.html": {
     "titulo": "Origem T1E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e2.html": {
     "titulo": "Origem T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e3.html": {
     "titulo": "Origem T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e4.html": {
     "titulo": "Origem T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e5.html": {
     "titulo": "Origem T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e6.html": {
     "titulo": "Origem T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e7.html": {
     "titulo": "Origem T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e8.html": {
     "titulo": "Origem T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t1e9.html": {
     "titulo": "Origem T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t2e1.html": {
     "titulo": "Origem T2E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t2e10.html": {
     "titulo": "Origem T2E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t2e2.html": {
     "titulo": "Origem T2E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "origem_t2e3.html": {
     "titulo": "Origem T2E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "os_cavaleiros_do_zodiaco_saint_seiya_o_comeco.html": {
     "titulo": "Os Cavaleiros do Zodiaco",
@@ -91095,10 +91730,11 @@
   },
   "os_candidatos.html": {
     "titulo": "Os Candidatos",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "os_canibais.html": {
     "titulo": "Os Canibais",
@@ -94146,10 +94782,12 @@
   },
   "os_seis_signos_da_luz_2007_2007.html": {
     "titulo": "Os Seis Signos da Luz (2007)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "os_sem_floresta.html": {
     "titulo": "Os Sem Floresta",
@@ -94163,10 +94801,11 @@
   },
   "os_sem_floresta_2006_2006.html": {
     "titulo": "Os Sem",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "os_seus_os_meus_e_os_nossos_2005_2005.html": {
     "titulo": "Os Seus, os Meus e os Nossos (2005)",
@@ -94608,10 +95247,11 @@
   },
   "os_pestes_2025_2025.html": {
     "titulo": "Os Pestes (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "os_pinguins_de_madagascar_o_filme.html": {
     "titulo": "Os Pinguins de Madagascar",
@@ -95151,6 +95791,7 @@
   },
   "o_retorno_2024_2024.html": {
     "titulo": "O Retorno (2024)",
+    "tipo": "filme",
     "generos": [
       "Ação",
       "Aventura"
@@ -95177,9 +95818,10 @@
   },
   "o_retrato_2023_2023.html": {
     "titulo": "O Retrato (2023)",
+    "tipo": "filme",
     "generos": [
-      "Mistério",
-      "Thriller"
+      "Drama",
+      "Romance"
     ],
     "fonte": "ia"
   },
@@ -95215,9 +95857,9 @@
   },
   "o_ritual_2025_2025.html": {
     "titulo": "O Ritual (2025)",
+    "tipo": "filme",
     "generos": [
-      "Terror",
-      "Mistério"
+      "Terror"
     ],
     "fonte": "ia"
   },
@@ -95253,73 +95895,103 @@
   },
   "overlord_t1e11.html": {
     "titulo": "Overlord T1E11",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e12.html": {
     "titulo": "Overlord T1E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e13.html": {
     "titulo": "Overlord T1E13",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e2.html": {
     "titulo": "Overlord T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e3.html": {
     "titulo": "Overlord T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e4.html": {
     "titulo": "Overlord T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Fantasia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e5.html": {
     "titulo": "Overlord T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Fantasia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e6.html": {
     "titulo": "Overlord T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Fantasia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e7.html": {
     "titulo": "Overlord T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Fantasia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e8.html": {
     "titulo": "Overlord T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Fantasia",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "overlord_t1e9.html": {
     "titulo": "Overlord T1E9",
@@ -95511,11 +96183,11 @@
   },
   "o_homem_cao.html": {
     "titulo": "O Homem",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Crime"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "o_homem_com_punhos_de_ferro.html": {
     "titulo": "O Homem com Punhos de Ferro",
@@ -95538,17 +96210,21 @@
   },
   "o_homem_da_cabana_2022_2022.html": {
     "titulo": "O Homem da Cabana (2022)",
+    "tipo": "filme",
     "generos": [
       "Terror",
+      "Mistério",
       "Thriller"
     ],
     "fonte": "ia"
   },
   "o_homem_das_sombras_2012_2012.html": {
     "titulo": "O Homem das Sombras (2012)",
+    "tipo": "filme",
     "generos": [
-      "Crime",
-      "Mistério"
+      "Terror",
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -95564,9 +96240,11 @@
   },
   "o_homem_de_branco_2022_2022.html": {
     "titulo": "O Homem de Branco (2022)",
+    "tipo": "filme",
     "generos": [
       "Drama",
-      "Romance"
+      "Mistério",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -96210,6 +96888,7 @@
   },
   "pac_t2e12.html": {
     "titulo": "Pac T2E12",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96217,6 +96896,7 @@
   },
   "pac_t2e13.html": {
     "titulo": "Pac T2E13",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96224,6 +96904,7 @@
   },
   "pac_t2e2.html": {
     "titulo": "Pac T2E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96231,6 +96912,7 @@
   },
   "pac_t2e3.html": {
     "titulo": "Pac T2E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96238,6 +96920,7 @@
   },
   "pac_t2e4.html": {
     "titulo": "Pac T2E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96245,6 +96928,7 @@
   },
   "pac_t2e5.html": {
     "titulo": "Pac T2E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96252,6 +96936,7 @@
   },
   "pac_t2e6.html": {
     "titulo": "Pac T2E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96259,6 +96944,7 @@
   },
   "pac_t2e7.html": {
     "titulo": "Pac T2E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96266,6 +96952,7 @@
   },
   "pac_t2e8.html": {
     "titulo": "Pac T2E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96273,6 +96960,7 @@
   },
   "pac_t2e9.html": {
     "titulo": "Pac T2E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96280,6 +96968,7 @@
   },
   "pac_t3e1.html": {
     "titulo": "Pac T3E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96287,6 +96976,7 @@
   },
   "pac_t3e2.html": {
     "titulo": "Pac T3E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96294,6 +96984,7 @@
   },
   "pac_t3e3.html": {
     "titulo": "Pac T3E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96301,6 +96992,7 @@
   },
   "pac_t3e4.html": {
     "titulo": "Pac T3E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96308,6 +97000,7 @@
   },
   "pac_t3e5.html": {
     "titulo": "Pac T3E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96315,6 +97008,7 @@
   },
   "pac_t3e6.html": {
     "titulo": "Pac T3E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96322,6 +97016,7 @@
   },
   "pac_t3e7.html": {
     "titulo": "Pac T3E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96329,6 +97024,7 @@
   },
   "pac_t3e8.html": {
     "titulo": "Pac T3E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -96736,6 +97432,7 @@
   },
   "o_roubo_dos_sapatos_de_magico_de_oz_2025_2025.html": {
     "titulo": "O Roubo dos Sapatos de Magico de Oz (2025)",
+    "tipo": "filme",
     "generos": [
       "Aventura",
       "Fantasia"
@@ -96744,9 +97441,10 @@
   },
   "o_s_rejeitados_operacao_submarino_2025_2025.html": {
     "titulo": "O.S Rejeitados: Operacao Submarino (2025)",
+    "tipo": "filme",
     "generos": [
-      "Guerra",
-      "Ação"
+      "Ação",
+      "Thriller"
     ],
     "fonte": "ia"
   },
@@ -96852,6 +97550,7 @@
   },
   "o_segredo_da_colmeia_2023_2023.html": {
     "titulo": "O Segredo Da Colmeia (2023)",
+    "tipo": "filme",
     "generos": [
       "Mistério",
       "Thriller"
@@ -96860,9 +97559,10 @@
   },
   "o_segredo_da_floresta_2020_2020.html": {
     "titulo": "O Segredo da Floresta (2020)",
+    "tipo": "filme",
     "generos": [
       "Aventura",
-      "Família"
+      "Fantasia"
     ],
     "fonte": "ia"
   },
@@ -96896,9 +97596,10 @@
   },
   "o_segredo_do_ourives_2025_2025.html": {
     "titulo": "O Segredo Do Ourives (2025)",
+    "tipo": "filme",
     "generos": [
       "Mistério",
-      "Thriller"
+      "Crime"
     ],
     "fonte": "ia"
   },
@@ -98137,6 +98838,7 @@
   },
   "peca_me_o_que_quiser_2024_2024.html": {
     "titulo": "Peca",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -98144,10 +98846,11 @@
   },
   "pecadores_2025_2025.html": {
     "titulo": "Pecadores (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
       "Terror",
-      "Thriller"
+      "Thriller",
+      "Drama"
     ],
     "fonte": "ia"
   },
@@ -98183,11 +98886,11 @@
   },
   "pegando_uma_onda_com_voce_2019_2019.html": {
     "titulo": "Pegando uma Onda com Voce (2019)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Família"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "peixe_grande_e_suas_historias_maravilhosas.html": {
     "titulo": "Peixe Grande e Suas Historias Maravilhosas",
@@ -98201,11 +98904,11 @@
   },
   "peles_2017_2017.html": {
     "titulo": "Peles (2017)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Comédia"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "pelotao_de_elite.html": {
     "titulo": "Pelotao de Elite",
@@ -98219,20 +98922,19 @@
   },
   "pelotao_em_apuros_1995_1995.html": {
     "titulo": "Pelotao em Apuros (1995)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Guerra"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "pequena_siberia_2025_2025.html": {
     "titulo": "Pequena Siberia (2025)",
+    "tipo": "filme",
     "generos": [
-      "Crime",
-      "Comédia",
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "pequenos_guerreiros_livre_1998_1998.html": {
     "titulo": "Pequenos Guerreiros Livre (1998)",
@@ -99231,6 +99933,7 @@
   },
   "pluribus_t1e9.html": {
     "titulo": "Pluribus T1E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -99336,10 +100039,12 @@
   },
   "policiais_da_mafia_2025_2025.html": {
     "titulo": "Policiais Da Mafia (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "policial_em_apuros_2014_2014.html": {
     "titulo": "Policial em Apuros (2014)",
@@ -99439,6 +100144,7 @@
   },
   "pai_em_dose_dupla_2_2017_20.html": {
     "titulo": "pai",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -99534,6 +100240,7 @@
   },
   "panava_2026_2026.html": {
     "titulo": "Panava (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -99541,6 +100248,7 @@
   },
   "pandabeer_in_afrika.html": {
     "titulo": "Pandabeer in Afrika",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -99858,6 +100566,7 @@
   },
   "por_inteiro_2025_2025.html": {
     "titulo": "Por Inteiro (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -99912,10 +100621,11 @@
   },
   "portoes_do_inferno_2025_2025.html": {
     "titulo": "Portoes Do Inferno (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "possessao_2012_2012.html": {
     "titulo": "Possessao (2012)",
@@ -100263,41 +100973,57 @@
   },
   "pluribus_t1e1.html": {
     "titulo": "Pluribus T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "pluribus_t1e2.html": {
     "titulo": "Pluribus T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "pluribus_t1e3.html": {
     "titulo": "Pluribus T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "pluribus_t1e4.html": {
     "titulo": "Pluribus T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "pluribus_t1e5.html": {
     "titulo": "Pluribus T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "pluribus_t1e6.html": {
     "titulo": "Pluribus T1E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -100305,6 +101031,7 @@
   },
   "pluribus_t1e7.html": {
     "titulo": "Pluribus T1E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -100312,6 +101039,7 @@
   },
   "pluribus_t1e8.html": {
     "titulo": "Pluribus T1E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -101161,17 +101889,20 @@
   },
   "projeto_internato_2026_2026.html": {
     "titulo": "Projeto Internato (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "projeto_legiao_2022_2022.html": {
     "titulo": "Projeto Legiao (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Guerra",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "projeto_x_uma_festa_fora_de_controle_2012_2012.html": {
     "titulo": "Projeto X: Uma Festa Fora de Controle (2012)",
@@ -101503,6 +102234,7 @@
   },
   "quando_o_ceu_se_engana_2025_2025.html": {
     "titulo": "Quando o Ceu se Engana (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -101510,10 +102242,12 @@
   },
   "quando_o_mal_desperta_2024_2024.html": {
     "titulo": "Quando O Mal Desperta (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "quando_um_estranho_chama_2006_2006.html": {
     "titulo": "Quando um Estranho Chama (2006)",
@@ -101624,17 +102358,20 @@
   },
   "quase_apaixonados_2024_2024.html": {
     "titulo": "Quase Apaixonados (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "quatro_maes_2025_2025.html": {
     "titulo": "Quatro Maes (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "quatro_vidas_de_um_cachorro.html": {
     "titulo": "Quatro Vidas de um Cachorro",
@@ -101656,10 +102393,11 @@
   },
   "que_horas_eu_te_pego_2023_2023.html": {
     "titulo": "Que Horas Eu Te Pego? (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "premonicao.html": {
     "titulo": "Premonicao",
@@ -101923,6 +102661,7 @@
   },
   "procura_se_gonker_2023_2023.html": {
     "titulo": "Procura",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -101977,6 +102716,7 @@
   },
   "procurando_emily_2026_2026.html": {
     "titulo": "Procurando Emily (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -103163,6 +103903,7 @@
   },
   "recem_casado_2009_2009.html": {
     "titulo": "Recem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -103170,6 +103911,7 @@
   },
   "recem_casados_2003_2003.html": {
     "titulo": "Recem",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -104654,6 +105396,7 @@
   },
   "parque_lezama_2026_2026.html": {
     "titulo": "Parque Lezama (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105159,6 +105902,7 @@
   },
   "pica_pau_o_filme.html": {
     "titulo": "Pica",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105166,6 +105910,7 @@
   },
   "pica_pau_o_filme_2017_2017.html": {
     "titulo": "Pica",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105648,6 +106393,7 @@
   },
   "sacramento_2025_2025.html": {
     "titulo": "Sacramento (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105664,6 +106410,7 @@
   },
   "salve_geral_irmandade_2026_2026.html": {
     "titulo": "Salve Geral Irmandade (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105671,6 +106418,7 @@
   },
   "salverosa_2025_2025.html": {
     "titulo": "Salverosa (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -105895,6 +106643,7 @@
   },
   "ruby_marinho_monstro_adolescente.html": {
     "titulo": "Ruby Marinho",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -106317,10 +107066,11 @@
   },
   "robos.html": {
     "titulo": "Robos",
+    "tipo": "filme",
     "generos": [
       "Animação",
-      "Aventura",
-      "Comédia"
+      "Comédia",
+      "Família"
     ],
     "fonte": "ia"
   },
@@ -106968,10 +107718,11 @@
   },
   "revelacoes_2025_2025.html": {
     "titulo": "Revelacoes (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "rick_e_morty_t1e1.html": {
     "titulo": "Rick e Morty T1E1",
@@ -107355,6 +108106,7 @@
   },
   "ong_bak_2_o_guerreiro_sagrado_voltou.html": {
     "titulo": "Ong",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -107362,6 +108114,7 @@
   },
   "ong_bak_2_o_guerreiro_sagrado_voltou_2008_2008.html": {
     "titulo": "Ong",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -107369,6 +108122,7 @@
   },
   "ong_bak_3.html": {
     "titulo": "Ong",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -107376,6 +108130,7 @@
   },
   "ong_bak_3_2010_2010.html": {
     "titulo": "Ong",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -107383,6 +108138,7 @@
   },
   "ong_bak_guerreiro_sagrado.html": {
     "titulo": "Ong",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -107407,10 +108163,11 @@
   },
   "operacao_baba.html": {
     "titulo": "Operacao Baba",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "operacao_big_hero.html": {
     "titulo": "Operacao Big Hero",
@@ -107527,34 +108284,47 @@
   },
   "separados_pelas_estrelas.html": {
     "titulo": "Separados pelas Estrelas",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Ficção Científica",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "separados_pelas_estrelas_2025_2025.html": {
     "titulo": "Separados pelas Estrelas (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Ficção Científica",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "separados_pelo_casamento_2006_2006.html": {
     "titulo": "Separados Pelo Casamento (2006)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Romance",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sequestro_fake_2025_2025.html": {
     "titulo": "Sequestro Fake (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Crime",
+      "Ação"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "serie.html": {
     "titulo": "🎄 Episódios",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -107562,10 +108332,13 @@
   },
   "servindo_nazistas_2023_2023.html": {
     "titulo": "Servindo Nazistas (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "História",
+      "Guerra"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sete_minutos_depois_da_meia_noite.html": {
     "titulo": "Sete Minutos Depois da Meia",
@@ -107579,10 +108352,13 @@
   },
   "sete_veus_2025_2025.html": {
     "titulo": "Sete Veus (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Mistério",
+      "Música"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sete_vidas_2008_2008.html": {
     "titulo": "Sete Vidas (2008)",
@@ -107605,10 +108381,12 @@
   },
   "seu_unico_filho_2023_2023.html": {
     "titulo": "Seu Unico Filho (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "História"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "seus_olhos_dizem_2020_2020.html": {
     "titulo": "Seus Olhos Dizem (2020)",
@@ -107639,31 +108417,35 @@
   },
   "sexta_feira_13.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_1980_1980.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_2009_2009.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_2_1981_1981.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "shadowhunters_instrumentos_mortais_t2e6.html": {
     "titulo": "Shadowhunters: Instrumentos Mortais T2E6",
@@ -108203,6 +108985,7 @@
   },
   "secretaria.html": {
     "titulo": "Secretaria",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -108447,66 +109230,79 @@
   },
   "sexta_feira_13_parte_3_1982_1982.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_4_o_capitulo_final_1984_1984.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_5_o_regresso_1985_1985.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_6_1986_1986.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_7_sangue_novo_1988_1988.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_8_terror_em_nova_iorque_1989_1989.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_13_parte_9_1993_1993.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_em_apuros.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_em_apuros_1995_1995.html": {
     "titulo": "Sexta",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sexta_feira_muito_louca_2003_2003.html": {
     "titulo": "Sexta Feira Muito Louca (2003)",
@@ -109161,9 +109957,11 @@
   },
   "so_por_uma_noite.html": {
     "titulo": "So por Uma Noite",
+    "tipo": "filme",
     "generos": [
       "Romance",
-      "Drama"
+      "Drama",
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -109179,34 +109977,35 @@
   },
   "sob_a_lua_cheia_2024_2024.html": {
     "titulo": "Sob a Lua Cheia (2024)",
-    "generos": [
-      "Fantasia",
-      "Aventura"
-    ],
-    "fonte": "ia"
-  },
-  "sob_fogo_2025_2025.html": {
-    "titulo": "Sob Fogo (2025)",
-    "generos": [
-      "Ação",
-      "Thriller"
-    ],
-    "fonte": "ia"
-  },
-  "sob_o_dominio_do_mal_2022_2022.html": {
-    "titulo": "Sob O Dominio Do Mal (2022)",
-    "generos": [
-      "Terror",
-      "Thriller"
-    ],
-    "fonte": "ia"
-  },
-  "risa_e_o_telefone_do_vento_2026_2026.html": {
-    "titulo": "Risa e o Telefone do Vento (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
     "fonte": "indefinido"
+  },
+  "sob_fogo_2025_2025.html": {
+    "titulo": "Sob Fogo (2025)",
+    "tipo": "filme",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "sob_o_dominio_do_mal_2022_2022.html": {
+    "titulo": "Sob O Dominio Do Mal (2022)",
+    "tipo": "filme",
+    "generos": [
+      "indefinido"
+    ],
+    "fonte": "indefinido"
+  },
+  "risa_e_o_telefone_do_vento_2026_2026.html": {
+    "titulo": "Risa e o Telefone do Vento (2026)",
+    "tipo": "filme",
+    "generos": [
+      "Comédia"
+    ],
+    "fonte": "ia"
   },
   "risque_a_vinganca_2025_2025.html": {
     "titulo": "Risque: A Vinganca (2025)",
@@ -110582,6 +111381,7 @@
   },
   "spider_t1e1.html": {
     "titulo": "Spider T1E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -110589,6 +111389,7 @@
   },
   "spider_t1e2.html": {
     "titulo": "Spider T1E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -110596,45 +111397,63 @@
   },
   "spider_t1e3.html": {
     "titulo": "Spider T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spider_t1e4.html": {
     "titulo": "Spider T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spider_t1e5.html": {
     "titulo": "Spider T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spider_t1e6.html": {
     "titulo": "Spider T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spider_t1e7.html": {
     "titulo": "Spider T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spider_t1e8.html": {
     "titulo": "Spider T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "spirit_o_corcel_indomavel.html": {
     "titulo": "Spirit: O Corcel Indomavel",
@@ -111405,10 +112224,13 @@
   },
   "sem_saida_ano_2008_2008.html": {
     "titulo": "Sem Saida Ano (2008)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Ação",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sem_tempo_a_perder_2023_2023.html": {
     "titulo": "Sem Tempo a Perder (2023)",
@@ -111638,13 +112460,15 @@
   },
   "sozinha_2020_2020.html": {
     "titulo": "Sozinha (2020)",
+    "tipo": "filme",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sozinha_2021_2021.html": {
     "titulo": "Sozinha (2021)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -111652,6 +112476,7 @@
   },
   "sozinha_com_voce_2022_2022.html": {
     "titulo": "Sozinha Com Voce (2022)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -112069,143 +112894,203 @@
   },
   "stranger_things_t2e3.html": {
     "titulo": "Stranger Things T2E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e4.html": {
     "titulo": "Stranger Things T2E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e5.html": {
     "titulo": "Stranger Things T2E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e6.html": {
     "titulo": "Stranger Things T2E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e7.html": {
     "titulo": "Stranger Things T2E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e8.html": {
     "titulo": "Stranger Things T2E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t2e9.html": {
     "titulo": "Stranger Things T2E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e1.html": {
     "titulo": "Stranger Things T3E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e2.html": {
     "titulo": "Stranger Things T3E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e3.html": {
     "titulo": "Stranger Things T3E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e4.html": {
     "titulo": "Stranger Things T3E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e5.html": {
     "titulo": "Stranger Things T3E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e6.html": {
     "titulo": "Stranger Things T3E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e7.html": {
     "titulo": "Stranger Things T3E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t3e8.html": {
     "titulo": "Stranger Things T3E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t4e1.html": {
     "titulo": "Stranger Things T4E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t4e2.html": {
     "titulo": "Stranger Things T4E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t4e3.html": {
     "titulo": "Stranger Things T4E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t4e4.html": {
     "titulo": "Stranger Things T4E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t4e5.html": {
     "titulo": "Stranger Things T4E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Mistério",
+      "Ficção Científica",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "scooby_doo_e_os_irmaos_boo_1987_1987.html": {
     "titulo": "Scooby Doo E Os Irmaos Boo (1987)",
@@ -112219,73 +113104,81 @@
   },
   "scooby_doo_e_wwe_maldicao_do_demonio_veloz.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_em_cade_a_minha_mumia_2005_2005.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_estrela_do_circo_2012_2012.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_gol_de_fantasma_2014_2014.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_gostosuras_ou_travessuras_2022_2022.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_halloween_2020_2020.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_misterio_na_lutamania.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_misterio_na_lutamania_2014_2014.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
@@ -112301,37 +113194,43 @@
   },
   "scooby_doo_na_ilha_dos_zumbis.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_na_ilha_dos_zumbis_1998_1998.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_natal_assombrado_2012_2012.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
       "Animação",
       "Comédia",
-      "Mistério"
+      "Família"
     ],
     "fonte": "ia"
   },
   "scooby_doo_o_filme.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "scooby_doo_o_filme_2002_2002.html": {
     "titulo": "Scooby Doo O Filme (2002)",
@@ -112345,17 +113244,23 @@
   },
   "scooby_doo_o_misterio_comeca_2009_2009.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "scooby_doo_verao_assombrado_2010_2010.html": {
     "titulo": "Scooby",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Animação",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "scooby_o_filme.html": {
     "titulo": "Scooby! O Filme",
@@ -113569,11 +114474,11 @@
   },
   "shakey_grounds_2025_2025.html": {
     "titulo": "Shakey Grounds (2025)",
+    "tipo": "filme",
     "generos": [
-      "Ação",
-      "Thriller"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "shame_2011_2011.html": {
     "titulo": "Shame (2011)",
@@ -113586,17 +114491,21 @@
   },
   "shang_chi_e_a_lenda_dos_dez_aneis.html": {
     "titulo": "Shang",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
   "shang_chi_e_a_lenda_dos_dez_aneis_2021_2021.html": {
     "titulo": "Shang",
+    "tipo": "filme",
     "generos": [
       "Ação",
-      "Aventura"
+      "Aventura",
+      "Fantasia"
     ],
     "fonte": "ia"
   },
@@ -113909,73 +114818,91 @@
   },
   "stephen_2025_2025.html": {
     "titulo": "Stephen (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e1.html": {
     "titulo": "Sterling Point T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e2.html": {
     "titulo": "Sterling Point T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e3.html": {
     "titulo": "Sterling Point T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e4.html": {
     "titulo": "Sterling Point T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e5.html": {
     "titulo": "Sterling Point T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e6.html": {
     "titulo": "Sterling Point T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e7.html": {
     "titulo": "Sterling Point T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sterling_point_t1e8.html": {
     "titulo": "Sterling Point T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "steve_2025_2025.html": {
     "titulo": "Steve (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "steven_universo_o_filme_2019_2019.html": {
     "titulo": "Steven Universo: O Filme (2019)",
@@ -114017,97 +114944,137 @@
   },
   "supermaes_t2e8.html": {
     "titulo": "Supermaes T2E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e1.html": {
     "titulo": "Supermaes T3E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e10.html": {
     "titulo": "Supermaes T3E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e11.html": {
     "titulo": "Supermaes T3E11",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e12.html": {
     "titulo": "Supermaes T3E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e2.html": {
     "titulo": "Supermaes T3E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e3.html": {
     "titulo": "Supermaes T3E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e4.html": {
     "titulo": "Supermaes T3E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e5.html": {
     "titulo": "Supermaes T3E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e6.html": {
     "titulo": "Supermaes T3E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e7.html": {
     "titulo": "Supermaes T3E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e8.html": {
     "titulo": "Supermaes T3E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t3e9.html": {
     "titulo": "Supermaes T3E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supermaes_t4e1.html": {
     "titulo": "Supermaes T4E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114115,6 +115082,7 @@
   },
   "supermaes_t4e2.html": {
     "titulo": "Supermaes T4E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114122,6 +115090,7 @@
   },
   "supermaes_t4e3.html": {
     "titulo": "Supermaes T4E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114129,6 +115098,7 @@
   },
   "supermaes_t4e4.html": {
     "titulo": "Supermaes T4E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114136,6 +115106,7 @@
   },
   "supermaes_t4e5.html": {
     "titulo": "Supermaes T4E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114143,6 +115114,7 @@
   },
   "supermaes_t4e6.html": {
     "titulo": "Supermaes T4E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114150,6 +115122,7 @@
   },
   "supermaes_t4e7.html": {
     "titulo": "Supermaes T4E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -114157,73 +115130,103 @@
   },
   "stranger_things_historias_de_85_t1e1.html": {
     "titulo": "Stranger Things: Historias de 85 T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e10.html": {
     "titulo": "Stranger Things: Historias de 85 T1E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e2.html": {
     "titulo": "Stranger Things: Historias de 85 T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e3.html": {
     "titulo": "Stranger Things: Historias de 85 T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Ficção Científica",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e4.html": {
     "titulo": "Stranger Things: Historias de 85 T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e5.html": {
     "titulo": "Stranger Things: Historias de 85 T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e6.html": {
     "titulo": "Stranger Things: Historias de 85 T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e7.html": {
     "titulo": "Stranger Things: Historias de 85 T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e8.html": {
     "titulo": "Stranger Things: Historias de 85 T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_historias_de_85_t1e9.html": {
     "titulo": "Stranger Things: Historias de 85 T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Aventura",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "stranger_things_t1e1.html": {
     "titulo": "Stranger Things T1E1",
@@ -114953,108 +115956,137 @@
   },
   "sorriso_real_t1e1.html": {
     "titulo": "Sorriso Real T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sorriso_real_t1e10.html": {
     "titulo": "Sorriso Real T1E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sorriso_real_t1e11.html": {
     "titulo": "Sorriso Real T1E11",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "sorriso_real_t1e12.html": {
     "titulo": "Sorriso Real T1E12",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "Drama",
+      "Romance",
+      "Família"
     ],
     "fonte": "ia"
   },
   "sorriso_real_t1e13.html": {
     "titulo": "Sorriso Real T1E13",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "Drama",
+      "Romance",
+      "Família"
     ],
     "fonte": "ia"
   },
   "sorriso_real_t1e14.html": {
     "titulo": "Sorriso Real T1E14",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "Drama",
+      "Romance",
+      "Família"
     ],
     "fonte": "ia"
   },
   "sorriso_real_t1e15.html": {
     "titulo": "Sorriso Real T1E15",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "Drama",
+      "Romance",
+      "Família"
     ],
     "fonte": "ia"
   },
   "sorriso_real_t1e16.html": {
     "titulo": "Sorriso Real T1E16",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e2.html": {
     "titulo": "Sorriso Real T1E2",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e3.html": {
     "titulo": "Sorriso Real T1E3",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e4.html": {
     "titulo": "Sorriso Real T1E4",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e5.html": {
     "titulo": "Sorriso Real T1E5",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e6.html": {
     "titulo": "Sorriso Real T1E6",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e7.html": {
     "titulo": "Sorriso Real T1E7",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorriso_real_t1e8.html": {
     "titulo": "Sorriso Real T1E8",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "supernatural_sobrenatural_t13e23.html": {
     "titulo": "Supernatural (Sobrenatural) T13E23",
@@ -115858,143 +116890,203 @@
   },
   "supernatural_sobrenatural_t1e20.html": {
     "titulo": "Supernatural (Sobrenatural) T1E20",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e21.html": {
     "titulo": "Supernatural (Sobrenatural) T1E21",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e22.html": {
     "titulo": "Supernatural (Sobrenatural) T1E22",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e3.html": {
     "titulo": "Supernatural (Sobrenatural) T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e4.html": {
     "titulo": "Supernatural (Sobrenatural) T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e5.html": {
     "titulo": "Supernatural (Sobrenatural) T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e6.html": {
     "titulo": "Supernatural (Sobrenatural) T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e7.html": {
     "titulo": "Supernatural (Sobrenatural) T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e8.html": {
     "titulo": "Supernatural (Sobrenatural) T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t1e9.html": {
     "titulo": "Supernatural (Sobrenatural) T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e1.html": {
     "titulo": "Supernatural (Sobrenatural) T2E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e10.html": {
     "titulo": "Supernatural (Sobrenatural) T2E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e11.html": {
     "titulo": "Supernatural (Sobrenatural) T2E11",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e12.html": {
     "titulo": "Supernatural (Sobrenatural) T2E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e13.html": {
     "titulo": "Supernatural (Sobrenatural) T2E13",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e14.html": {
     "titulo": "Supernatural (Sobrenatural) T2E14",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e15.html": {
     "titulo": "Supernatural (Sobrenatural) T2E15",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e16.html": {
     "titulo": "Supernatural (Sobrenatural) T2E16",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e17.html": {
     "titulo": "Supernatural (Sobrenatural) T2E17",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e18.html": {
     "titulo": "Supernatural (Sobrenatural) T2E18",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Fantasia",
+      "Terror"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "supernatural_sobrenatural_t2e19.html": {
     "titulo": "Supernatural (Sobrenatural) T2E19",
@@ -116238,17 +117330,19 @@
   },
   "siga_minha_voz_2025_2025.html": {
     "titulo": "Siga Minha Voz (2025)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Mistério"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "silvio_santos_vem_ai_2025_2025.html": {
     "titulo": "Silvio Santos Vem Ai! (2025)",
+    "tipo": "filme",
     "generos": [
-      "Comédia",
-      "Drama"
+      "Documentário",
+      "Drama",
+      "Comédia"
     ],
     "fonte": "ia"
   },
@@ -116374,19 +117468,19 @@
   },
   "sinta_a_minha_voz.html": {
     "titulo": "Sinta a Minha Voz",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Música"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sinta_a_minha_voz_2026_2026.html": {
     "titulo": "Sinta a Minha Voz (2026)",
+    "tipo": "filme",
     "generos": [
-      "Drama",
-      "Música"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "supernatural_sobrenatural_t5e19.html": {
     "titulo": "Supernatural (Sobrenatural) T5E19",
@@ -116790,6 +117884,7 @@
   },
   "supermaes_t6e8.html": {
     "titulo": "Supermaes T6E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116797,6 +117892,7 @@
   },
   "supermaes_t6e9.html": {
     "titulo": "Supermaes T6E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116804,6 +117900,7 @@
   },
   "supermaes_t7e1.html": {
     "titulo": "Supermaes T7E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116811,6 +117908,7 @@
   },
   "supermaes_t7e10.html": {
     "titulo": "Supermaes T7E10",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116818,6 +117916,7 @@
   },
   "supermaes_t7e11.html": {
     "titulo": "Supermaes T7E11",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116825,6 +117924,7 @@
   },
   "supermaes_t7e12.html": {
     "titulo": "Supermaes T7E12",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116832,6 +117932,7 @@
   },
   "supermaes_t7e13.html": {
     "titulo": "Supermaes T7E13",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116839,6 +117940,7 @@
   },
   "supermaes_t7e2.html": {
     "titulo": "Supermaes T7E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116846,6 +117948,7 @@
   },
   "supermaes_t7e3.html": {
     "titulo": "Supermaes T7E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116853,6 +117956,7 @@
   },
   "supermaes_t7e4.html": {
     "titulo": "Supermaes T7E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116860,6 +117964,7 @@
   },
   "supermaes_t7e5.html": {
     "titulo": "Supermaes T7E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116867,6 +117972,7 @@
   },
   "supermaes_t7e6.html": {
     "titulo": "Supermaes T7E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -116874,6 +117980,7 @@
   },
   "supermaes_t7e7.html": {
     "titulo": "Supermaes T7E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -120088,10 +121195,13 @@
   },
   "super_quem_herois_por_acidente_2022_2022.html": {
     "titulo": "Super Quem Herois Por Acidente (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Animação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "super_velozes_mega_furiosos_2015_2015.html": {
     "titulo": "Super Velozes, Mega Furiosos (2015)",
@@ -120929,10 +122039,11 @@
   },
   "sorriso_real_t1e9.html": {
     "titulo": "Sorriso Real T1E9",
+    "tipo": "serie",
     "generos": [
-      "Drama"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sorte_no_amor_2006_2006.html": {
     "titulo": "Sorte no Amor (2006)",
@@ -120945,51 +122056,51 @@
   },
   "sos_cobra_t8e1.html": {
     "titulo": "SOS Cobra T8E1",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sos_cobra_t8e2.html": {
     "titulo": "SOS Cobra T8E2",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sos_cobra_t8e3.html": {
     "titulo": "SOS Cobra T8E3",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sos_cobra_t8e4.html": {
     "titulo": "SOS Cobra T8E4",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sos_cobra_t8e5.html": {
     "titulo": "SOS Cobra T8E5",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sos_cobra_t8e6.html": {
     "titulo": "SOS Cobra T8E6",
+    "tipo": "serie",
     "generos": [
-      "Ação",
-      "Aventura"
+      "indefinido"
     ],
-    "fonte": "ia"
+    "fonte": "indefinido"
   },
   "sou_espiao_2002_2002.html": {
     "titulo": "Sou Espiao (2002)",
@@ -121153,6 +122264,7 @@
   },
   "t_34_o_monstro_de_metal_2018_2018.html": {
     "titulo": "T",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -122808,10 +123920,12 @@
   },
   "tempestade_acida_2023_2023.html": {
     "titulo": "Tempestade Acida (2023)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tempestade_planeta_em_furia_2017_2017.html": {
     "titulo": "Tempestade: Planeta em Furia (2017)",
@@ -122825,31 +123939,37 @@
   },
   "tempo.html": {
     "titulo": "Tempo",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tempo_2021_2021.html": {
     "titulo": "Tempo (2021)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tempo_de_guerra_2025_2025.html": {
     "titulo": "Tempo De Guerra (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Guerra",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tempo_de_recomecar_2001_2001.html": {
     "titulo": "Tempo de Recomecar (2001)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tenet_2020_2020.html": {
     "titulo": "Tenet (2020)",
@@ -126172,6 +127292,7 @@
   },
   "the_dink_a_ultima_chance_2026_2026.html": {
     "titulo": "The Dink",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -127347,101 +128468,131 @@
   },
   "the_witcher_t3e3.html": {
     "titulo": "The Witcher T3E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t3e4.html": {
     "titulo": "The Witcher T3E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t3e5.html": {
     "titulo": "The Witcher T3E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t3e6.html": {
     "titulo": "The Witcher T3E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t3e7.html": {
     "titulo": "The Witcher T3E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t3e8.html": {
     "titulo": "The Witcher T3E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e1.html": {
     "titulo": "The Witcher T4E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e2.html": {
     "titulo": "The Witcher T4E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e3.html": {
     "titulo": "The Witcher T4E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e4.html": {
     "titulo": "The Witcher T4E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e5.html": {
     "titulo": "The Witcher T4E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e6.html": {
     "titulo": "The Witcher T4E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Fantasia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e7.html": {
     "titulo": "The Witcher T4E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_witcher_t4e8.html": {
     "titulo": "The Witcher T4E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Aventura",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_woman_nem_todo_monstro_vive_na_selva_2011_2011.html": {
     "titulo": "The Woman Nem Todo Monstro Vive Na Selva (2011)",
@@ -127454,38 +128605,48 @@
   },
   "them_t1e1.html": {
     "titulo": "Them T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "them_t1e10.html": {
     "titulo": "Them T1E10",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "them_t1e2.html": {
     "titulo": "Them T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "them_t1e3.html": {
     "titulo": "Them T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "them_t1e4.html": {
     "titulo": "Them T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_walking_dead_t6e2.html": {
     "titulo": "The Walking Dead T6E2",
@@ -130429,38 +131590,53 @@
   },
   "tremembe_t1e1.html": {
     "titulo": "Tremembe T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tremembe_t1e2.html": {
     "titulo": "Tremembe T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tremembe_t1e3.html": {
     "titulo": "Tremembe T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tremembe_t1e4.html": {
     "titulo": "Tremembe T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tremembe_t1e5.html": {
     "titulo": "Tremembe T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tres_anuncios_para_um_crime_2017_2017.html": {
     "titulo": "Tres Anuncios Para Um Crime (2017)",
@@ -130700,6 +131876,7 @@
   },
   "tomo_t1e10.html": {
     "titulo": "Tomo T1E10",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130707,6 +131884,7 @@
   },
   "tomo_t1e11.html": {
     "titulo": "Tomo T1E11",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130714,6 +131892,7 @@
   },
   "tomo_t1e12.html": {
     "titulo": "Tomo T1E12",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130721,6 +131900,7 @@
   },
   "tomo_t1e13.html": {
     "titulo": "Tomo T1E13",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130728,6 +131908,7 @@
   },
   "tomo_t1e2.html": {
     "titulo": "Tomo T1E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130735,6 +131916,7 @@
   },
   "tomo_t1e3.html": {
     "titulo": "Tomo T1E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130742,6 +131924,7 @@
   },
   "tomo_t1e4.html": {
     "titulo": "Tomo T1E4",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130749,6 +131932,7 @@
   },
   "tomo_t1e5.html": {
     "titulo": "Tomo T1E5",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130756,6 +131940,7 @@
   },
   "tomo_t1e6.html": {
     "titulo": "Tomo T1E6",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130763,6 +131948,7 @@
   },
   "tomo_t1e7.html": {
     "titulo": "Tomo T1E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130770,6 +131956,7 @@
   },
   "tomo_t1e8.html": {
     "titulo": "Tomo T1E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -130777,6 +131964,7 @@
   },
   "tomo_t1e9.html": {
     "titulo": "Tomo T1E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -131139,17 +132327,22 @@
   },
   "trama_internacional_2009_2009.html": {
     "titulo": "Trama Internacional (2009)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "trancada_2022_2022.html": {
     "titulo": "Trancada (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Thriller",
+      "Drama",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "transformers.html": {
     "titulo": "Transformers",
@@ -131333,66 +132526,93 @@
   },
   "tulsa_king_t1e1.html": {
     "titulo": "Tulsa King T1E1",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e2.html": {
     "titulo": "Tulsa King T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e3.html": {
     "titulo": "Tulsa King T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e4.html": {
     "titulo": "Tulsa King T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e5.html": {
     "titulo": "Tulsa King T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e6.html": {
     "titulo": "Tulsa King T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e7.html": {
     "titulo": "Tulsa King T1E7",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e8.html": {
     "titulo": "Tulsa King T1E8",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "tulsa_king_t1e9.html": {
     "titulo": "Tulsa King T1E9",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Drama",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "titanic.html": {
     "titulo": "Titanic",
@@ -132228,10 +133448,12 @@
   },
   "the_trip_2021_2021.html": {
     "titulo": "The Trip (2021)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Aventura"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "the_unaware_atelier_meister_t1e1.html": {
     "titulo": "The Unaware Atelier Meister T1E1",
@@ -132626,10 +133848,13 @@
   },
   "um_lugar_chamado_utopia.html": {
     "titulo": "Um Lugar Chamado Utopia",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Ficção Científica",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_lugar_para_recomecar_2023_2023.html": {
     "titulo": "Um Lugar Para Recomecar (2023)",
@@ -133129,6 +134354,7 @@
   },
   "um_homem_de_2000_2000.html": {
     "titulo": "Um Homem De (2000)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133290,6 +134516,7 @@
   },
   "ultima_casa_2026_0835851079_2026.html": {
     "titulo": "Ultima Casa 2026 0835851079",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133315,10 +134542,13 @@
   },
   "ultimo_alvo_2024_2024.html": {
     "titulo": "Ultimo Alvo (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Thriller",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "ultravioleta_2006_2006.html": {
     "titulo": "Ultravioleta (2006)",
@@ -133361,31 +134591,43 @@
   },
   "um_anjo_em_nossas_vidas_2020_2020.html": {
     "titulo": "Um Anjo Em Nossas Vidas (2020)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Família",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_bom_bandido_2025_2025.html": {
     "titulo": "Um Bom Bandido (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Crime",
+      "Ação",
+      "Thriller"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_cabra_bom_de_bola_2026_2026.html": {
     "titulo": "Um Cabra Bom De Bola (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_caso_do_outro_mundo_2022_2022.html": {
     "titulo": "Um Caso do Outro Mundo (2022)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ficção Científica",
+      "Comédia",
+      "Fantasia"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_classico_filme_de_terror.html": {
     "titulo": "Um Classico Filme de Terror",
@@ -133776,48 +135018,67 @@
   },
   "uma_seul_desconhecida_t1e12.html": {
     "titulo": "Uma Seul Desconhecida T1E12",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e2.html": {
     "titulo": "Uma Seul Desconhecida T1E2",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e3.html": {
     "titulo": "Uma Seul Desconhecida T1E3",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e4.html": {
     "titulo": "Uma Seul Desconhecida T1E4",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e5.html": {
     "titulo": "Uma Seul Desconhecida T1E5",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e6.html": {
     "titulo": "Uma Seul Desconhecida T1E6",
+    "tipo": "serie",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_seul_desconhecida_t1e7.html": {
     "titulo": "Uma Seul Desconhecida T1E7",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -133825,6 +135086,7 @@
   },
   "uma_seul_desconhecida_t1e8.html": {
     "titulo": "Uma Seul Desconhecida T1E8",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -133832,6 +135094,7 @@
   },
   "uma_seul_desconhecida_t1e9.html": {
     "titulo": "Uma Seul Desconhecida T1E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -133839,6 +135102,7 @@
   },
   "uma_sexta_feira_mais_louca_ainda_2025_2025.html": {
     "titulo": "Uma Sexta",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133856,6 +135120,7 @@
   },
   "uma_viagem_ao_desconhecido_2023_2023.html": {
     "titulo": "Uma Viagem Ao Desconhecido (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133863,6 +135128,7 @@
   },
   "uma_viagem_para_recordar_2024_2024.html": {
     "titulo": "Uma Viagem para Recordar (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133870,6 +135136,7 @@
   },
   "uma_vida_em_sete_dias.html": {
     "titulo": "Uma Vida em Sete Dias",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -133877,6 +135144,7 @@
   },
   "uma_vida_honesta_2025_2025.html": {
     "titulo": "Uma Vida Honesta (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -134261,17 +135529,23 @@
   },
   "uma_mulher_diferente_2025_2025.html": {
     "titulo": "Uma Mulher Diferente (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Drama",
+      "Romance",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_mulher_sem_filtro_2025_2025.html": {
     "titulo": "Uma Mulher Sem Filtro (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "uma_noite_alucinante_2_1987_1987.html": {
     "titulo": "Uma Noite Alucinante 2 (1987)",
@@ -134871,6 +136145,7 @@
   },
   "undertone_2026_2026.html": {
     "titulo": "Undertone (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135022,10 +136297,11 @@
   },
   "uyra_a_retomada_da_floresta.html": {
     "titulo": "Uyra",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Documentário"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "v_de_vinganca.html": {
     "titulo": "V de Vinganca",
@@ -135076,6 +136352,7 @@
   },
   "vinganca_ancestral_2023_2023.html": {
     "titulo": "Vinganca Ancestral (2023)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135083,6 +136360,7 @@
   },
   "vinganca_brutal_2026_2026.html": {
     "titulo": "Vinganca Brutal (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135090,6 +136368,7 @@
   },
   "vinganca_fatal_2014_2014.html": {
     "titulo": "Vinganca Fatal (2014)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135097,6 +136376,7 @@
   },
   "vinganca_no_deserto_2024_2024.html": {
     "titulo": "Vinganca No Deserto (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135104,6 +136384,7 @@
   },
   "vinganca_solitaria_2020_2020.html": {
     "titulo": "Vinganca Solitaria (2020)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135603,6 +136884,7 @@
   },
   "visao_geral_depois_de_ser_picado_por_2002_2002.html": {
     "titulo": "Visao Geral Depois De Ser Picado Por (2002)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135920,6 +137202,7 @@
   },
   "trunfo_2026_2026.html": {
     "titulo": "Trunfo (2026)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -135987,6 +137270,7 @@
   },
   "trust_2025_2025.html": {
     "titulo": "Trust (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -136513,6 +137797,7 @@
   },
   "voce_t1e1.html": {
     "titulo": "Voce T1E1",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -136520,6 +137805,7 @@
   },
   "voce_t1e10.html": {
     "titulo": "Voce T1E10",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -136527,6 +137813,7 @@
   },
   "voce_t1e2.html": {
     "titulo": "Voce T1E2",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -136534,6 +137821,7 @@
   },
   "voce_t1e3.html": {
     "titulo": "Voce T1E3",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -136691,6 +137979,7 @@
   },
   "voce_you_t5e9.html": {
     "titulo": "Voce (You) T5E9",
+    "tipo": "serie",
     "generos": [
       "indefinido"
     ],
@@ -137806,6 +139095,7 @@
   },
   "vinski_o_heroi_invisivel_2021_2021.html": {
     "titulo": "Vinski O Heroi Invisivel (2021)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -137863,6 +139153,7 @@
   },
   "virus_2010_2010.html": {
     "titulo": "Virus (2010)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -138319,6 +139610,7 @@
   },
   "wall_e.html": {
     "titulo": "WALL",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -138496,6 +139788,7 @@
   },
   "voce_vai_morrer_em_6_horas_2024_2024.html": {
     "titulo": "Voce Vai Morrer Em 6 Horas (2024)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139184,6 +140477,7 @@
   },
   "warden_2025_2025.html": {
     "titulo": "Warden (2025)",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139231,6 +140525,7 @@
   },
   "x_men_dias_de_um_futuro_esquecido.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139238,6 +140533,7 @@
   },
   "x_men_dias_de_um_futuro_esquecido_2014_2014.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139245,6 +140541,7 @@
   },
   "x_men_fenix_negra.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139252,6 +140549,7 @@
   },
   "x_men_fenix_negra_2019_2019.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139259,6 +140557,7 @@
   },
   "x_men_o_confronto_final.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139266,6 +140565,7 @@
   },
   "x_men_o_confronto_final_2006_2006.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139273,6 +140573,7 @@
   },
   "x_men_o_confronto_final_acao_ficcao_cientifica.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139280,6 +140581,7 @@
   },
   "x_men_o_filme.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139287,6 +140589,7 @@
   },
   "x_men_o_filme_2000_2000.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139294,6 +140597,7 @@
   },
   "x_men_origens_wolverine.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139301,6 +140605,7 @@
   },
   "x_men_origens_wolverine_2009_2009.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139308,6 +140613,7 @@
   },
   "x_men_primeira_classe.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139315,6 +140621,7 @@
   },
   "x_men_primeira_classe_2011_2011.html": {
     "titulo": "X",
+    "tipo": "filme",
     "generos": [
       "indefinido"
     ],
@@ -139395,24 +140702,33 @@
   },
   "um_pesadelo_maravilhoso_2026_2026.html": {
     "titulo": "Um Pesadelo Maravilhoso (2026)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Fantasia",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_pesadelo_sem_fim_2024_2024.html": {
     "titulo": "Um Pesadelo Sem Fim (2024)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Terror",
+      "Thriller",
+      "Mistério"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_principe_em_minha_vida_2004_2004.html": {
     "titulo": "Um Principe Em Minha Vida (2004)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Romance",
+      "Comédia",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_principe_em_nova_york_1988_1988.html": {
     "titulo": "Um Principe Em Nova York (1988)",
@@ -139434,10 +140750,13 @@
   },
   "um_salao_do_barulho_2005_2005.html": {
     "titulo": "Um Salao Do Barulho (2005)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Drama",
+      "Romance"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_senhor_estagiario_2015_2015.html": {
     "titulo": "Um Senhor Estagiario (2015)",
@@ -139478,10 +140797,13 @@
   },
   "um_terror_de_parentes_2025_2025.html": {
     "titulo": "Um Terror de Parentes (2025)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Terror",
+      "Família"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_time_muito_louco_1994_1994.html": {
     "titulo": "Um Time Muito Louco (1994)",
@@ -139495,10 +140817,13 @@
   },
   "um_time_show_de_bola_2013_2013.html": {
     "titulo": "Um Time Show de Bola (2013)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Comédia",
+      "Família",
+      "Drama"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_tira_da_pesada_1984_1984.html": {
     "titulo": "Um Tira da Pesada (1984)",
@@ -139542,10 +140867,13 @@
   },
   "um_tira_muito_suspeito_1999_1999.html": {
     "titulo": "Um Tira Muito Suspeito (1999)",
+    "tipo": "filme",
     "generos": [
-      "indefinido"
+      "Ação",
+      "Comédia",
+      "Crime"
     ],
-    "fonte": "indefinido"
+    "fonte": "ia"
   },
   "um_tira_no_jardim_de_infancia_1990_1990.html": {
     "titulo": "Um Tira no Jardim de Infancia (1990)",
