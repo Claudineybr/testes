@@ -197,7 +197,7 @@
   "13o_distrito_2014_2014": {
     "fonte": "mantido",
     "original": "13o Distrito (2014)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "13o Distrito (2014)"
   },
   "1408_2007_2007": {
@@ -573,7 +573,7 @@
   "9o_pelotao_2005_2005": {
     "fonte": "mantido",
     "original": "9o Pelotao (2005)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "9o Pelotao (2005)"
   },
   "a_100_passos_de_um_sonho_2014_2014": {
@@ -584,13 +584,13 @@
   "a_5a_onda": {
     "fonte": "mantido",
     "original": "A 5a Onda",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "A 5a Onda"
   },
   "a_5a_onda_2016_1_2016": {
     "fonte": "mantido",
     "original": "A 5a Onda 2016 1 (2016)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "A 5a Onda 2016 1 (2016)"
   },
   "a_abelha_maya_o_filme_2014_2014": {
@@ -2504,16 +2504,14 @@
     "titulo": "A Pirâmide (2014)"
   },
   "a_possessao_de_deborah_logan_2014_2014": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "A Possessao de Deborah Logan (2014)",
-    "tentativas": 1,
-    "titulo": "A Possessao de Deborah Logan (2014)"
+    "titulo": "A Possessão de Deborah Logan (2014)"
   },
   "a_possessao_de_mary_2020_2020": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "A Possessao de Mary (2020)",
-    "tentativas": 1,
-    "titulo": "A Possessao de Mary (2020)"
+    "titulo": "A Possessão de Mary (2020)"
   },
   "a_presa_2016_2016": {
     "fonte": "ia",
@@ -3098,7 +3096,7 @@
   "ace_ventura_detective_animal_1994_1994": {
     "fonte": "mantido",
     "original": "Ace Ventura - Detective Animal (1994)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Ace Ventura - Detective Animal (1994)"
   },
   "ace_ventura_em_africa_1995_1995": {
@@ -3464,7 +3462,7 @@
   "alien_o_8_o_passageiro_1979_1979": {
     "fonte": "mantido",
     "original": "Alien - O 8.o Passageiro (1979)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Alien - O 8.o Passageiro (1979)"
   },
   "alien_romulus": {
@@ -4543,10 +4541,9 @@
     "titulo": "As Mil Palavras (2012)"
   },
   "as_mumias_e_o_anel_perdido": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "As Mumias e o Anel Perdido",
-    "tentativas": 1,
-    "titulo": "As Mumias e o Anel Perdido"
+    "titulo": "As Múmias e o Anel Perdido"
   },
   "as_namoradas_do_papai_1995_1995": {
     "fonte": "ia",
@@ -4981,7 +4978,7 @@
   "b13_13o_distrito_2004_2004": {
     "fonte": "mantido",
     "original": "B13 - 13o Distrito (2004)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "B13 - 13o Distrito (2004)"
   },
   "b13_u_13_distrito_ultimato_2009_2009": {
@@ -5095,10 +5092,9 @@
     "titulo": "Banana Splits: O Filme (2019)"
   },
   "bandeirantesjogo_de_inix_amor_em_las_2008_2008": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Bandeirantesjogo De Inix Amor Em Las (2008)",
-    "tentativas": 1,
-    "titulo": "Bandeirantesjogo De Inix Amor Em Las (2008)"
+    "titulo": "Bandeirantesjogo de Inix Amor em Las (2008)"
   },
   "bandido_2022_2022": {
     "fonte": "ia",
@@ -5128,13 +5124,13 @@
   "barbie_a_princesa_a_popstar": {
     "fonte": "mantido",
     "original": "Barbie: A Princesa & A Popstar",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Barbie: A Princesa & A Popstar"
   },
   "barbie_a_princesa_a_popstar_2012_2012": {
     "fonte": "mantido",
     "original": "Barbie: A Princesa & A Popstar (2012)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Barbie: A Princesa & A Popstar (2012)"
   },
   "barbie_a_princesa_e_a_plebeia_2004_2004": {
@@ -5243,46 +5239,39 @@
     "titulo": "Barbie e Teresa: Receita para Amizade (2025)"
   },
   "barbie_em_a_cancao_de_natal": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em a Cancao de Natal",
-    "tentativas": 1,
-    "titulo": "Barbie em a Cancao de Natal"
+    "titulo": "Barbie em A Canção de Natal"
   },
   "barbie_em_a_pequena_polegar": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em a Pequena Polegar",
-    "tentativas": 1,
-    "titulo": "Barbie em a Pequena Polegar"
+    "titulo": "Barbie em A Pequena Polegar"
   },
   "barbie_em_a_princesa_da_ilha": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em a Princesa da Ilha",
-    "tentativas": 1,
-    "titulo": "Barbie em a Princesa da Ilha"
+    "titulo": "Barbie em A Princesa da Ilha"
   },
   "barbie_em_a_princesa_da_ilha_2007_2007": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em a Princesa da Ilha (2007)",
-    "tentativas": 1,
-    "titulo": "Barbie em a Princesa da Ilha (2007)"
+    "titulo": "Barbie em A Princesa da Ilha (2007)"
   },
   "barbie_em_a_princesa_e_a_plebeia": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em A Princesa e a Plebeia",
-    "tentativas": 1,
     "titulo": "Barbie em A Princesa e a Plebeia"
   },
   "barbie_em_as_12_princesas_bailarinas": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em as 12 Princesas Bailarinas",
-    "tentativas": 1,
-    "titulo": "Barbie em as 12 Princesas Bailarinas"
+    "titulo": "Barbie em As 12 Princesas Bailarinas"
   },
   "barbie_em_as_12_princesas_bailarinas_2006_2006": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Barbie em as 12 Princesas Bailarinas (2006)",
-    "tentativas": 1,
-    "titulo": "Barbie em as 12 Princesas Bailarinas (2006)"
+    "titulo": "Barbie em As 12 Princesas Bailarinas (2006)"
   },
   "barbie_em_um_mundo_de_video_game": {
     "fonte": "ia",
@@ -5372,7 +5361,7 @@
   "barbie_suas_irmas_em_busca_dos_cachorrinhos": {
     "fonte": "mantido",
     "original": "Barbie & Suas Irmas: Em Busca Dos Cachorrinhos",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Barbie & Suas Irmas: Em Busca Dos Cachorrinhos"
   },
   "barbie_vida_de_sereia": {
@@ -5518,7 +5507,7 @@
   "belen_uma_historia_de_injustica_2025_2025": {
     "fonte": "mantido",
     "original": "Belen: Uma Historia de Injustica (2025)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Belen: Uma Historia de Injustica (2025)"
   },
   "beleza_oculta_2016_2016": {
@@ -5549,7 +5538,7 @@
   "bem_10_a_corrida_contra_o_tempo_2007_2007": {
     "fonte": "mantido",
     "original": "Bem 10 - A Corrida Contra o Tempo (2007)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Bem 10 - A Corrida Contra o Tempo (2007)"
   },
   "bem_vinda_a_quixeramobim_2022_2022": {
@@ -6610,7 +6599,7 @@
   "chico_bento_e_a_goiabeira_maraviosa_2025_2025": {
     "fonte": "mantido",
     "original": "Chico Bento e a Goiabeira Maraviosa (2025)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Chico Bento e a Goiabeira Maraviosa (2025)"
   },
   "chris_watts_confissoes_de_um_assassino_2020_2020": {
@@ -7146,13 +7135,13 @@
   "contatos_de_4o_grau": {
     "fonte": "mantido",
     "original": "Contatos de 4o Grau",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Contatos de 4o Grau"
   },
   "contatos_de_4o_grau_2009_2009": {
     "fonte": "mantido",
     "original": "Contatos de 4o Grau (2009)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Contatos de 4o Grau (2009)"
   },
   "continencia_ao_amor_2022_2022": {
@@ -7723,7 +7712,7 @@
   "deadpool_e_wolverine": {
     "fonte": "mantido",
     "original": "Deadpool e Wolverine",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Deadpool e Wolverine"
   },
   "deadpool_wolverine_2024_2024": {
@@ -8722,10 +8711,9 @@
     "titulo": "Duro de Matar: Um Bom Dia para Morrer (2013)"
   },
   "duvide_do_que_ouve_2024_2024": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Duvide do que Ouve (2024)",
-    "tentativas": 1,
-    "titulo": "Duvide do que Ouve (2024)"
+    "titulo": "Duvide do que ouve (2024)"
   },
   "e_assim_que_acaba": {
     "fonte": "ia",
@@ -8818,10 +8806,9 @@
     "titulo": "Efeito Borboleta 3: Revelação (2009)"
   },
   "efeito_domino_2008_2008": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Efeito Domino (2008)",
-    "tentativas": 1,
-    "titulo": "Efeito Domino (2008)"
+    "titulo": "Efeito Dominó (2008)"
   },
   "efeito_flashback_2020_2020": {
     "fonte": "ia",
@@ -9551,7 +9538,7 @@
   "eu_eu_mesmo_irene_2000_2000": {
     "fonte": "mantido",
     "original": "Eu, Eu Mesmo & Irene (2000)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Eu, Eu Mesmo & Irene (2000)"
   },
   "eu_queria_ter_a_sua_vida_2011_2011": {
@@ -9607,7 +9594,7 @@
   "eu_voce_na_toscana_2026_2026": {
     "fonte": "mantido",
     "original": "Eu & Voce na Toscana (2026)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Eu & Voce na Toscana (2026)"
   },
   "evangelion_1_11_voce_nao_esta_sozinho": {
@@ -9683,7 +9670,7 @@
   "expresso_galatico_metro_via_lacteo_o_filme_2026_2026": {
     "fonte": "mantido",
     "original": "Expresso Galatico Metro Via-Lacteo: O Filme (2026)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Expresso Galatico Metro Via-Lacteo: O Filme (2026)"
   },
   "exterminio": {
@@ -10242,9 +10229,8 @@
     "titulo": "Furiosa: Uma Saga Mad Max (2024)"
   },
   "furioza_2_2025_2025": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Furioza 2 (2025)",
-    "tentativas": 1,
     "titulo": "Furioza 2 (2025)"
   },
   "g20_2025_2025": {
@@ -10503,10 +10489,9 @@
     "titulo": "Gladiador II (2024)"
   },
   "gladiator_o_desafio_1992_1992": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Gladiator O Desafio (1992)",
-    "tentativas": 1,
-    "titulo": "Gladiator O Desafio (1992)"
+    "titulo": "Gladiator: O Desafio (1992)"
   },
   "gnomeu_e_julieta": {
     "fonte": "ia",
@@ -10701,7 +10686,7 @@
   "grosteque_2009_2009": {
     "fonte": "mantido",
     "original": "Grosteque (2009)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Grosteque (2009)"
   },
   "gtmax_2024_2024": {
@@ -11610,10 +11595,9 @@
     "titulo": "Hotel Transilvania 3: Férias Monstruosas (2018)"
   },
   "hotel_transilvania_transformonstrao": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Hotel Transilvania: Transformonstrao",
-    "tentativas": 1,
-    "titulo": "Hotel Transilvania: Transformonstrao"
+    "titulo": "Hotel Transilvânia: Transformonstrão"
   },
   "hulk": {
     "fonte": "ia",
@@ -12176,10 +12160,9 @@
     "titulo": "Jenifer - Instinto Assassino (2005)"
   },
   "jeruzalem_2016_2016": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Jeruzalem (2016)",
-    "tentativas": 1,
-    "titulo": "Jeruzalem (2016)"
+    "titulo": "Jeruzalém (2016)"
   },
   "jessabelle_o_passado_nunca_morre_2014_2014": {
     "fonte": "ia",
@@ -12229,7 +12212,7 @@
   "jogador_no_1_2018_2018": {
     "fonte": "mantido",
     "original": "Jogador No 1 (2018)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Jogador No 1 (2018)"
   },
   "jogo_da_morte_2014_2014": {
@@ -12430,7 +12413,7 @@
   "john_wick_3_parabellum_2019_1_2019": {
     "fonte": "mantido",
     "original": "John Wick 3 Parabellum 2019 1 (2019)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "John Wick 3 Parabellum 2019 1 (2019)"
   },
   "john_wick_4_baba_yaga": {
@@ -15634,10 +15617,9 @@
     "titulo": "Nos Seus Sonhos (2025)"
   },
   "nos_somos_zumbis_2024_2024": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Nos Somos Zumbis (2024)",
-    "tentativas": 1,
-    "titulo": "Nos Somos Zumbis (2024)"
+    "titulo": "Nós Somos Zumbis (2024)"
   },
   "nos_vemos_em_venus_2023_2023": {
     "fonte": "ia",
@@ -15650,22 +15632,19 @@
     "titulo": "Nosferatu (2024)"
   },
   "nossa_culpa": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Nossa Culpa",
-    "tentativas": 1,
     "titulo": "Nossa Culpa"
   },
   "nossa_culpa_2025_2025": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Nossa Culpa (2025)",
-    "tentativas": 1,
     "titulo": "Nossa Culpa (2025)"
   },
   "nossa_vizinhanca_2026_2026": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Nossa Vizinhanca (2026)",
-    "tentativas": 1,
-    "titulo": "Nossa Vizinhanca (2026)"
+    "titulo": "Nossa Vizinhança (2026)"
   },
   "nosso_lar_2_os_mensageiros_2024_2024": {
     "fonte": "ia",
@@ -15730,13 +15709,13 @@
   "o_12o_homem_2017_2017": {
     "fonte": "mantido",
     "original": "O 12o Homem (2017)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "O 12o Homem (2017)"
   },
   "o_3o_andar_terror_na_rua_malasana_2020_2020": {
     "fonte": "mantido",
     "original": "O 3o Andar: Terror na Rua Malasana (2020)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "O 3o Andar: Terror na Rua Malasana (2020)"
   },
   "o_abutre": {
@@ -15887,7 +15866,7 @@
   "o_assasino_o_primeiro_alvo_2017_2017": {
     "fonte": "mantido",
     "original": "O Assasino: O Primeiro Alvo (2017)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "O Assasino: O Primeiro Alvo (2017)"
   },
   "o_assassinato_de_rachel_nickell_2026_2026": {
@@ -17191,10 +17170,9 @@
     "titulo": "O Legado (2024)"
   },
   "o_legionario_2022_2022": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "O Legionario (2022)",
-    "tentativas": 1,
-    "titulo": "O Legionario (2022)"
+    "titulo": "O Legionário (2022)"
   },
   "o_limite_do_prazer_2023_2023": {
     "fonte": "ia",
@@ -17224,7 +17202,7 @@
   "o_lobisomen_2010_2010": {
     "fonte": "mantido",
     "original": "O Lobisomen (2010)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "O Lobisomen (2010)"
   },
   "o_lobo_da_estepe_2024_2024": {
@@ -17286,6 +17264,126 @@
     "fonte": "ia",
     "original": "O Mal Mora Aqui (2024)",
     "titulo": "O Mal Mora Aqui (2024)"
+  },
+  "o_mal_que_nao_se_pode_ver_2023_2023": {
+    "fonte": "ia",
+    "original": "O Mal Que Nao se Pode Ver (2023)",
+    "titulo": "O Mal Que Não Se Pode Ver (2023)"
+  },
+  "o_mal_que_nos_habita": {
+    "fonte": "ia",
+    "original": "O Mal que Nos Habita",
+    "titulo": "O Mal que Nos Habita"
+  },
+  "o_mal_que_nos_habita_2023_2023": {
+    "fonte": "ia",
+    "original": "O Mal que Nos Habita (2023)",
+    "titulo": "O Mal que Nos Habita (2023)"
+  },
+  "o_manicomio": {
+    "fonte": "ia",
+    "original": "O Manicomio",
+    "titulo": "O Manicômio"
+  },
+  "o_manicomio_2018_2018": {
+    "fonte": "ia",
+    "original": "O Manicomio (2018)",
+    "titulo": "O Manicômio (2018)"
+  },
+  "o_mapa_que_me_leva_ate_voce_2025_2025": {
+    "fonte": "ia",
+    "original": "O Mapa Que Me Leva Ate Voce (2025)",
+    "titulo": "O Mapa Que Me Leva Até Você (2025)"
+  },
+  "o_mar_nao_esta_pra_peixe_2006_2006": {
+    "fonte": "ia",
+    "original": "O Mar Nao Esta Pra Peixe (2006)",
+    "titulo": "O Mar Não Está Pra Peixe (2006)"
+  },
+  "o_maravilhoso_magico_de_oz_parte_1_2025_2025": {
+    "fonte": "ia",
+    "original": "O Maravilhoso Magico de Oz - Parte 1 (2025)",
+    "titulo": "O Maravilhoso Mágico de Oz - Parte 1 (2025)"
+  },
+  "o_maskara": {
+    "fonte": "ia",
+    "original": "O Maskara",
+    "titulo": "O Maskara"
+  },
+  "o_massacre_da_festa_do_pijama_2021_2021": {
+    "fonte": "ia",
+    "original": "O Massacre da Festa do Pijama (2021)",
+    "titulo": "O Massacre da Festa do Pijama (2021)"
+  },
+  "o_massacre_da_mare_vermelha_2022_2022": {
+    "fonte": "ia",
+    "original": "O Massacre da Mare Vermelha (2022)",
+    "titulo": "O Massacre da Maré Vermelha (2022)"
+  },
+  "o_massacre_da_serra_eletrica": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica",
+    "titulo": "O Massacre da Serra Elétrica"
+  },
+  "o_massacre_da_serra_eletrica_1974_1974": {
+    "fonte": "ia",
+    "original": "O Massacre Da Serra Eletrica (1974)",
+    "titulo": "O Massacre da Serra Elétrica (1974)"
+  },
+  "o_massacre_da_serra_eletrica_2": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica 2",
+    "titulo": "O Massacre da Serra Elétrica 2"
+  },
+  "o_massacre_da_serra_eletrica_2003_2003": {
+    "fonte": "ia",
+    "original": "O Massacre Da Serra Eletrica (2003)",
+    "titulo": "O Massacre da Serra Elétrica (2003)"
+  },
+  "o_massacre_da_serra_eletrica_2_1986_1986": {
+    "fonte": "ia",
+    "original": "O Massacre Da Serra Eletrica 2 (1986)",
+    "titulo": "O Massacre da Serra Elétrica 2 (1986)"
+  },
+  "o_massacre_da_serra_eletrica_3": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica 3",
+    "titulo": "O Massacre da Serra Elétrica 3"
+  },
+  "o_massacre_da_serra_eletrica_3_1990_1990": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica 3 (1990)",
+    "titulo": "O Massacre da Serra Elétrica 3 (1990)"
+  },
+  "o_massacre_da_serra_eletrica_3d_a_lenda_continua": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica 3D: A Lenda Continua",
+    "titulo": "O Massacre da Serra Elétrica 3D: A Lenda Continua"
+  },
+  "o_massacre_da_serra_eletrica_3d_a_lenda_continua_2013_2013": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica 3D: A Lenda Continua (2013)",
+    "titulo": "O Massacre da Serra Elétrica 3D: A Lenda Continua (2013)"
+  },
+  "o_massacre_da_serra_eletrica_o_inicio": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica: O Inicio",
+    "titulo": "O Massacre da Serra Elétrica: O Início"
+  },
+  "o_massacre_da_serra_eletrica_o_inicio_2006_2006": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica: O Inicio (2006)",
+    "titulo": "O Massacre da Serra Elétrica: O Início (2006)"
+  },
+  "o_massacre_da_serra_eletrica_o_retorno": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica: O Retorno",
+    "titulo": "O Massacre da Serra Elétrica: O Retorno"
+  },
+  "o_massacre_da_serra_eletrica_o_retorno_1995_1995": {
+    "fonte": "ia",
+    "original": "O Massacre da Serra Eletrica - O Retorno (1995)",
+    "titulo": "O Massacre da Serra Elétrica - O Retorno (1995)"
   },
   "o_massacre_da_serra_eletrica_o_retorno_de_leatherface_2022_2022": {
     "fonte": "ia",
@@ -17505,7 +17603,7 @@
   "o_naufrago_2000_2000": {
     "fonte": "mantido",
     "original": "O Naufrago (2000)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "O Naufrago (2000)"
   },
   "o_nevoeiro_2007_2007": {
@@ -19424,9 +19522,8 @@
     "titulo": "Os Piratas: Em Busca do Tesouro Perdido (2022)"
   },
   "os_quatro_pais_2020_2020": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Os Quatro Pais (2020)",
-    "tentativas": 1,
     "titulo": "Os Quatro Pais (2020)"
   },
   "os_ratos_uma_historia_de_the_witcher": {
@@ -19667,7 +19764,7 @@
   "pai_em_dose_dupla_2_2017_20": {
     "fonte": "mantido",
     "original": "pai-em-dose-dupla-2 2017_20",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "pai-em-dose-dupla-2 2017_20"
   },
   "pai_em_tempo_integral_2026_2026": {
@@ -20026,10 +20123,9 @@
     "titulo": "Parasita"
   },
   "pare_senao_mamae_atira_1992_1992": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Pare Senao Mamae Atira (1992)",
-    "tentativas": 1,
-    "titulo": "Pare Senao Mamae Atira (1992)"
+    "titulo": "Pare, Senão Mamãe Atira (1992)"
   },
   "parque_do_inferno_2018_2018": {
     "fonte": "ia",
@@ -20669,7 +20765,7 @@
   "poisedon_2006_2006": {
     "fonte": "mantido",
     "original": "Poisedon (2006)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Poisedon (2006)"
   },
   "pokemon_detetive_pikachu_2019_2019": {
@@ -22010,7 +22106,7 @@
   "robot_selvagem_2024_2024": {
     "fonte": "mantido",
     "original": "Robot Selvagem (2024)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Robot Selvagem (2024)"
   },
   "rocky_balboa_2006_2006": {
@@ -23131,7 +23227,7 @@
   "serie:diarios_de_uma_apoticaria": {
     "fonte": "mantido",
     "original": "Diarios De Uma Apoticaria",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Diarios De Uma Apoticaria"
   },
   "serie:dias_perfeitos": {
@@ -23594,6 +23690,11 @@
     "original": "O Jogo Do Diabo",
     "titulo": "O Jogo do Diabo"
   },
+  "serie:o_maskara_a_serie_animada": {
+    "fonte": "ia",
+    "original": "O Maskara A Serie Animada",
+    "titulo": "O Maskara A Série Animada"
+  },
   "serie:o_monstro_de_florenca": {
     "fonte": "ia",
     "original": "O Monstro de Florenca",
@@ -23757,7 +23858,7 @@
   "serie:pssica": {
     "fonte": "mantido",
     "original": "Pssica",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Pssica"
   },
   "serie:rainha_charlotte_uma_historia_bridgerton": {
@@ -25256,10 +25357,9 @@
     "titulo": "Tarzan (1999)"
   },
   "tarzan_e_jane_2002_2002": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Tarzan E Jane (2002)",
-    "tentativas": 1,
-    "titulo": "Tarzan E Jane (2002)"
+    "titulo": "Tarzan e Jane (2002)"
   },
   "tarzan_ii_2005_2005": {
     "fonte": "ia",
@@ -26249,7 +26349,7 @@
   "truque_de_mestre_o_2o_ato_2016_2016": {
     "fonte": "mantido",
     "original": "Truque de Mestre: O 2o Ato (2016)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Truque de Mestre: O 2o Ato (2016)"
   },
   "truque_de_mestre_o_3_ato": {
@@ -26755,7 +26855,7 @@
   "um_natal_ex_pecial_2025_2025": {
     "fonte": "mantido",
     "original": "Um Natal Ex-pecial (2025)",
-    "tentativas": 1,
+    "tentativas": 2,
     "titulo": "Um Natal Ex-pecial (2025)"
   },
   "um_natal_quase_perfeito_1": {
@@ -27334,10 +27434,9 @@
     "titulo": "V/H/S: Halloween (2025)"
   },
   "va_e_veja_1985_1985": {
-    "fonte": "mantido",
+    "fonte": "ia",
     "original": "Va e Veja (1985)",
-    "tentativas": 1,
-    "titulo": "Va e Veja (1985)"
+    "titulo": "Vá e Veja (1985)"
   },
   "vale_da_morte_2021_2021": {
     "fonte": "ia",
