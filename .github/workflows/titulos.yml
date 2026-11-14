@@ -124,12 +124,14 @@ jobs:
           PAUSA = int(os.environ.get("PAUSA") or 30)
           MODELOS = [
               # Só os que responderam sem travar no log real (os outros davam timeout ou 404).
-              "nvidia/nemotron-3-ultra-550b-a55b",
-              "nvidia/nemotron-3.5-lightning-30b-a3b",
+              "nvidia/nemotron-3-ultra-550b-a55b",        # ordem = confiabilidade (é também a ordem de reserva)
               "minimaxai/minimax-m3.1-flash",
               "nvidia/nemotron-3.5-super-vl-120b-a12b",
+              "nvidia/nemotron-3.5-lightning-30b-a3b",
               "openai/gpt-oss-20b",
           ]
+          # Pelo log real: o ultra quase não falha; gpt-oss dá timeout (lento), minimax dá 503/429. Quem começa o lote:
+          ROTACAO = [MODELOS[0], MODELOS[0], MODELOS[1], MODELOS[0], MODELOS[4], MODELOS[2]]
           LOTE, MAX_WORKERS, MAX_TENTATIVAS, TEMPO_LIMITE, LIMITE_PODA = 25, 10, 2, 320 * 60, 0.20
           SAIDA = "titulos.json"
           SCHEMA = {"type": "object", "required": ["itens"], "properties": {"itens": {"type": "array", "items": {
@@ -203,13 +205,14 @@ jobs:
                   "Títulos em inglês ou de outra língua ficam no idioma original. Mantenha o ano entre parênteses. "
                   "Se já estiver certo, devolva igual. Responda APENAS o JSON.\n\n"
                   + json.dumps({"itens": entrada}, ensure_ascii=False))
-              ordem = MODELOS[ini:] + MODELOS[:ini]
+              inicio = ROTACAO[ini % len(ROTACAO)]
+              ordem = [inicio] + [m for m in MODELOS if m != inicio]
               for rodada in range(2):
                   for modelo in ordem:
                       try:
                           r = client.chat.completions.create(
                               model=modelo, messages=[{"role": "user", "content": prompt}], temperature=0,
-                              max_tokens=4096,
+                              max_tokens=8192,
                               response_format={"type": "json_schema", "json_schema": {"name": "T", "schema": SCHEMA}})
                           c = r.choices[0].message.content
                           if not c:
