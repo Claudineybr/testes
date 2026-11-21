@@ -1,9 +1,10 @@
 name: Trocar capas pelo TMDB
 
 # Procura cada filme/série no TMDB pelo nome (usa o titulos.json se existir) e grava capas.json.
-# Filme = 1 capa. Série = 1 capa por TEMPORADA (episódios da mesma temporada dividem a capa).
-# Quem não for achado fica com a capa atual. Precisa do secret TMDB_API_KEY (chave grátis do TMDB).
-#   pendentes  só o que falta / mudou de nome (padrão)
+# Filme = 1 capa. Série = 1 imagem POR EPISÓDIO (a "still" do episódio no TMDB).
+#   Se o episódio não tiver imagem no TMDB, usa a capa da temporada; se ela também faltar, a da série.
+# Quem não for achado fica com a capa atual. No fim, dispara o catalogo.yml. Precisa do secret TMDB_API_KEY (chave grátis do TMDB).
+#   pendentes  só o que falta / mudou de nome (padrão) + séries que ainda não têm as imagens por episódio
 #   tudo       refaz tudo
 #   refazer    refaz só o que contém o texto do campo "filtro"
 "on":
@@ -23,16 +24,24 @@ name: Trocar capas pelo TMDB
         required: false
         default: ""
       tamanho:
-        description: "Tamanho da capa (w342 leve, w500 padrão, w780 mais nítida)"
+        description: "Tamanho da capa de filme/temporada (w342 leve, w500 padrão, w780 mais nítida)"
         type: choice
         default: w500
         options:
           - w342
           - w500
           - w780
+      tamanho_ep:
+        description: "Tamanho da imagem de EPISÓDIO (w300 leve, original = máxima qualidade). Para trocar em séries já feitas, rode o modo tudo"
+        type: choice
+        default: w300
+        options:
+          - w300
+          - original
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: capas
@@ -55,13 +64,14 @@ jobs:
           MODO: ${{ inputs.modo || 'pendentes' }}
           FILTRO: ${{ inputs.filtro || '' }}
           TAMANHO: ${{ inputs.tamanho || 'w500' }}
+          TAMANHO_EP: ${{ inputs.tamanho_ep || 'w300' }}
           PYTHONUNBUFFERED: "1"
         run: |
           python -u - <<'PYEOF'
           import html as htmllib, json, os, re, unicodedata
 
           IGNORAR = {"index.html", "serie.html", "404.html"}
-          RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(\d+)|(\d+)x(\d+))$", re.I)
+          RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$", re.I)
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
           RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
@@ -78,6 +88,7 @@ jobs:
           def do_arquivo(slug):
               """Título legível a partir do nome do arquivo: ano duplicado vira (ANO)."""
               slug = re.sub(r"_(\d{4})_\1$", r"_\1", slug)
+              slug = re.sub(r"^(.*_(?:19|20)\d{2})_\d{1,2}$", r"\1", slug)   # "nome_2010_2" (nome repetido)
               m = re.search(r"^(.*?)_(\d{4})$", slug)
               base, ano = (m.group(1), m.group(2)) if m else (slug, "")
               nome = " ".join(w.capitalize() for w in re.split(r"[_\-\s]+", base) if w)
@@ -94,7 +105,7 @@ jobs:
               t = SUFIXOS.sub("", t)
               t = re.sub(r"(\(\d{4}\))(\s*[-|–—]\s*\1)+", r"\1", t)                         # "(2010) - (2010)"
               t = re.sub(r"[\s\-|–—]+$", "", t)
-              t = re.sub(r"\s*[-|–]?\s*(T\d+E\d+|\d+x\d+)\s*$", "", t, flags=re.I).strip()
+              t = re.sub(r"\s*[-|–—]?\s*(?:T\d+\s*E(?:P)?\d+|\d+x\d+)\b.*$", "", t, flags=re.I).strip()   # "Série - T1E1 – Título"
               t = re.sub(r"\s*\(?\b(\d{4})\b\)?\s+\(?\1\)?$", r" (\1)", t).strip()
               sem_ano = re.sub(r"\(\d{4}\)|\b\d{4}\b", "", t)
               if t and norm(sem_ano) and slug_norm.startswith(norm(sem_ano)):
@@ -115,15 +126,22 @@ jobs:
                       if f.endswith(".html") and f not in IGNORAR:
                           yield os.path.relpath(os.path.join(raiz, f), ".").replace("\\", "/"), f
 
-          import sys, threading, time, urllib.error, urllib.parse, urllib.request
+          import difflib, sys, threading, time, unicodedata, urllib.error, urllib.parse, urllib.request
           from concurrent.futures import ThreadPoolExecutor, as_completed
 
           MODO = os.environ.get("MODO") or "pendentes"
           FILTRO = (os.environ.get("FILTRO") or "").lower().strip()
           TAMANHO = os.environ.get("TAMANHO") or "w500"
+          TAMANHO_EP = os.environ.get("TAMANHO_EP") or "w300"
           CHAVE = (os.environ.get("TMDB_API_KEY") or "").strip()
+          DET_V = 1      # sobe quando mudam os campos de detalhes (reenfileira só os detalhes, sem rebuscar a capa)
+          EP_V = 1       # sobe quando muda o formato das imagens por episódio (reenfileira só as séries, sem rebuscar a capa)
+          DIR_DET = "detalhes"   # 1 arquivo pequeno por título: detalhes/<chave>.json (a página carrega só o que precisa)
+          CRITERIO = 2   # sobe quando o critério de busca melhora (reenfileira os "não achados")
           SAIDA, MAX_TENTATIVAS, MAX_WORKERS, TEMPO_LIMITE, LIMITE_PODA = "capas.json", 2, 8, 300 * 60, 0.20
           IMG = "https://image.tmdb.org/t/p/" + TAMANHO
+          IMG_EP = "https://image.tmdb.org/t/p/" + TAMANHO_EP      # imagens de episódio só existem em w92, w185, w300 e original
+          IMG_FUNDO = "https://image.tmdb.org/t/p/w1280"
           trava = threading.Lock()
 
 
@@ -163,27 +181,149 @@ jobs:
               raise ConnectionError(f"TMDB sem resposta em {caminho}")
 
 
+          ROMANOS = {"ii": "2", "iii": "3", "iv": "4", "v": "5", "vi": "6", "vii": "7", "viii": "8", "ix": "9", "x": "10"}
+          EXTRAS_OK = {"parte", "part", "vol", "volume", "capitulo", "chapter", "o", "a", "filme", "the", "movie"}
+
+
+          def nm(t):
+              """Normaliza p/ comparar: sem acento (5ª->5a), '&'->'e', romanos->números, sem pontuação."""
+              t = unicodedata.normalize("NFKD", str(t or "")).encode("ascii", "ignore").decode().lower().replace("&", " e ")
+              return " ".join(ROMANOS.get(w, w) for w in re.sub(r"[^a-z0-9]+", " ", t).split())
+
+
+          def variantes(nome):
+              """Formas alternativas do nome: sem '(Origem)', bilíngue 'A - B', subtítulo 'A: B', números soltos no fim."""
+              v = [nome]
+              sem_par = re.sub(r"\s*\((?!\d{4}\))[^)]*\)", "", nome).strip()
+              v += [sem_par] + re.findall(r"\((?!\d{4}\))([^)]+)\)", nome)
+              partes = [x.strip() for x in re.split(r"\s+[-–—]\s+|:\s+", sem_par) if len(x.strip()) >= 3]
+              limpo = re.sub(r"\b(?:19|20)\d{2}\b(?=.*\b(?:19|20)\d{2}\b)", "", sem_par)          # ano repetido no meio
+              limpo = re.sub(r"\s+\d{1,2}$", "", re.sub(r"\s+", " ", limpo).strip())                   # "Orion e o Escuro 10"
+              v.append(limpo)
+              visto, res = set(), []
+              for x, forte in [(x, True) for x in v] + [(x, False) for x in partes]:
+                  x = re.sub(r"\s+", " ", x).strip(" -–—:")
+                  if len(x) >= 3 and nm(x) not in visto:
+                      visto.add(nm(x)); res.append((x, forte))
+              return res[:6]       # forte=False: pedaço do nome (só vale se houver ano para confirmar)
+
+
+          def aceitar(q, ano, r, filme, primeiro):
+              """Decide se o resultado r do TMDB é o mesmo título de q. Regra de ouro: sem capa > capa errada."""
+              nq = nm(q)
+              cands = [nm(r.get("title" if filme else "name", "")), nm(r.get("original_title" if filme else "original_name", ""))]
+              brutos = [r.get("title" if filme else "name", ""), r.get("original_title" if filme else "original_name", "")]
+              y = int(((r.get("release_date" if filme else "first_air_date")) or "0")[:4] or 0)
+              ano_ok = (not ano) or (y and abs(y - ano) <= 1)
+              if nq in cands:                                                   # A) nome idêntico
+                  return ano_ok
+              for c, b in zip(cands, brutos):
+                  if not c:
+                      continue
+                  rt = difflib.SequenceMatcher(None, nq, c).ratio()
+                  if rt >= (0.88 if ano else 0.92) and ano_ok:                  # B) quase idêntico (typo, pontuação)
+                      return True
+                  wq, wc = nq.split(), c.split()
+                  if ano and ano_ok and wc and wq[:len(wc)] == wc and all(w.isdigit() or w in EXTRAS_OK for w in wq[len(wc):]):
+                      return True                                               # C) "Pânico 5" = "Pânico" (mesmo ano)
+                  antes = nm(re.split(r":\s|\s[-–—]\s", b, maxsplit=1)[0]) if re.search(r":\s|\s[-–—]\s", b or "") else ""
+                  if antes and antes == nq and (ano_ok if ano else primeiro):
+                      return True                                               # D) título + subtítulo do TMDB
+                  if not ano and not filme and primeiro and len(wq) >= 2 and wc[:len(wq)] == wq:
+                      return True                                               # E) série sem ano: começa igual e é o 1º resultado
+              return False
+
+
           def achar(tipo, titulo):
-              """Procura no TMDB. Só aceita se o NOME bater (e o ano, com folga de 1) — melhor sem capa do que capa errada."""
               m = re.search(r"\((\d{4})\)\s*$", titulo)
               ano = int(m.group(1)) if m else None
               nome = re.sub(r"\s*\(\d{4}\)\s*$", "", titulo).strip()
               filme = tipo == "movie"
-              for filtro_ano in ([ano, None] if ano else [None]):
-                  params = {"query": nome}
-                  if filtro_ano:
-                      params["year" if filme else "first_air_date_year"] = filtro_ano
-                  for r in tmdb(f"search/{tipo}", **params).get("results", []):
-                      if not r.get("poster_path"):
-                          continue
-                      nomes = {norm(r.get("title" if filme else "name", "")), norm(r.get("original_title" if filme else "original_name", ""))}
-                      if norm(nome) not in nomes:
-                          continue
-                      y = int(((r.get("release_date" if filme else "first_air_date")) or "0")[:4] or 0)
-                      if ano and filtro_ano is None and abs(y - ano) > 1:
-                          continue
-                      return r
+              for q, forte in variantes(nome):
+                  if not forte and not ano:
+                      continue
+                  for filtro_ano in ([ano, None] if ano else [None]):
+                      params = {"query": q}
+                      if filtro_ano:
+                          params["year" if filme else "first_air_date_year"] = filtro_ano
+                      resultados = [r for r in tmdb(f"search/{tipo}", **params).get("results", []) if r.get("poster_path")]
+                      for n, r in enumerate(resultados):
+                          if aceitar(q, ano, r, filme, n == 0):
+                              return r
               return None
+
+
+          def arquivo_det(chave):
+              """'serie:9_1_1' -> detalhes/serie--9_1_1.json ; filme 'nome_2020' -> detalhes/nome_2020.json"""
+              return os.path.join(DIR_DET, re.sub(r"[^a-z0-9_.\-]", "_", chave.lower().replace(":", "--")) + ".json")
+
+
+          def escolher_trailer(videos):
+              yt = [v for v in videos if v.get("site") == "YouTube" and v.get("key")]
+              def nota(v):
+                  return ((v.get("type") == "Trailer") * 4 + (v.get("iso_639_1") == "pt") * 2 + bool(v.get("official")) * 1)
+              yt.sort(key=nota, reverse=True)
+              return yt[0]["key"] if yt else None
+
+
+          def detalhes(tid, serie):
+              """Sinopse, banner, nota, duração, ano e trailer do TMDB. {} se o TMDB não tiver a ficha."""
+              tipo = "tv" if serie else "movie"
+              d = tmdb(f"{tipo}/{tid}", append_to_response="videos", include_video_language="pt,en,null")
+              if not d:
+                  return {}
+              sinopse = (d.get("overview") or "").strip()
+              if not sinopse:                                    # sem sinopse em português: tenta em inglês
+                  sinopse = (tmdb(f"{tipo}/{tid}", language="en-US").get("overview") or "").strip()
+              out = {}
+              if sinopse: out["sinopse"] = sinopse
+              if d.get("backdrop_path"): out["fundo"] = IMG_FUNDO + d["backdrop_path"]
+              if d.get("vote_average"): out["nota"] = round(float(d["vote_average"]), 1)
+              ano = (d.get("release_date") or d.get("first_air_date") or "")[:4]
+              if ano.isdigit(): out["ano"] = int(ano)
+              dur = d.get("runtime") or next(iter(d.get("episode_run_time") or []), None)
+              if dur: out["duracao"] = int(dur)
+              if d.get("tagline"): out["frase"] = d["tagline"].strip()
+              tr = escolher_trailer((d.get("videos") or {}).get("results", []))
+              if tr: out["trailer"] = tr
+              if serie and d.get("number_of_seasons"): out["temporadas_qtd"] = d["number_of_seasons"]
+              return out
+
+
+          def gravar_det(chave, dados):
+              os.makedirs(DIR_DET, exist_ok=True)
+              caminho = arquivo_det(chave)
+              tmp = caminho + ".tmp"
+              with open(tmp, "w", encoding="utf-8") as f:
+                  json.dump(dados, f, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+              os.replace(tmp, caminho)
+
+
+          def completar(chave, e):
+              """Backfill: título já tem capa (tmdb_id) mas ainda não tem detalhes. -> dict de detalhes."""
+              return detalhes(e["tmdb_id"], chave.startswith("serie:"))
+
+
+          def capas_serie(tid):
+              """-> (temporadas, episodios) de uma série.
+              temporadas: {"1": pôster da temporada}  (reserva para episódio sem imagem)
+              episodios:  {"1x3": imagem do episódio} (chave = temporada x episódio, sem zeros à esquerda)"""
+              temps, eps = {}, {}
+              for s in tmdb(f"tv/{tid}").get("seasons", []):
+                  n = s.get("season_number") or 0
+                  if n <= 0:
+                      continue
+                  if s.get("poster_path"):
+                      temps[str(n)] = IMG + s["poster_path"]
+                  for ep in tmdb(f"tv/{tid}/season/{n}").get("episodes", []):
+                      if ep.get("still_path") and ep.get("episode_number"):
+                          eps[f"{n}x{ep['episode_number']}"] = IMG_EP + ep["still_path"]
+              return temps, eps
+
+
+          def completar_eps(chave, e):
+              """Backfill: série já tem capa (tmdb_id) mas ainda não tem as imagens por episódio."""
+              return capas_serie(e["tmdb_id"])
 
 
           def resolver(chave, u):
@@ -194,11 +334,11 @@ jobs:
                   return None
               e = {"fonte": "tmdb", "tmdb_id": r["id"], "poster": IMG + r["poster_path"], "nome": u["nome"]}
               if serie:
-                  temps = {}
-                  for s in tmdb(f"tv/{r['id']}").get("seasons", []):
-                      if s.get("poster_path") and (s.get("season_number") or 0) > 0:
-                          temps[str(s["season_number"])] = IMG + s["poster_path"]
-                  e["temporadas"] = temps
+                  e["temporadas"], e["episodios"] = capas_serie(r["id"])
+                  e["ep_v"] = EP_V
+              det = detalhes(r["id"], serie)
+              gravar_det(chave, det)
+              e["det_v"] = DET_V
               return e
 
 
@@ -238,6 +378,8 @@ jobs:
               e = cache.get(k)
               if MODO == "tudo" or e is None or e.get("nome") != u["nome"]:
                   return True
+              if e.get("fonte") == "nao_achou" and e.get("v") != CRITERIO:
+                  return True                                    # critério melhorou: tenta de novo uma vez
               return e.get("fonte") == "nao_achou" and e.get("tentativas", 0) < MAX_TENTATIVAS
 
 
@@ -250,6 +392,7 @@ jobs:
               cache = {}
 
           todas = unidades()
+          fila_det = []   # preenchida depois de conhecer o cache
           sobra = [k for k in cache if k not in todas]
           if sobra and len(sobra) <= len(cache) * LIMITE_PODA:
               for k in sobra:
@@ -257,10 +400,18 @@ jobs:
           fila = [(k, u) for k, u in todas.items() if (not FILTRO or FILTRO in k) and (MODO == "refazer" or pendente(k, u, cache))]
           if MODO == "refazer" and not FILTRO:
               print("❌ O modo 'refazer' exige o campo filtro."); sys.exit(1)
+          na_fila = {k for k, _ in fila}
+          # Séries que já têm capa mas ainda não têm as imagens por episódio (não precisa buscar a série de novo)
+          fila_ep = [(k, e) for k, e in cache.items()
+                     if e.get("fonte") == "tmdb" and e.get("tmdb_id") and k.startswith("serie:") and k in todas and k not in na_fila
+                     and (not FILTRO or FILTRO in k) and e.get("ep_v") != EP_V]
+          fila_det = [(k, e) for k, e in cache.items()
+                      if e.get("fonte") == "tmdb" and e.get("tmdb_id") and k in todas and (not FILTRO or FILTRO in k)
+                      and (MODO == "tudo" or e.get("det_v") != DET_V or not os.path.exists(arquivo_det(k)))]
           log("=" * 50)
-          log(f"🖼️  Modo {MODO} | {len(todas)} títulos únicos | {len(cache)} no cache | fila: {len(fila)} | tamanho {TAMANHO}")
+          log(f"🖼️  Modo {MODO} | {len(todas)} títulos únicos | {len(cache)} no cache | fila: {len(fila)} | episódios a completar: {len(fila_ep)} | detalhes a completar: {len(fila_det)} | capa {TAMANHO}, episódio {TAMANHO_EP}")
           log("=" * 50)
-          if not fila:
+          if not fila and not fila_det and not fila_ep:
               salvar(cache) if sobra else None
               log("Nada a fazer."); sys.exit(0)
           if not CHAVE:
@@ -288,23 +439,121 @@ jobs:
                   elif antigo.get("fonte") == "tmdb":
                       pass                                           # já tinha capa boa: mantém
                   else:
-                      cache[k] = {"fonte": "nao_achou", "nome": u["nome"],
+                      cache[k] = {"fonte": "nao_achou", "nome": u["nome"], "v": CRITERIO,
                                   "tentativas": (antigo.get("tentativas", 0) + 1) if antigo.get("nome") == u["nome"] else 1}
                       nao += 1
                   if i % 200 == 0:
                       salvar(cache); log(f"📊 {i}/{len(fila)}")
           salvar(cache)
+
+          # Imagens por episódio das séries que já tinham capa
+          ep_ok = ep_falha = 0
+          if fila_ep and time.time() - inicio < TEMPO_LIMITE:
+              with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+                  futs = {ex.submit(completar_eps, k, e): (k, e) for k, e in fila_ep}
+                  for i, fut in enumerate(as_completed(futs), 1):
+                      k, e = futs[fut]
+                      if time.time() - inicio > TEMPO_LIMITE:
+                          log("⏰ Tempo limite nos episódios; o resto fica para a próxima rodada.")
+                          for f in futs: f.cancel()
+                          break
+                      try:
+                          temps, eps = fut.result()
+                          if temps:
+                              cache[k]["temporadas"] = temps
+                          cache[k]["episodios"] = eps
+                          cache[k]["ep_v"] = EP_V; ep_ok += 1
+                      except ChaveInvalida as err:
+                          print(f"❌ {err}: confira o secret TMDB_API_KEY."); salvar(cache); sys.exit(1)
+                      except Exception as err:
+                          ep_falha += 1; log(f"[!] episódios {k}: {str(err)[:80]} (continua na fila)")
+                      if i % 100 == 0:
+                          salvar(cache); log(f"📊 episódios {i}/{len(fila_ep)}")
+              salvar(cache)
+
+          # Detalhes (sinopse, banner, nota, trailer) dos títulos que já tinham capa
+          det_ok = det_falha = 0
+          if fila_det and time.time() - inicio < TEMPO_LIMITE:
+              with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
+                  futs = {ex.submit(completar, k, e): (k, e) for k, e in fila_det}
+                  for i, fut in enumerate(as_completed(futs), 1):
+                      k, e = futs[fut]
+                      if time.time() - inicio > TEMPO_LIMITE:
+                          log("⏰ Tempo limite nos detalhes; o resto fica para a próxima rodada.")
+                          for f in futs: f.cancel()
+                          break
+                      try:
+                          gravar_det(k, fut.result())
+                          cache[k]["det_v"] = DET_V; det_ok += 1
+                      except ChaveInvalida as err:
+                          print(f"❌ {err}: confira o secret TMDB_API_KEY."); salvar(cache); sys.exit(1)
+                      except Exception as err:
+                          det_falha += 1; log(f"[!] detalhes {k}: {str(err)[:80]} (continua na fila)")
+                      if i % 200 == 0:
+                          salvar(cache); log(f"📊 detalhes {i}/{len(fila_det)}")
+              salvar(cache)
           log("=" * 50)
+          for k, e in sorted(cache.items()):
+              if e.get("fonte") == "nao_achou" and e.get("v") == CRITERIO:
+                  log(f"   sem capa: {e.get('nome')}")
           log(f"🎉 {achou} com capa do TMDB, {nao} não encontrados (ficam com a capa atual), {falhou} falhas de rede (continuam na fila).")
-          sys.exit(1 if (falhou and not achou and not nao) else 0)
+          log(f"🎞️  Imagens por episódio: {ep_ok} séries completadas, {ep_falha} falhas (continuam na fila).")
+          log(f"📖 Detalhes (sinopse/banner/trailer): {det_ok} completados, {det_falha} falhas (continuam na fila).")
+          sys.exit(1 if (falhou and not achou and not nao and not det_ok and not ep_ok) else 0)
           PYEOF
 
-      - name: Commitar capas.json
+      - name: Aplicar capas nos HTML (páginas novas já saem com a capa certa)
+        if: always()
+        run: |
+          python3 -I - << 'PYEOF'
+          # Troca a capa do blog pela do TMDB (capas.json) direto nos HTML recém-gerados.
+          # Série: imagem do episódio -> (se não existir) pôster da temporada -> (se não existir) pôster da série.
+          # Roda DEPOIS de gerar os arquivos, por isso a troca não se perde a cada sincronização.
+          # Quem não está no capas.json (ou não foi achado no TMDB) mantém a capa que já tem.
+          import html as htmllib, json, os, re
+          from pathlib import Path
+
+          PROTEGIDOS = {"index.html", "serie.html"}
+          try:
+              capas = json.load(open("capas.json", encoding="utf-8"))
+          except (OSError, ValueError):
+              capas = {}
+          RX_SERIE = re.compile(r"^(.+?)_t(\d+)e(?:p)?(\d+)(?:_\d+)?$", re.I)
+          RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*"([^"]*)"')
+          trocados = 0
+          for f in sorted(Path(".").glob("*.html")):
+              if f.name in PROTEGIDOS:
+                  continue
+              slug = f.stem
+              m = RX_SERIE.match(slug)
+              if m:
+                  e = capas.get("serie:" + m[1].lower()) or {}
+                  nova = ((e.get("episodios") or {}).get(f"{int(m[2])}x{int(m[3])}")
+                          or (e.get("temporadas") or {}).get(str(int(m[2])))
+                          or e.get("poster"))
+              else:
+                  nova = (capas.get(slug) or {}).get("poster")
+              if not nova:
+                  continue
+              texto = f.read_text(encoding="utf-8")
+              mt = RX_THUMB.search(texto)
+              if not mt or mt[1] == nova:
+                  continue
+              velha = mt[1]
+              novo_texto = texto.replace(velha, nova).replace(htmllib.escape(velha, quote=True), htmllib.escape(nova, quote=True))
+              if novo_texto != texto:
+                  f.write_text(novo_texto, encoding="utf-8")
+                  trocados += 1
+          print(f"Capas do TMDB aplicadas em {trocados} arquivos.")
+          PYEOF
+
+      - name: Commitar capas.json e HTML
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add capas.json
+          mkdir -p detalhes
+          git add capas.json detalhes '*.html'
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
             exit 0
@@ -316,5 +565,21 @@ jobs:
             fi
             echo "Push falhou (tentativa $i). Tentando de novo..."
             sleep 5
+          done
+          exit 1
+
+      - name: Disparar o catalogo
+        if: ${{ !cancelled() }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "🔁 Disparando workflow catalogo.yml..."
+          for i in 1 2 3; do
+            if gh workflow run "catalogo.yml" --ref "$GITHUB_REF_NAME"; then
+              echo "✅ catalogo.yml disparado!"
+              exit 0
+            fi
+            echo "⚠️ Erro ao disparar (tentativa $i/3). Tentando de novo em 10s..."
+            sleep 10
           done
           exit 1
