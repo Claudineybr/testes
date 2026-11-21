@@ -1,6 +1,9 @@
 name: Trocar capas pelo TMDB
 
-# Procura cada filme/série no TMDB pelo nome (usa o titulos.json se existir) e grava capas.json.
+# Acha cada filme/série no TMDB pelo ID que está no NOME do arquivo e grava capas.json:
+#   filme  10002.html          -> ID do filme no TMDB (10002)
+#   série  100010s01e01.html   -> ID da série no TMDB (100010) + temporada 1 + episódio 1
+# Arquivos com outro tipo de nome (ex.: nome_do_filme_2020.html) continuam sendo procurados pelo título (usa o titulos.json se existir).
 # Filme = 1 capa. Série = 1 imagem POR EPISÓDIO (a "still" do episódio no TMDB).
 #   Se o episódio não tiver imagem no TMDB, usa a capa da temporada; se ela também faltar, a da série.
 # Quem não for achado fica com a capa atual. No fim, dispara o catalogo.yml. Precisa do secret TMDB_API_KEY (chave grátis do TMDB).
@@ -72,6 +75,8 @@ jobs:
 
           IGNORAR = {"index.html", "serie.html", "404.html"}
           RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$", re.I)
+          RX_ID_SERIE = re.compile(r"^(\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 = ID da série no TMDB + temporada/episódio
+          RX_ID_FILME = re.compile(r"^(\d+)$")                       # 10002 = ID do filme no TMDB
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
           RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
@@ -326,8 +331,26 @@ jobs:
               return capas_serie(e["tmdb_id"])
 
 
+          def resolver_id(chave, u):
+              """Nome do arquivo é o ID do TMDB: busca direto pelo ID, sem adivinhar pelo título."""
+              serie = u["tipo"] == "tv"
+              d = tmdb(f"{u['tipo']}/{u['tmdb_id']}")
+              if not d or not d.get("poster_path"):
+                  return None                                    # ID não existe no TMDB (ou está sem pôster)
+              e = {"fonte": "tmdb", "tmdb_id": u["tmdb_id"], "poster": IMG + d["poster_path"],
+                   "nome": (d.get("name") if serie else d.get("title")) or u["nome"]}
+              if serie:
+                  e["temporadas"], e["episodios"] = capas_serie(u["tmdb_id"])
+                  e["ep_v"] = EP_V
+              gravar_det(chave, detalhes(u["tmdb_id"], serie))
+              e["det_v"] = DET_V
+              return e
+
+
           def resolver(chave, u):
               """-> entrada nova (achou) ou None (não existe no TMDB). Erro de rede levanta exceção."""
+              if u.get("tmdb_id"):
+                  return resolver_id(chave, u)
               serie = chave.startswith("serie:")
               r = achar("tv" if serie else "movie", u["nome"]) or (achar("tv" if serie else "movie", u["alt"]) if u["alt"] != u["nome"] else None)
               if not r:
@@ -351,6 +374,13 @@ jobs:
               res = {}
               for caminho, arquivo in sorted(listar()):
                   slug = arquivo[:-5]
+                  ms, mf = RX_ID_SERIE.match(slug), RX_ID_FILME.match(slug)
+                  if ms or mf:                                   # o nome do arquivo é o ID do TMDB
+                      num = (ms or mf).group(1)
+                      chave = f"serie:{num}" if ms else num
+                      if chave not in res:
+                          res[chave] = {"nome": num, "alt": num, "tmdb_id": int(num), "tipo": "tv" if ms else "movie"}
+                      continue
                   m = RX_EP.match(slug)
                   chave = ("serie:" + m.group(1).lower()) if m else slug
                   if chave in res:
@@ -376,7 +406,12 @@ jobs:
 
           def pendente(k, u, cache):
               e = cache.get(k)
-              if MODO == "tudo" or e is None or e.get("nome") != u["nome"]:
+              if MODO == "tudo" or e is None:
+                  return True
+              if u.get("tmdb_id"):
+                  if (e.get("tmdb_id") or e.get("id_buscado")) != u["tmdb_id"]:
+                      return True                                # o ID do arquivo mudou
+              elif e.get("nome") != u["nome"]:
                   return True
               if e.get("fonte") == "nao_achou" and e.get("v") != CRITERIO:
                   return True                                    # critério melhorou: tenta de novo uma vez
@@ -392,6 +427,8 @@ jobs:
               cache = {}
 
           todas = unidades()
+          for k in [k for k in cache if RX_ID_SERIE.match(k)]:     # sobras de quando "100010s01e01" era tratado como filme
+              del cache[k]
           fila_det = []   # preenchida depois de conhecer o cache
           sobra = [k for k in cache if k not in todas]
           if sobra and len(sobra) <= len(cache) * LIMITE_PODA:
@@ -418,6 +455,7 @@ jobs:
               print("❌ Secret TMDB_API_KEY não encontrado (crie uma chave grátis em themoviedb.org > Configurações > API)."); sys.exit(1)
 
           achou = nao = falhou = 0
+          amostras = []   # alguns "ID -> título" no log, para conferir se o ID bate com o título certo
           inicio = time.time()
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
               futs = {ex.submit(resolver, k, u): (k, u) for k, u in fila}
@@ -436,11 +474,16 @@ jobs:
                   antigo = cache.get(k) or {}
                   if e:
                       cache[k] = e; achou += 1
+                      if u.get("tmdb_id") and len(amostras) < 12:
+                          amostras.append(f"{k} → {e['nome']}")
                   elif antigo.get("fonte") == "tmdb":
                       pass                                           # já tinha capa boa: mantém
                   else:
+                      mesmo = (antigo.get("id_buscado") == u["tmdb_id"]) if u.get("tmdb_id") else (antigo.get("nome") == u["nome"])
                       cache[k] = {"fonte": "nao_achou", "nome": u["nome"], "v": CRITERIO,
-                                  "tentativas": (antigo.get("tentativas", 0) + 1) if antigo.get("nome") == u["nome"] else 1}
+                                  "tentativas": (antigo.get("tentativas", 0) + 1) if mesmo else 1}
+                      if u.get("tmdb_id"):
+                          cache[k]["id_buscado"] = u["tmdb_id"]
                       nao += 1
                   if i % 200 == 0:
                       salvar(cache); log(f"📊 {i}/{len(fila)}")
@@ -496,6 +539,8 @@ jobs:
           for k, e in sorted(cache.items()):
               if e.get("fonte") == "nao_achou" and e.get("v") == CRITERIO:
                   log(f"   sem capa: {e.get('nome')}")
+          for a in amostras:
+              log(f"   ID → título: {a}")
           log(f"🎉 {achou} com capa do TMDB, {nao} não encontrados (ficam com a capa atual), {falhou} falhas de rede (continuam na fila).")
           log(f"🎞️  Imagens por episódio: {ep_ok} séries completadas, {ep_falha} falhas (continuam na fila).")
           log(f"📖 Detalhes (sinopse/banner/trailer): {det_ok} completados, {det_falha} falhas (continuam na fila).")
@@ -513,23 +558,33 @@ jobs:
           import html as htmllib, json, os, re
           from pathlib import Path
 
-          PROTEGIDOS = {"index.html", "serie.html"}
+          PROTEGIDOS = {"index.html", "serie.html", "404.html"}
           try:
               capas = json.load(open("capas.json", encoding="utf-8"))
           except (OSError, ValueError):
               capas = {}
-          RX_SERIE = re.compile(r"^(.+?)_t(\d+)e(?:p)?(\d+)(?:_\d+)?$", re.I)
+          # 100010s01e01 (ID da série + temporada/episódio)  ou  nome_t1e2 (nome antigo)
+          RX_SERIE = re.compile(r"^(?:(\d+)s(\d+)e(\d+)|(.+?)_t(\d+)e(?:p)?(\d+)(?:_\d+)?)$", re.I)
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*"([^"]*)"')
+
+
+          def arquivos():
+              """Todos os .html do repositório, inclusive subpastas (ex.: oneplayer/), menos pastas ocultas."""
+              for f in sorted(Path(".").rglob("*.html")):
+                  if f.name in PROTEGIDOS or any(p.startswith(".") or p == "node_modules" for p in f.parts[:-1]):
+                      continue
+                  yield f
+
+
           trocados = 0
-          for f in sorted(Path(".").glob("*.html")):
-              if f.name in PROTEGIDOS:
-                  continue
+          for f in arquivos():
               slug = f.stem
               m = RX_SERIE.match(slug)
               if m:
-                  e = capas.get("serie:" + m[1].lower()) or {}
-                  nova = ((e.get("episodios") or {}).get(f"{int(m[2])}x{int(m[3])}")
-                          or (e.get("temporadas") or {}).get(str(int(m[2])))
+                  nome_s, t, ep = (m[1] or m[4]), int(m[2] or m[5]), int(m[3] or m[6])
+                  e = capas.get("serie:" + nome_s.lower()) or {}
+                  nova = ((e.get("episodios") or {}).get(f"{t}x{ep}")
+                          or (e.get("temporadas") or {}).get(str(t))
                           or e.get("poster"))
               else:
                   nova = (capas.get(slug) or {}).get("poster")
