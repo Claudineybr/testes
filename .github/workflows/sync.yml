@@ -6,7 +6,7 @@ on:
     - cron: '0 */12 * * *' # Roda a cada 12 horas
 
 permissions:
-  contents: write # Permissão para o bot commitar no repo testes
+  contents: write
 
 jobs:
   sincronizar:
@@ -17,13 +17,13 @@ jobs:
 
       - name: Clonar repo rede e extrair arquivos soltos
         run: |
-          # Clona o repositório rede (público, sem precisar de token)
+          # Clona o repositório rede
           git clone --depth 1 https://github.com/Claudineybr/rede.git temp_rede
           
-          # O segredo está no /* no final. 
-          # Ele pega os arquivos de DENTRO das pastas e joga direto na raiz.
-          cp -r temp_rede/oneplayer/* . || true
-          cp -r temp_rede/series_html/* . || true
+          # O rsync copia TUDO de dentro da pasta para a raiz (.)
+          # A barra no final (oneplayer/) é o que diz para copiar o conteúdo, e não a pasta.
+          rsync -a temp_rede/oneplayer/ .
+          rsync -a temp_rede/series_html/ .
           
           # Limpa a pasta temporária
           rm -rf temp_rede
@@ -35,7 +35,6 @@ jobs:
           
           git add .
           
-          # Se não houver mudanças, não faz o commit
           if git diff --cached --quiet; then
             echo "Sem mudanças nos arquivos."
           else
