@@ -1,12 +1,17 @@
 name: Sincronizar arquivos soltos do repo rede
 
 on:
-  workflow_dispatch: # Permite rodar manualmente
+  workflow_dispatch:
   schedule:
-    - cron: '0 */12 * * *' # Roda a cada 12 horas
+    - cron: '0 */12 * * *'
 
 permissions:
   contents: write
+
+# Isso impede que duas execuções deste workflow rodem ao mesmo tempo
+concurrency:
+  group: sync-testes
+  cancel-in-progress: false
 
 jobs:
   sincronizar:
@@ -17,13 +22,15 @@ jobs:
 
       - name: Clonar repo rede e extrair arquivos soltos
         run: |
+          # Aumenta o buffer do git para suportar pushes grandes (5 milhões de linhas)
+          git config --global http.postBuffer 524288000
+          
           # Clona o repositório rede
           git clone --depth 1 https://github.com/Claudineybr/rede.git temp_rede
           
-          # O rsync copia TUDO de dentro da pasta para a raiz (.)
-          # A barra no final (oneplayer/) é o que diz para copiar o conteúdo, e não a pasta.
-          rsync -a temp_rede/oneplayer/ .
-          rsync -a temp_rede/series_html/ .
+          # O comando abaixo varre TODAS as subpastas de oneplayer e series_html
+          # e copia apenas os ARQUIVOS para a raiz (.)
+          find temp_rede/oneplayer temp_rede/series_html -type f -exec cp {} . \;
           
           # Limpa a pasta temporária
           rm -rf temp_rede
@@ -37,7 +44,21 @@ jobs:
           
           if git diff --cached --quiet; then
             echo "Sem mudanças nos arquivos."
-          else
-            git commit -m "sync: atualizando arquivos soltos do repo rede"
-            git push
+            exit 0
           fi
+          
+          git commit -m "sync: atualizando arquivos soltos do repo rede"
+          
+          # Sincroniza com o repositório remoto ANTES de enviar, resolvendo o erro de lock
+          git pull origin main --no-rebase -X ours --no-edit || true
+          
+          # Tenta enviar com até 5 tentativas em caso de falha de rede
+          for i in $(seq 1 5); do
+            if git push origin main; then
+              echo "[SUCESSO] Push OK"
+              exit 0
+            fi
+            echo "[FALHA] Tentando sincronizar novamente..."
+            git pull origin main --no-rebase -X ours --no-edit || true
+            sleep 5
+          done
