@@ -5,7 +5,8 @@ name: Classificar filmes e séries com TMDB
 #   novos        só o que falta (padrão)
 #   indefinidos  re-tenta os que o TMDB não encontrou, ignorando o limite de tentativas
 #   tudo         reclassifica tudo; nada é apagado, a entrada só é trocada quando o TMDB responde
-# O campo "filtro" limita o trabalho a arquivos cujo nome contenha o texto (ex.: scooby).
+# O campo "filtro" limita o trabalho a arquivos cujo nome contenha o texto.
+# Os arquivos já estão renomeados com o ID do TMDB e/ou IMDb (ex.: "1399_tt0944947_t1e1.html").
 on:
   workflow_dispatch:
     inputs:
@@ -18,7 +19,7 @@ on:
           - indefinidos
           - tudo
       filtro:
-        description: "Opcional: só arquivos cujo nome contenha este texto (ex.: scooby)"
+        description: "Opcional: só arquivos cujo nome contenha este texto (ex.: 1399)"
         type: string
         required: false
         default: ""
@@ -50,7 +51,7 @@ jobs:
       - name: Instalar deps
         run: pip install requests beautifulsoup4
 
-      - name: Rodar classificador TMDB
+      - name: Rodar classificador TMDB (por ID)
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           MODO: ${{ inputs.modo || 'novos' }}
@@ -58,7 +59,7 @@ jobs:
           PYTHONUNBUFFERED: "1"
         run: |
           python -u - <<'PYEOF'
-          import json, os, re, sys, time, threading, unicodedata
+          import json, os, re, sys, time, threading
           from collections import Counter
           from concurrent.futures import ThreadPoolExecutor, as_completed
           from bs4 import BeautifulSoup
@@ -84,43 +85,27 @@ jobs:
               sys.exit(1)
 
           # ------------------------------------------------------------------
-          # Mapeamento de gêneros do TMDB (IDs) para a lista fixa usada no site
+          # Mapeamento de gêneros do TMDB (IDs) -> lista fixa usada no site
           # ------------------------------------------------------------------
           TMDB_GENERO_MAP = {
               # Filmes
-              28: "Ação",
-              12: "Aventura",
-              16: "Animação",
-              35: "Comédia",
-              80: "Crime",
-              99: "Documentário",
-              18: "Drama",
-              10751: "Família",
-              14: "Fantasia",
-              36: "História",
-              27: "Terror",
-              10402: "Música",
-              9648: "Mistério",
-              10749: "Romance",
-              878: "Ficção Científica",
-              53: "Thriller",
-              10752: "Guerra",
-              37: "Faroeste",
-              # Séries (alguns IDs adicionais)
-              10759: "Ação",          # Action & Adventure
-              10765: "Ficção Científica", # Sci-Fi & Fantasy
-              10768: "Guerra",        # War & Politics
+              28: "Ação", 12: "Aventura", 16: "Animação", 35: "Comédia",
+              80: "Crime", 99: "Documentário", 18: "Drama", 10751: "Família",
+              14: "Fantasia", 36: "História", 27: "Terror", 10402: "Música",
+              9648: "Mistério", 10749: "Romance", 878: "Ficção Científica",
+              53: "Thriller", 10752: "Guerra", 37: "Faroeste",
+              # Séries (IDs adicionais)
+              10759: "Ação", 10765: "Ficção Científica", 10768: "Guerra",
           }
 
           GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
                      "Família","Fantasia","História","Terror","Música","Mistério","Romance",
                      "Ficção Científica","Thriller","Guerra","Faroeste"]
 
-          LOTE = 20                    # não usado para TMDB, mantido por compatibilidade
-          MAX_WORKERS = 8              # requisições paralelas ao TMDB
-          MAX_TENTATIVAS = 2           # tentativas antes de desistir (modo "novos")
-          TEMPO_LIMITE = 330 * 60      # segurança: para antes do limite de 6h do job
-          LIMITE_PODA = 0.20           # nunca apaga mais de 20% do cache de uma vez
+          MAX_WORKERS = 8
+          MAX_TENTATIVAS = 2
+          TEMPO_LIMITE = 330 * 60
+          LIMITE_PODA = 0.20
 
           PASTA, SAIDA = ".", "classificacao.json"
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html", "serie.html"}
@@ -149,9 +134,6 @@ jobs:
                   sys.exit(1)
 
           def salvar():
-              for v in cache.values():
-                  if isinstance(v, dict) and v.get("modelo") is None:
-                      v.pop("modelo", None)
               tmp = SAIDA + ".tmp"
               with open(tmp, "w", encoding="utf-8") as f:
                   json.dump(cache, f, ensure_ascii=False, indent=2)
@@ -160,47 +142,70 @@ jobs:
           cache = carregar_cache()
 
           # ==================================================================
-          # NOMES, TÍTULOS E TIPO (sem IA)
+          # EXTRAÇÃO DE IDs DO NOME DO ARQUIVO
           # ==================================================================
-          def normalizar(s):
-              s = unicodedata.normalize("NFD", str(s)).encode("ascii", "ignore").decode()
-              return re.sub(r"[^a-z0-9]+", " ", s.lower()).strip()
+          def extrair_ids(arq):
+              """
+              Retorna (tmdb_id, imdb_id) extraídos do nome do arquivo.
+              Aceita formatos como:
+                - "1399.html"                     -> (1399, None)
+                - "tt0944947.html"                -> (None, "tt0944947")
+                - "1399_tt0944947.html"           -> (1399, "tt0944947")
+                - "tmdb_1399_tt0944947_t1e1.html" -> (1399, "tt0944947")
+                - "some_name_1399_t1e1.html"      -> (1399, None)
+              Exclui anos (1900-2099) e marcadores de episódio.
+              """
+              s = arq[:-5].lower()  # sem .html
+              imdb = None
+              tmdb = None
 
+              m = re.search(r'(tt\d{6,9})', s)
+              if m:
+                  imdb = m.group(1)
+
+              m = re.search(r'tmdb[_\-\s]?(\d{1,8})', s)
+              if m:
+                  tmdb = int(m.group(1))
+              else:
+                  # Remove IMDb e marcadores de episódio para não capturá-los como TMDB ID
+                  s2 = re.sub(r'tt\d{6,9}', ' ', s)
+                  s2 = re.sub(r't\d+e\d+|\d+x\d+', ' ', s2)
+                  nums = re.findall(r'(?<![a-z0-9])(\d{1,8})(?![a-z0-9])', s2)
+                  candidatos = [int(n) for n in nums if int(n) > 0]
+                  # Descarta anos (4 dígitos, 1900-2099)
+                  nao_anos = [c for c in candidatos
+                              if not (len(str(c)) == 4 and 1900 <= c <= 2099)]
+                  if nao_anos:
+                      tmdb = nao_anos[0]
+                  elif len(candidatos) == 1:
+                      tmdb = candidatos[0]
+
+              return tmdb, imdb
+
+          def parece_id(titulo):
+              """True se o título for só um ID (ou vazio) — nesse caso preferimos o título do TMDB."""
+              if not titulo:
+                  return True
+              t = titulo.strip().lower()
+              if re.match(r'^tt\d+', t):
+                  return True
+              if re.match(r'^\d+([_\-\s]|$)', t):
+                  return True
+              return False
+
+          # ==================================================================
+          # NOMES E TIPO (sem IA)
+          # ==================================================================
           def eh_serie(arq):
               return bool(RX_EPISODIO.search(arq))
 
           def prefixo_serie(arq):
               return RX_EPISODIO.split(arq[:-5], 1)[0]
 
-          def palavras_do_arquivo(arq):
-              s = prefixo_serie(arq) if eh_serie(arq) else arq[:-5]
-              s = re.sub(r"_(\d{4})_\1$", "", s)
-              s = re.sub(r"_\d{4}_\d{4}$", "", s)
-              return [w for w in s.lower().split("_") if w]
-
-          MINUSCULAS = {"de","da","do","das","dos","e","a","o","as","os","em","no","na","um","uma","para","por","com"}
-          def capitalizar(palavras):
-              return " ".join(w if (i and w in MINUSCULAS) else w.capitalize() for i, w in enumerate(palavras))
-
           def numeros_do_episodio(arq):
               m = RX_EPISODIO.search(arq)
               t, e = (m.group(1), m.group(2)) if m.group(1) else (m.group(3), m.group(4))
               return int(t), int(e)
-
-          def titulo_do_arquivo(arq):
-              nome = capitalizar(palavras_do_arquivo(arq))
-              if eh_serie(arq):
-                  t, e = numeros_do_episodio(arq)
-                  return f"{nome} T{t}E{e}"
-              ano = re.search(r"_(\d{4})_\1\.html$", arq)
-              return f"{nome} ({ano.group(1)})" if ano else nome
-
-          def tem_titulo_cortado(arq, titulo):
-              base = re.sub(r"\(\d{4}\)", " ", titulo or "")
-              base = re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", base, flags=re.I)
-              tw = normalizar(base).split()
-              sw = normalizar(" ".join(palavras_do_arquivo(arq))).split()
-              return bool(tw) and len(tw) < len(sw) and sw[:len(tw)] == tw
 
           def limpar_titulo(txt):
               t = re.sub(r"\s+", " ", txt or "").strip()
@@ -229,30 +234,27 @@ jobs:
               antigo = (e or {}).get("titulo") or ""
               if e is None or MODO == "tudo":
                   t = ler_titulo_html(arq)
-                  if t and not tem_titulo_cortado(arq, t):
+                  if t and not parece_id(t):
                       return t
-                  if antigo and not tem_titulo_cortado(arq, antigo):
+                  if antigo and not parece_id(antigo):
                       return antigo
-                  return titulo_do_arquivo(arq)
-              return antigo or titulo_do_arquivo(arq)
+                  return ""  # deixaremos o TMDB preencher depois
+              return antigo
 
           # ==================================================================
           # CORREÇÕES GRATUITAS NO CACHE
           # ==================================================================
           def corrigir_cache():
-              n_tipo = n_titulo = 0
+              n_tipo = 0
               for arq, e in cache.items():
-                  tipo = "serie" if eh_serie(arq) else "filme"
-                  if e.get("tipo") != tipo:
-                      e["tipo"] = tipo
+                  tipo = "serie" if eh_serie(arq) else e.get("tipo", "filme")
+                  # Só marca como série se o nome tem marcador de episódio.
+                  # Se o cache já diz "serie" (por consulta anterior ao TMDB) e não há marcador,
+                  # mantemos o que está — não sobrescrevemos com "filme".
+                  if eh_serie(arq) and e.get("tipo") != "serie":
+                      e["tipo"] = "serie"
                       n_tipo += 1
-                  if tem_titulo_cortado(arq, e.get("titulo")):
-                      e["titulo"] = titulo_do_arquivo(arq)
-                      e.pop("tentativas", None)
-                      if e.get("fonte") == "tmdb":
-                          e["fonte"] = "revisar"
-                      n_titulo += 1
-              return n_tipo, n_titulo
+              return n_tipo
 
           def podar(arquivos):
               obsoletos = [a for a in cache if a not in arquivos]
@@ -268,26 +270,31 @@ jobs:
           # ==================================================================
           # UNIDADES (filme = 1 item; série = 1 item para todos os episódios)
           # ==================================================================
+          def chave_unidade(arq):
+              """Agrupa episódios da mesma série. Prefere TMDB ID (sempre série-nível)."""
+              if eh_serie(arq):
+                  tmdb_id, imdb_id = extrair_ids(arq)
+                  if tmdb_id:
+                      return f"serie:tmdb_{tmdb_id}"
+                  if imdb_id:
+                      return f"serie:imdb_{imdb_id}"
+                  return "serie:" + prefixo_serie(arq)
+              return arq
+
           def montar_unidades(arquivos, titulos):
               unidades = {}
               for arq in arquivos:
-                  chave = "serie:" + prefixo_serie(arq) if eh_serie(arq) else arq
+                  chave = chave_unidade(arq)
                   u = unidades.setdefault(chave, {"tipo": "serie" if eh_serie(arq) else "filme", "arqs": []})
                   u["arqs"].append(arq)
               for chave, u in unidades.items():
                   if u["tipo"] == "filme":
-                      u["nome"] = titulos[u["arqs"][0]]
+                      u["nome"] = titulos.get(u["arqs"][0]) or ""
                   else:
-                      nomes = []
-                      for a in u["arqs"]:
-                          n = re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", titulos[a], flags=re.I).strip(" -–—|:")
-                          if n:
-                              nomes.append(n)
-                      nome = Counter(nomes).most_common(1)[0][0] if nomes else ""
-                      if not nome or tem_titulo_cortado(u["arqs"][0], nome):
-                          nome = capitalizar(palavras_do_arquivo(u["arqs"][0]))
-                      u["nome"] = nome
-                  u["nome"] = corrigido(u["arqs"][0]) or u["nome"]
+                      # Pega o título "mais frequente" entre os episódios (ou vazio)
+                      nomes = [titulos.get(a, "") for a in u["arqs"]]
+                      nomes = [n for n in nomes if n and not parece_id(n)]
+                      u["nome"] = Counter(nomes).most_common(1)[0][0] if nomes else ""
               return unidades
 
           def generos_da_serie(arqs):
@@ -298,14 +305,8 @@ jobs:
                       cont.update(g for g in e.get("generos", []) if g in GENEROS)
               return [g for g, _ in sorted(cont.items(), key=lambda kv: (-kv[1], GENEROS.index(kv[0])))][:3]
 
-          def modelo_da_serie(arqs, gs):
-              for a in arqs:
-                  e = cache.get(a)
-                  if e and e.get("fonte") == "tmdb" and e.get("generos") == gs and e.get("modelo") and not e.get("herdado"):
-                      return e["modelo"]
-              return None
-
           def herdar_series(unidades, titulos):
+              """Episódio novo (ou 'indefinido') de uma série já classificada herda os gêneros dela."""
               herdados = 0
               for u in unidades.values():
                   if u["tipo"] != "serie":
@@ -313,34 +314,22 @@ jobs:
                   gs = generos_da_serie(u["arqs"])
                   if not gs:
                       continue
+                  ref = next((cache.get(a) for a in u["arqs"]
+                              if cache.get(a) and cache[a].get("fonte") == "tmdb"), None)
                   for arq in u["arqs"]:
                       e = cache.get(arq)
                       if e is None or e.get("fonte") == "indefinido":
-                          cache[arq] = {"titulo": titulos[arq], "tipo": "serie", "generos": gs, "fonte": "tmdb",
-                                        "modelo": modelo_da_serie(u["arqs"], gs), "herdado": True}
+                          novo = {"titulo": titulos.get(arq) or (ref.get("titulo") if ref else ""),
+                                  "tipo": "serie",
+                                  "generos": gs,
+                                  "fonte": "tmdb",
+                                  "herdado": True}
+                          if ref:
+                              novo["imdb_id"] = ref.get("imdb_id")
+                              novo["tmdb_id"] = ref.get("tmdb_id")
+                          cache[arq] = novo
                           herdados += 1
               return herdados
-
-          CORRIGIDOS = {}
-
-          def carregar_corrigidos():
-              try:
-                  with open("titulos.json", encoding="utf-8") as f:
-                      dados = json.load(f)
-              except (OSError, ValueError):
-                  return {}
-              return {k: v["titulo"] for k, v in dados.items() if isinstance(v, dict) and v.get("titulo")}
-
-          def corrigido(arq):
-              k = ("serie:" + prefixo_serie(arq).lower()) if eh_serie(arq) else arq[:-5]
-              return CORRIGIDOS.get(k)
-
-          def nome_tentado(e):
-              return e.get("nome") or re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", e.get("titulo", ""), flags=re.I).strip()
-
-          def renomeado(u, es):
-              c = corrigido(u["arqs"][0])
-              return bool(c) and any(e and e.get("fonte") == "indefinido" and nome_tentado(e) != c for e in es)
 
           def pendente(u):
               if RX_FILTRO and not any(RX_FILTRO.search(a) for a in u["arqs"]):
@@ -359,21 +348,25 @@ jobs:
                   return False
               if MODO == "novos":
                   tentativas = max([e.get("tentativas", 0) for e in es if e] or [0])
-                  if tentativas >= MAX_TENTATIVAS and not renomeado(u, es):
+                  if tentativas >= MAX_TENTATIVAS:
                       return False
               return True
 
-          def aplicar(u, gs, imdb_id, titulos, modelo=None):
+          def aplicar(u, gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb, titulos):
+              """Grava o resultado. Prefere o título do HTML, cai pro TMDB se for só ID/vazio."""
               for arq in u["arqs"]:
                   e = cache.get(arq)
+                  tipo = "serie" if tipo_tmdb == "tv" else ("filme" if tipo_tmdb == "movie" else u["tipo"])
+                  titulo_html = titulos.get(arq) or (e or {}).get("titulo") or ""
+                  titulo = titulo_html if not parece_id(titulo_html) else (titulo_tmdb or titulo_html or "")
                   if gs:
                       cache[arq] = {
-                          "titulo": titulos[arq],
-                          "tipo": u["tipo"],
+                          "titulo": titulo,
+                          "tipo": tipo,
                           "generos": gs,
                           "fonte": "tmdb",
-                          "modelo": modelo or "tmdb",
                           "imdb_id": imdb_id,
+                          "tmdb_id": tmdb_id,
                       }
                   elif e and e.get("fonte") == "tmdb":
                       continue
@@ -381,15 +374,17 @@ jobs:
                       e["tentativas"] = e.get("tentativas", 0) + 1
                   else:
                       tent = (e or {}).get("tentativas", 0) + 1
-                      cache[arq] = {"titulo": titulos[arq], "tipo": u["tipo"], "generos": ["indefinido"],
-                                    "fonte": "indefinido", "tentativas": tent, "nome": u["nome"], "modelo": modelo or "tmdb"}
+                      cache[arq] = {"titulo": titulo, "tipo": tipo,
+                                    "generos": ["indefinido"], "fonte": "indefinido",
+                                    "tentativas": tent, "nome": u.get("nome", ""),
+                                    "imdb_id": imdb_id, "tmdb_id": tmdb_id}
 
           # ==================================================================
-          # TMDB – BUSCA E DETALHES
+          # TMDB
           # ==================================================================
           SESSION = requests.Session()
           SESSION.headers.update({
-              "User-Agent": "ClassificadorTMDB/1.0 (https://github.com/seu-usuario/seu-repo)",
+              "User-Agent": "ClassificadorTMDB/1.0 (+https://github.com/)",
               "Accept": "application/json",
           })
 
@@ -400,11 +395,11 @@ jobs:
                   p.update(params)
               try:
                   r = SESSION.get(url, params=p, timeout=30)
+                  if r.status_code == 404:
+                      return None
                   r.raise_for_status()
                   return r.json()
               except requests.HTTPError as e:
-                  if e.response.status_code == 404:
-                      return None
                   log(f"[!] TMDB HTTP {e.response.status_code} em {path}: {e}")
                   return None
               except Exception as e:
@@ -412,70 +407,83 @@ jobs:
                   return None
 
           def extrair_ano(titulo):
-              m = re.search(r"\((\d{4})\)", titulo)
+              m = re.search(r"\((\d{4})\)", titulo or "")
               return int(m.group(1)) if m else None
 
-          def buscar_tmdb(titulo, tipo, ano=None):
+          def buscar_por_ids(tmdb_id, imdb_id):
               """
-              Retorna (tmdb_id, media_type) ou (None, None).
-              tipo: "filme" ou "serie"
+              Resolve (tmdb_id, tipo_tmdb, details_dict) a partir dos IDs disponíveis.
+              tipo_tmdb: 'movie' | 'tv' | None
               """
-              query = re.sub(r"\(\d{4}\)", "", titulo).strip()
-              if tipo == "filme":
-                  params = {"query": query}
-                  if ano:
-                      params["year"] = ano
-                  data = tmdb_get("/search/movie", params)
-                  if data and data.get("results"):
-                      return data["results"][0]["id"], "movie"
-              else:
-                  params = {"query": query}
-                  if ano:
-                      params["first_air_date_year"] = ano
-                  data = tmdb_get("/search/tv", params)
-                  if data and data.get("results"):
-                      return data["results"][0]["id"], "tv"
-              return None, None
+              # 1) Se só temos IMDb, usa /find para obter TMDB ID e o tipo.
+              tipo_tmdb = None
+              if not tmdb_id and imdb_id:
+                  data = tmdb_get(f"/find/{imdb_id}", {"external_source": "imdb_id"})
+                  if data:
+                      if data.get("movie_results"):
+                          tmdb_id = data["movie_results"][0]["id"]
+                          tipo_tmdb = "movie"
+                      elif data.get("tv_results"):
+                          tmdb_id = data["tv_results"][0]["id"]
+                          tipo_tmdb = "tv"
+                  if not tmdb_id:
+                      return None, None, None
 
-          def obter_detalhes_tmdb(tmdb_id, media_type):
-              """
-              Retorna (generos_lista, imdb_id).
-              generos_lista: lista de strings da GENEROS (pode ser vazia).
-              imdb_id: string "tt..." ou None.
-              """
-              generos = []
-              imdb_id = None
-              # 1) Detalhes (gêneros)
-              details = tmdb_get(f"/{media_type}/{tmdb_id}")
+              # 2) Consulta detalhes. Se tipo desconhecido, tenta movie -> tv.
+              if tipo_tmdb == "movie":
+                  details = tmdb_get(f"/movie/{tmdb_id}")
+                  return (tmdb_id, "movie", details) if details else (tmdb_id, None, None)
+              if tipo_tmdb == "tv":
+                  details = tmdb_get(f"/tv/{tmdb_id}")
+                  return (tmdb_id, "tv", details) if details else (tmdb_id, None, None)
+
+              # Desconhecido: tenta movie
+              details = tmdb_get(f"/movie/{tmdb_id}")
               if details:
-                  for g in details.get("genres", []):
-                      nome = TMDB_GENERO_MAP.get(g["id"])
-                      if nome and nome in GENEROS and nome not in generos:
-                          generos.append(nome)
-              # 2) External IDs (IMDb)
-              ext = tmdb_get(f"/{media_type}/{tmdb_id}/external_ids")
-              if ext:
-                  imdb_id = ext.get("imdb_id")
-              return generos[:3], imdb_id
+                  return tmdb_id, "movie", details
+              details = tmdb_get(f"/tv/{tmdb_id}")
+              if details:
+                  return tmdb_id, "tv", details
+              return tmdb_id, None, None
+
+          def mapear_generos(details):
+              gs = []
+              for g in details.get("genres", []) or []:
+                  nome = TMDB_GENERO_MAP.get(g.get("id"))
+                  if nome and nome in GENEROS and nome not in gs:
+                      gs.append(nome)
+              return gs[:3]
+
+          def obter_imdb(details, tipo_tmdb, tmdb_id):
+              # Só chama external_ids se ainda não temos IMDb e é útil
+              try:
+                  ext = tmdb_get(f"/{tipo_tmdb}/{tmdb_id}/external_ids")
+                  return (ext or {}).get("imdb_id")
+              except Exception:
+                  return None
 
           def classificar_unidade_tmdb(u):
               """
-              Retorna (generos, imdb_id, modelo="tmdb").
-              generos vazio significa "não encontrado".
+              Retorna (generos, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb).
+              generos == [] significa "não encontrado / sem gêneros mapeáveis".
               """
-              titulo = u["nome"]
-              ano = extrair_ano(titulo)
-              tipo = "filme" if u["tipo"] == "filme" else "serie"
-              tmdb_id, media_type = buscar_tmdb(titulo, tipo, ano)
-              if not tmdb_id:
-                  log(f"[?] TMDB não encontrou: {titulo!r} ({tipo})")
-                  return [], None, "tmdb"
-              generos, imdb_id = obter_detalhes_tmdb(tmdb_id, media_type)
-              if not generos:
-                  log(f"[?] TMDB encontrou {titulo!r} mas sem gêneros mapeáveis (ID {tmdb_id})")
-              else:
-                  log(f"[✓] {titulo!r} -> {generos} | IMDb: {imdb_id}")
-              return generos, imdb_id, "tmdb"
+              arq0 = u["arqs"][0]
+              tmdb_id, imdb_id = extrair_ids(arq0)
+
+              tmdb_id, tipo_tmdb, details = buscar_por_ids(tmdb_id, imdb_id)
+              if not details or not tipo_tmdb:
+                  log(f"[?] TMDB não resolveu: {arq0!r} (tmdb={tmdb_id}, imdb={imdb_id})")
+                  return [], imdb_id, tmdb_id, tipo_tmdb, None
+
+              titulo_tmdb = details.get("title") or details.get("name")
+              generos = mapear_generos(details)
+
+              # Se não veio IMDb do filename, tenta external_ids
+              if not imdb_id:
+                  imdb_id = obter_imdb(details, tipo_tmdb, tmdb_id)
+
+              log(f"[✓] {arq0!r} -> {generos} | tipo={tipo_tmdb} | tmdb={tmdb_id} | imdb={imdb_id}")
+              return generos, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb
 
           # ==================================================================
           # EXECUÇÃO
@@ -488,14 +496,13 @@ jobs:
           log("==================================================")
           log(f"🔎 Modo: {MODO}" + (f" | filtro: {FILTRO}" if FILTRO else "") + f" | {len(arquivos)} arquivos | {len(cache)} no cache")
 
-          n_tipo, n_titulo = corrigir_cache()
+          n_tipo = corrigir_cache()
           n_podados = podar(set(arquivos))
-          CORRIGIDOS = carregar_corrigidos()
-          titulos = {a: (corrigido(a) if not eh_serie(a) and corrigido(a) else descobrir_titulo(a)) for a in arquivos}
+          titulos = {a: (cache.get(a, {}).get("titulo") or descobrir_titulo(a)) for a in arquivos}
           unidades = montar_unidades(arquivos, titulos)
           n_herdados = herdar_series(unidades, titulos)
-          log(f"🧹 Correções sem IA: {n_tipo} tipos, {n_titulo} títulos cortados, {n_herdados} episódios herdaram gêneros da série, {n_podados} entradas removidas.")
-          if n_tipo or n_titulo or n_herdados or n_podados:
+          log(f"🧹 Correções sem IA: {n_tipo} tipos, {n_herdados} episódios herdaram gêneros da série, {n_podados} entradas removidas.")
+          if n_tipo or n_herdados or n_podados:
               salvar()
 
           pendentes = [(c, u) for c, u in sorted(unidades.items()) if pendente(u)]
@@ -518,17 +525,17 @@ jobs:
               futuros = {executor.submit(classificar_unidade_tmdb, u): u for u in unid_pendentes}
               for futuro in as_completed(futuros):
                   if time.time() - inicio_execucao > TEMPO_LIMITE:
-                      log("⏰ Tempo limite de segurança atingido. Parando de processar...")
+                      log("⏰ Tempo limite de segurança atingido. Parando...")
                       for f in futuros:
                           f.cancel()
                       break
                   u = futuros[futuro]
                   try:
-                      gs, imdb_id, modelo = futuro.result()
+                      gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb = futuro.result()
                   except Exception as e:
-                      log(f"[x] Erro ao classificar {u['nome']!r}: {e}")
-                      gs, imdb_id, modelo = [], None, "tmdb"
-                  aplicar(u, gs, imdb_id, titulos, modelo)
+                      log(f"[x] Erro ao classificar {u['arqs'][0]!r}: {e}")
+                      gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb = [], None, None, None, None
+                  aplicar(u, gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb, titulos)
                   respondidos += 1
                   if not gs:
                       desconhecidos += 1
@@ -542,7 +549,7 @@ jobs:
 
           sem_resposta = total - respondidos
           log("==================================================")
-          log(f"🎉 FINALIZADO! {respondidos} itens processados, {desconhecidos} não encontrados no TMDB, {sem_resposta} sem resposta.")
+          log(f"🎉 FINALIZADO! {respondidos} itens processados, {desconhecidos} não resolvidos no TMDB, {sem_resposta} sem resposta.")
           log(f"💾 {len(cache)} títulos no cache. O passo de commit fará o push.")
           log("==================================================")
           if respondidos == 0:
