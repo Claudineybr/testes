@@ -8,20 +8,15 @@
       recusa uma resposta redirecionada quando é uma navegação (dava ERR_FAILED).
       Agora o worker pede direto o endereço final ("/" em vez de "/index.html").
    2) Qualquer resposta redirecionada é "limpa" antes de ser guardada/entregue.
-   3) Cache com nome novo: apaga automaticamente os caches antigos (v1/v2/v3).
-   4) v10: o catálogo agora vem em partes (catalogo/indice.json e catalogo/parte-NNN.json),
-      porque o Cloudflare Pages recusa arquivos acima de 25 MiB. Tudo em /catalogo/ usa rede primeiro. */
+   3) Cache com nome novo: apaga automaticamente os caches antigos (v1/v2/v3). */
 
-const VERSAO = 'clauflix-v10'; // v10: catálogo dividido em partes (catalogo/indice.json + catalogo/parte-NNN.json)
+const VERSAO = 'clauflix-v11'; // v5: player.js novo
 
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 const CACHE_DADOS = `${VERSAO}-dados`;
 
 const BASE = ['/', '/serie', '/player.js'];
-const DADOS = ['/classificacao.json'];
-
-/* dados que usam "rede primeiro": classificação e todo o catálogo em partes (/catalogo/...) */
-const ehDados = (caminho) => DADOS.includes(caminho) || caminho.startsWith('/catalogo/');
+const DADOS = ['/catalogo.json', '/classificacao.json'];
 
 /* "/index.html" -> "/", "/serie.html" -> "/serie" (URL final do Cloudflare Pages) */
 function canonica(href) {
@@ -121,7 +116,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
   if (url.origin !== self.location.origin) return;
 
-  if (ehDados(url.pathname)) {
+  if (DADOS.includes(url.pathname)) {
     event.respondWith(redePrimeiro(req, url.pathname));
     return;
   }
