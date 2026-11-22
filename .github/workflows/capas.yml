@@ -3,6 +3,8 @@ name: Trocar capas pelo TMDB
 # Acha cada filme/série no TMDB pelo ID que está no NOME do arquivo e grava capas.json:
 #   filme  10002.html          -> ID do filme no TMDB (10002)
 #   série  100010s01e01.html   -> ID da série no TMDB (100010) + temporada 1 + episódio 1
+#   filme  tt0018773.html         -> ID do IMDb: o robô pergunta ao TMDB qual é o filme (endpoint "find") e segue pelo ID do TMDB
+#   série  tt0903747s01e01.html   -> ID do IMDb da série + temporada 1 + episódio 1
 # Arquivos com outro tipo de nome (ex.: nome_do_filme_2020.html) continuam sendo procurados pelo título (usa o titulos.json se existir).
 # Filme = 1 capa. Série = 1 imagem POR EPISÓDIO (a "still" do episódio no TMDB).
 #   Se o episódio não tiver imagem no TMDB, usa a capa da temporada; se ela também faltar, a da série.
@@ -77,6 +79,8 @@ jobs:
           RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$", re.I)
           RX_ID_SERIE = re.compile(r"^(\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 = ID da série no TMDB + temporada/episódio
           RX_ID_FILME = re.compile(r"^(\d+)$")                       # 10002 = ID do filme no TMDB
+          RX_TT_SERIE = re.compile(r"^(tt\d+)s(\d+)e(\d+)$", re.I)  # tt0903747s01e01 = ID da série no IMDb + temporada/episódio
+          RX_TT_FILME = re.compile(r"^(tt\d+)$", re.I)                # tt0018773 = ID do filme no IMDb
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
           RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
@@ -347,8 +351,23 @@ jobs:
               return e
 
 
+          def resolver_imdb(chave, u):
+              """Nome do arquivo é o ID do IMDb (tt...): o TMDB diz qual é o título (find) e o resto segue pelo ID do TMDB."""
+              serie = u["tipo"] == "tv"
+              d = tmdb(f"find/{u['imdb_id']}", external_source="imdb_id")
+              achados = d.get("tv_results" if serie else "movie_results") or []
+              if not achados:
+                  return None                                    # o TMDB não conhece esse ID do IMDb
+              e = resolver_id(chave, dict(u, tmdb_id=achados[0]["id"]))
+              if e:
+                  e["imdb_id"] = u["imdb_id"]
+              return e
+
+
           def resolver(chave, u):
               """-> entrada nova (achou) ou None (não existe no TMDB). Erro de rede levanta exceção."""
+              if u.get("imdb_id"):
+                  return resolver_imdb(chave, u)
               if u.get("tmdb_id"):
                   return resolver_id(chave, u)
               serie = chave.startswith("serie:")
@@ -381,6 +400,13 @@ jobs:
                       if chave not in res:
                           res[chave] = {"nome": num, "alt": num, "tmdb_id": int(num), "tipo": "tv" if ms else "movie"}
                       continue
+                  ts, tf = RX_TT_SERIE.match(slug), RX_TT_FILME.match(slug)
+                  if ts or tf:                                   # o nome do arquivo é o ID do IMDb
+                      num = (ts or tf).group(1).lower()
+                      chave = f"serie:{num}" if ts else slug
+                      if chave not in res:
+                          res[chave] = {"nome": num, "alt": num, "imdb_id": num, "tipo": "tv" if ts else "movie"}
+                      continue
                   m = RX_EP.match(slug)
                   chave = ("serie:" + m.group(1).lower()) if m else slug
                   if chave in res:
@@ -408,9 +434,10 @@ jobs:
               e = cache.get(k)
               if MODO == "tudo" or e is None:
                   return True
-              if u.get("tmdb_id"):
-                  if (e.get("tmdb_id") or e.get("id_buscado")) != u["tmdb_id"]:
-                      return True                                # o ID do arquivo mudou
+              ident = u.get("imdb_id") or u.get("tmdb_id")
+              if ident:
+                  if (e.get("imdb_id") or e.get("tmdb_id") or e.get("id_buscado")) != ident:
+                      return True                                # o ID do arquivo mudou (ou ainda não foi buscado por ID)
               elif e.get("nome") != u["nome"]:
                   return True
               if e.get("fonte") == "nao_achou" and e.get("v") != CRITERIO:
@@ -427,7 +454,7 @@ jobs:
               cache = {}
 
           todas = unidades()
-          for k in [k for k in cache if RX_ID_SERIE.match(k)]:     # sobras de quando "100010s01e01" era tratado como filme
+          for k in [k for k in cache if RX_ID_SERIE.match(k) or RX_TT_SERIE.match(k)]:     # sobras de quando "100010s01e01" era tratado como filme
               del cache[k]
           fila_det = []   # preenchida depois de conhecer o cache
           sobra = [k for k in cache if k not in todas]
@@ -474,16 +501,17 @@ jobs:
                   antigo = cache.get(k) or {}
                   if e:
                       cache[k] = e; achou += 1
-                      if u.get("tmdb_id") and len(amostras) < 12:
+                      if (u.get("imdb_id") or u.get("tmdb_id")) and len(amostras) < 12:
                           amostras.append(f"{k} → {e['nome']}")
                   elif antigo.get("fonte") == "tmdb":
                       pass                                           # já tinha capa boa: mantém
                   else:
-                      mesmo = (antigo.get("id_buscado") == u["tmdb_id"]) if u.get("tmdb_id") else (antigo.get("nome") == u["nome"])
+                      ident = u.get("imdb_id") or u.get("tmdb_id")
+                      mesmo = (antigo.get("id_buscado") == ident) if ident else (antigo.get("nome") == u["nome"])
                       cache[k] = {"fonte": "nao_achou", "nome": u["nome"], "v": CRITERIO,
                                   "tentativas": (antigo.get("tentativas", 0) + 1) if mesmo else 1}
-                      if u.get("tmdb_id"):
-                          cache[k]["id_buscado"] = u["tmdb_id"]
+                      if ident:
+                          cache[k]["id_buscado"] = ident
                       nao += 1
                   if i % 200 == 0:
                       salvar(cache); log(f"📊 {i}/{len(fila)}")
@@ -564,7 +592,7 @@ jobs:
           except (OSError, ValueError):
               capas = {}
           # 100010s01e01 (ID da série + temporada/episódio)  ou  nome_t1e2 (nome antigo)
-          RX_SERIE = re.compile(r"^(?:(\d+)s(\d+)e(\d+)|(.+?)_t(\d+)e(?:p)?(\d+)(?:_\d+)?)$", re.I)
+          RX_SERIE = re.compile(r"^(?:((?:tt)?\d+)s(\d+)e(\d+)|(.+?)_t(\d+)e(?:p)?(\d+)(?:_\d+)?)$", re.I)
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*"([^"]*)"')
 
 
