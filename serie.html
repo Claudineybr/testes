@@ -278,7 +278,7 @@
       NEVE_MAX_FLOCOS: 60,
       QTD_LUZES: 36,
       CLASSIFICACAO_URL: 'classificacao.json',  // gêneros por arquivo (opcional: a página funciona sem ele)
-      CLASSIFICACAO_TIMEOUT_MS: 40000,          // manifesto + shards; margem maior p/ conexões lentas
+      CLASSIFICACAO_TIMEOUT_MS: 25000,
       CLASSIFICACAO_GRACA_MS: 1500,             // espera curta antes de desenhar, p/ evitar "pulo" visual
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS: 3,
@@ -492,42 +492,21 @@
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
-    /**
-     * Carrega a classificação (opcional). Compatível com os dois formatos:
-     * - Formato antigo (arquivo único): o próprio conteúdo É o mapa {arquivo: entrada}.
-     * - Formato novo (shards): classificacao.json é um manifesto
-     *     {"parts": ["classificacao_1.json", ...], "total": N}
-     *   e cada shard contém uma fatia do mapa. Baixamos em paralelo e mesclamos.
-     * Se algum shard falhar, aproveita os que chegaram; se todos falharem, segue sem gêneros.
-     */
-    async function carregarClassificacao() {
-      try {
-        const manifest = await buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS);
-        if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return null;
-
-        // Formato antigo (arquivo único): o conteúdo já é o mapa
-        if (!Array.isArray(manifest.parts)) return manifest;
-
-        // Formato novo (manifesto + shards)
-        if (!manifest.parts.length) return null;
-        const resultados = await Promise.allSettled(
-          manifest.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS))
-        );
-        const partes = resultados
-          .filter((r) => r.status === 'fulfilled' && r.value && typeof r.value === 'object' && !Array.isArray(r.value))
-          .map((r) => r.value);
-        if (!partes.length) {
-          console.warn('[Clau Flix] nenhum shard da classificação carregou; seguindo sem gêneros.');
-          return null;
-        }
-        return Object.assign({}, ...partes);
-      } catch (erro) {
-        console.warn('[Clau Flix] classificação indisponível; seguindo sem gêneros.', erro);
-        return null;
-      }
+    /** Carrega a classificação (opcional): se falhar, só ficam de fora os gêneros. */
+    function carregarClassificacao() {
+      return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
+        .then(async (cls) => {
+          // Formato novo: classificacao.json é só um manifesto {parts: [...]}; os dados ficam em classificacao_1.json, _2.json...
+          if (cls && Array.isArray(cls.parts)) {
+            const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
+            cls = Object.assign({}, ...partes);       // vira o mesmo mapa {arquivo: {titulo, generos, ...}} de antes
+          }
+          return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
+        })
+        .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
-    const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const arquivoDoLink = (link) => {
       try { return decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()).toLowerCase(); } catch { return ''; }
     };
@@ -939,6 +918,7 @@
     let epAtual = -1;
     const btnProximo = $('btnProximo');
 
+    /** Toca o episódio i: registra no histórico e prepara o botão "Próximo episódio". */
     /** Depois do player fechar: atualiza "Continuar" e a marca de visto. */
     function atualizarAposAssistir() {
       epAtual = -1;
@@ -1019,7 +999,7 @@
       document.body.classList.remove('modal-aberto');
       playerContainer.innerHTML = '';
       btnProximo.hidden = true;
-      if (epAtual >= 0 && serieAtual) {
+      if (epAtual >= 0 && serieAtual) { // atualiza "Continuar" e a marca de visto
         epAtual = -1;
         renderizarHero();
         if ($('listaEps')) renderizarLista();
@@ -1049,6 +1029,7 @@
       const aba = e.target.closest('.aba');
       if (aba) { trocarTemporada(Number(aba.dataset.temp)); return; }
 
+      // Episódios da lista e botão "Assistir" do hero usam data-i (índice em `episodios`)
       if (e.target.closest('#btnProximo')) { if (epAtual >= 0) { temporadaAtiva = episodios[epAtual + 1]?._temp ?? temporadaAtiva; tocarEpisodio(epAtual + 1); } return; }
 
       const alvo = e.target.closest('[data-i]');
