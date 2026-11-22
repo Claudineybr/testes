@@ -6,6 +6,10 @@ name: Gerar Catalogo de Filmes e Series
 #   catalogo/parte-001.json  itens no MESMO formato do antigo catalogo.json (lista de objetos), JSON minificado
 #   catalogo/parte-002.json  ...  cada parte tem no máximo ~6 MB e uma série nunca é cortada ao meio
 # O antigo catalogo.json (arquivo único) é apagado do repositório.
+# NOMES: arquivos cujo nome é o ID do TMDB (filme: 10002.html; série: 100010s01e01.html) recebem o nome assim:
+#   1) titulos.json (correção manual)  2) nome do TMDB já guardado pelo capas.yml (capas.json + detalhes/, sem chamar a API)
+#   3) título que está dentro do próprio .html  4) o número do arquivo, em último caso.
+# Arquivos com nome antigo (nome_do_filme_2020.html, nome_t1e2.html) continuam como antes.
 # Opcional: crie a variável PREFIXO_LINKS (Settings > Secrets and variables > Actions > Variables) se as páginas
 # .html passarem a ficar em outro endereço (ex.: https://paginas.exemplo.com). Ela é colocada na frente de cada "link".
 "on":
@@ -43,6 +47,8 @@ jobs:
           TAMANHO_PARTE = 6 * 1024 * 1024        # bytes por parte (o Pages aceita até 25 MiB por arquivo; 6 MB deixa folga e carrega rápido)
           PREFIXO = (os.environ.get("PREFIXO_LINKS") or "").strip().rstrip("/")
           RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(\d+)|(\d+)x(\d+))$", re.I)
+          RX_ID_SERIE = re.compile(r"^(\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 = ID da série no TMDB + temporada/episódio
+          RX_ID_FILME = re.compile(r"^(\d+)$")                       # 10002 = ID do filme no TMDB
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
           RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
@@ -65,8 +71,9 @@ jobs:
               return f"{nome} ({ano})" if ano else nome
 
 
-          def do_html(conteudo, slug_norm):
-              """Título do HTML (com acentos), só se bater com o nome do arquivo; senão None."""
+          def limpar_titulo(conteudo, forte=False):
+              """Título cru da página (<h1> ou <title>) sem os sufixos ("- 🍿Clau", "Assistir", "T1E1"...). None se não houver.
+              forte=True também corta tudo depois do "T1E1" (ex.: "Série - T1E1 – Nome do episódio")."""
               m = RX_TITULO.search(conteudo)
               if not m:
                   return None
@@ -75,12 +82,32 @@ jobs:
               t = SUFIXOS.sub("", t)
               t = re.sub(r"(\(\d{4}\))(\s*[-|–—]\s*\1)+", r"\1", t)                         # "(2010) - (2010)"
               t = re.sub(r"[\s\-|–—]+$", "", t)
-              t = re.sub(r"\s*[-|–]?\s*(T\d+E\d+|\d+x\d+)\s*$", "", t, flags=re.I).strip()
+              if forte:
+                  t = re.sub(r"\s*[-|–—]?\s*(?:T\d+\s*E(?:P)?\d+|\d+x\d+)\b.*$", "", t, flags=re.I).strip()
+              else:
+                  t = re.sub(r"\s*[-|–]?\s*(T\d+E\d+|\d+x\d+)\s*$", "", t, flags=re.I).strip()
               t = re.sub(r"\s*\(?\b(\d{4})\b\)?\s+\(?\1\)?$", r" (\1)", t).strip()
+              return t or None
+
+
+          def do_html(conteudo, slug_norm):
+              """Título do HTML (com acentos), só se bater com o nome do arquivo; senão None."""
+              t = limpar_titulo(conteudo)
+              if not t:
+                  return None
               sem_ano = re.sub(r"\(\d{4}\)|\b\d{4}\b", "", t)
-              if t and norm(sem_ano) and slug_norm.startswith(norm(sem_ano)):
+              if norm(sem_ano) and slug_norm.startswith(norm(sem_ano)):
                   return t
               return None
+
+
+          def arquivo_det(chave):
+              """Mesmo nome que o capas.yml usa: 'serie:19' -> detalhes/serie--19.json ; filme '10002' -> detalhes/10002.json"""
+              return os.path.join("detalhes", re.sub(r"[^a-z0-9_.\-]", "_", chave.lower().replace(":", "--")) + ".json")
+
+
+          def com_ano(nome, ano):
+              return f"{nome} ({ano})" if ano and not re.search(r"\(\d{4}\)\s*$", nome) else nome
 
 
           def extrair(conteudo):
@@ -124,7 +151,34 @@ jobs:
               except (OSError, ValueError):
                   tit = {}
               corrigido = lambda k: (tit.get(k) or {}).get("titulo")
-              itens, sem_video = [], 0
+              try:
+                  capas = json.load(open("capas.json", encoding="utf-8"))   # nomes do TMDB guardados pelo capas.yml
+              except (OSError, ValueError):
+                  capas = {}
+              nomes, stats = {}, {"tmdb": 0, "html": 0, "numero": 0, "manual": 0}
+
+              def nome_do_id(chave, num, conteudo):
+                  """Nome de um título cujo arquivo se chama pelo ID do TMDB. Ordem: manual > TMDB > HTML > número."""
+                  if corrigido(chave):
+                      stats["manual"] += 1
+                      return corrigido(chave)
+                  e = capas.get(chave) or {}
+                  if e.get("fonte") == "tmdb" and e.get("nome"):
+                      ano = None
+                      try:
+                          ano = json.load(open(arquivo_det(chave), encoding="utf-8")).get("ano")
+                      except (OSError, ValueError):
+                          pass
+                      stats["tmdb"] += 1
+                      return com_ano(e["nome"], ano)
+                  h = limpar_titulo(conteudo, forte=True)
+                  if h and not h.isdigit():
+                      stats["html"] += 1
+                      return h
+                  stats["numero"] += 1
+                  return do_arquivo(num)
+
+              itens, metas, sem_video = [], [], 0
               for caminho, arquivo in listar():
                   slug = arquivo[:-5]
                   try:
@@ -134,8 +188,21 @@ jobs:
                       conteudo = ""
                   thumb, video = extrair(conteudo)
                   sem_video += not video
-                  m = RX_EP.match(slug)
-                  if m:
+                  ms, mf = RX_ID_SERIE.match(slug), RX_ID_FILME.match(slug)
+                  num = (ms or mf).group(1) if (ms or mf) else None
+                  m = None if num else RX_EP.match(slug)
+                  if num:
+                      chave = f"serie:{num}" if ms else num
+                      if chave not in nomes:                       # o mesmo nome para todos os episódios da série
+                          nomes[chave] = nome_do_id(chave, num, conteudo)
+                      serie = nomes[chave]
+                      if ms:
+                          t, e = int(ms.group(2)), int(ms.group(3))
+                          titulo = f"{serie} - T{t}E{e:02d}"
+                      else:
+                          t = e = 1
+                          titulo = serie
+                  elif m:
                       t = int(m.group(2) or m.group(4)); e = int(m.group(3) or m.group(5))
                       serie = corrigido("serie:" + m.group(1).lower()) or do_html(conteudo, norm(m.group(1))) or do_arquivo(m.group(1))
                       titulo = f"{serie} - T{t}E{e:02d}"
@@ -145,9 +212,23 @@ jobs:
                   link = f"{PREFIXO}/{caminho}" if PREFIXO else caminho
                   itens.append({"titulo": titulo, "serie": serie, "temporada": t, "episodio": e,
                                 "link": link, "thumbnailUrl": thumb, "videoUrl": video})
+                  metas.append((chave if num else "legado", num))
               if not itens:
                   print("❌ Nenhum .html encontrado; mantendo o catálogo atual sem mexer.")
                   sys.exit(1)
+              usos = {}
+              for it, (ident, num) in zip(itens, metas):
+                  usos.setdefault(it["serie"].lower(), set()).add(ident)
+              repetidos = 0
+              for it, (ident, num) in zip(itens, metas):
+                  if num and len(usos[it["serie"].lower()]) > 1:     # o site agrupa pelo nome: títulos diferentes não podem se misturar
+                      antigo = it["serie"]
+                      it["serie"] = f"{antigo} #{num}"
+                      if it["titulo"].startswith(antigo):
+                          it["titulo"] = it["serie"] + it["titulo"][len(antigo):]
+                      repetidos += 1
+              print(f"Nomes dos arquivos com ID: {stats['tmdb']} do TMDB, {stats['html']} do HTML, {stats['manual']} manuais, "
+                    f"{stats['numero']} só o número; {repetidos} itens com #ID por nome repetido")
               itens.sort(key=lambda x: (x["serie"].lower(), x["temporada"], x["episodio"], x["link"]))
 
               partes = dividir(itens)
