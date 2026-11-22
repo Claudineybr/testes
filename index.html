@@ -351,7 +351,7 @@
       SKELETONS: 12,
       DEBOUNCE_MS: 300,
       CLASSIFICACAO_URL: 'classificacao.json',  // gêneros por arquivo (opcional: o site funciona sem ele)
-      CLASSIFICACAO_TIMEOUT_MS: 40000,          // arquivo grande + shards; margem maior p/ conexões lentas
+      CLASSIFICACAO_TIMEOUT_MS: 25000,          // arquivo grande, mas nunca trava o catálogo
       CLASSIFICACAO_GRACA_MS: 1500,             // espera curta antes do 1º desenho, p/ evitar "pulo" visual
       GENERO_INDEFINIDO: 'indefinido',          // valor usado pela IA quando não soube classificar
       MAX_GENEROS_CARD: 2,
@@ -1273,39 +1273,18 @@
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
-    /**
-     * Carrega a classificação (opcional). Compatível com os dois formatos:
-     * - Formato antigo (arquivo único): o próprio conteúdo É o mapa {arquivo: entrada}.
-     * - Formato novo (shards): classificacao.json é um manifesto
-     *     {"parts": ["classificacao_1.json", ...], "total": N}
-     *   e cada shard contém uma fatia do mapa. Baixamos em paralelo e mesclamos.
-     * Se algum shard falhar, aproveita os que chegaram; se todos falharem, segue sem gêneros.
-     */
-    async function carregarClassificacao() {
-      try {
-        const manifest = await buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS);
-        if (!manifest || typeof manifest !== 'object' || Array.isArray(manifest)) return null;
-
-        // Formato antigo (arquivo único): o conteúdo já é o mapa
-        if (!Array.isArray(manifest.parts)) return manifest;
-
-        // Formato novo (manifesto + shards)
-        if (!manifest.parts.length) return null;
-        const resultados = await Promise.allSettled(
-          manifest.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS))
-        );
-        const partes = resultados
-          .filter((r) => r.status === 'fulfilled' && r.value && typeof r.value === 'object' && !Array.isArray(r.value))
-          .map((r) => r.value);
-        if (!partes.length) {
-          console.warn('[Clau Flix] nenhum shard da classificação carregou; seguindo sem gêneros.');
-          return null;
-        }
-        return Object.assign({}, ...partes);
-      } catch (erro) {
-        console.warn('[Clau Flix] classificação indisponível; seguindo sem gêneros.', erro);
-        return null;
-      }
+    /** Carrega a classificação (opcional): se falhar, o site funciona normalmente, só sem gêneros. */
+    function carregarClassificacao() {
+      return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
+        .then(async (cls) => {
+          // Formato novo: classificacao.json é só um manifesto {parts: [...]}; os dados ficam em classificacao_1.json, _2.json...
+          if (cls && Array.isArray(cls.parts)) {
+            const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
+            cls = Object.assign({}, ...partes);       // vira o mesmo mapa {arquivo: {titulo, generos, ...}} de antes
+          }
+          return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
+        })
+        .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
     async function iniciar() {
