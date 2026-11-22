@@ -1,18 +1,18 @@
-/* Clau Flix — Service Worker v11
-   Novidades desta versão:
-   1) A classificação agora é dividida em shards (classificacao.json é o manifesto +
-      classificacao_1.json, classificacao_2.json, ...). O service worker trata
-      TODOS esses arquivos como "dados" (rede primeiro, cache só como reserva offline),
-      igual ao catálogo em /catalogo/... — senão os shards ficavam presos no cache
-      e o usuário não via os gêneros novos.
-   2) Mantém todas as correções das versões anteriores:
-      - "/index.html" -> "/" (Cloudflare Pages responde 308, que não pode ser
-        devolvido numa navegação; o worker pede direto o destino).
-      - Respostas com redirecionamento são "limpas" antes de cache/entrega.
-      - Cache com nome novo: apaga automaticamente os caches antigos.
-      - Catálogo dividido em partes (catalogo/indice.json + catalogo/parte-NNN.json). */
+/* Clau Flix — Service Worker v4
+   0) Mesma lógica da v3 (que corrigiu o ERR_FAILED do /index.html).
+      Só troquei a versão do cache para v4 porque mudaram o index.html e o serie.html:
+      com cache novo, os arquivos novos aparecem na hora em quem já usa o site.
+   Correções desta versão:
+   1) Navegação para "/index.html" (ou qualquer ".../pagina.html") não quebra mais.
+      O Cloudflare Pages responde 308 em "/index.html" -> "/", e o navegador
+      recusa uma resposta redirecionada quando é uma navegação (dava ERR_FAILED).
+      Agora o worker pede direto o endereço final ("/" em vez de "/index.html").
+   2) Qualquer resposta redirecionada é "limpa" antes de ser guardada/entregue.
+   3) Cache com nome novo: apaga automaticamente os caches antigos (v1/v2/v3).
+   4) v10: o catálogo agora vem em partes (catalogo/indice.json e catalogo/parte-NNN.json),
+      porque o Cloudflare Pages recusa arquivos acima de 25 MiB. Tudo em /catalogo/ usa rede primeiro. */
 
-const VERSAO = 'clauflix-v11'; // v11: shards da classificação como "dados" (rede primeiro)
+const VERSAO = 'clauflix-v11'; // v11: classificação em partes (classificacao.json manifesto + classificacao_N.json)
 
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 const CACHE_DADOS = `${VERSAO}-dados`;
@@ -20,11 +20,8 @@ const CACHE_DADOS = `${VERSAO}-dados`;
 const BASE = ['/', '/serie', '/player.js'];
 const DADOS = ['/classificacao.json'];
 
-/* dados que usam "rede primeiro": classificação (manifesto + shards) e catálogo em partes */
-const ehDados = (caminho) =>
-  DADOS.includes(caminho) ||
-  /^\/classificacao_\d+\.json$/i.test(caminho) ||
-  caminho.startsWith('/catalogo/');
+/* dados que usam "rede primeiro": classificação (manifesto e partes classificacao_N.json) e todo o catálogo em partes (/catalogo/...) */
+const ehDados = (caminho) => DADOS.includes(caminho) || caminho.startsWith('/catalogo/') || /^\/classificacao_\d+\.json$/.test(caminho);
 
 /* "/index.html" -> "/", "/serie.html" -> "/serie" (URL final do Cloudflare Pages) */
 function canonica(href) {
@@ -71,7 +68,7 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-/* catálogo, manifesto e shards da classificação: rede primeiro, cache só como reserva offline */
+/* catálogo e classificação: rede primeiro, cache só como reserva offline */
 async function redePrimeiro(req, chave) {
   const cache = await caches.open(CACHE_DADOS);
   try {
