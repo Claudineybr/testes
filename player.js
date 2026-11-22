@@ -272,7 +272,7 @@
         <h2 id="cpEscTitulo">Como deseja assistir?</h2>
         <p class="cp-t" id="cpEscNome"></p>
         <button type="button" class="cp-op" data-op="interno">${svg('play', 20)}<span>Player Interno</span></button>
-        <button type="button" class="cp-op rave" data-op="rave">${svg('pessoas', 20)}<span>Assistir no Rave<small>Abre a página do filme para o Rave reconhecer o vídeo</small></span></button>
+        <button type="button" class="cp-op rave" data-op="rave">${svg('pessoas', 20)}<span>Assistir no Rave<small>Abre a página do filme (link RAW) para o Rave reconhecer o vídeo</small></span></button>
         <button type="button" class="cp-cancelar" data-op="cancelar">Cancelar</button>
       </div>`;
 
@@ -525,11 +525,19 @@
       fecharEscolha();
       if (!o) return;
       if (acao === 'interno') abrir(o);
-      else if (acao === 'rave') { if (o.aoIniciar) o.aoIniciar(); window.location.href = o.link; } // a página original é lida pelo Rave (mesmo comportamento do celular)
+      else if (acao === 'rave') { if (o.aoIniciar) o.aoIniciar(); window.location.href = destinoRave(o); }
     });
   }
 
   let pendente = null;
+  /** Rave: abre o link RAW da página .html no GitHub (ex.: .../refs/heads/main/100010s01e03.html).
+   *  Mude RAVE_BASE para o seu repositório/branch (ou passe opts.raveBase). Sem arquivo .html, usa o link original. */
+  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/api_pobreflix_filmes/refs/heads/main/';
+  function destinoRave(o) {
+    const nome = String(o.link || '').split(/[?#]/)[0].split('/').pop();
+    if (!/\.html?$/i.test(nome)) return o.link || o.videoUrl;
+    return (o.raveBase || RAVE_BASE) + nome;
+  }
   function fecharEscolha() {
     el.escolha.classList.remove('on');
     if (focoAnterior && focoAnterior.focus && !raiz.classList.contains('on')) focoAnterior.focus();
