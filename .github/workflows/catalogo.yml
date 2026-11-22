@@ -1,6 +1,13 @@
 name: Gerar Catalogo de Filmes e Series
 
-# Botão "Run workflow": varre os .html, gera catalogo.json e commita só se mudou.
+# Botão "Run workflow": varre os .html, gera o catálogo e commita só se mudou.
+# O catálogo agora sai em PARTES pequenas (o Cloudflare Pages recusa arquivo acima de 25 MiB):
+#   catalogo/indice.json     lista das partes (pequeno)
+#   catalogo/parte-001.json  itens no MESMO formato do antigo catalogo.json (lista de objetos), JSON minificado
+#   catalogo/parte-002.json  ...  cada parte tem no máximo ~6 MB e uma série nunca é cortada ao meio
+# O antigo catalogo.json (arquivo único) é apagado do repositório.
+# Opcional: crie a variável PREFIXO_LINKS (Settings > Secrets and variables > Actions > Variables) se as páginas
+# .html passarem a ficar em outro endereço (ex.: https://paginas.exemplo.com). Ela é colocada na frente de cada "link".
 "on":
   workflow_dispatch:
 
@@ -24,12 +31,17 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Gerar catalogo.json
+      - name: Gerar o catalogo (em partes)
+        env:
+          PREFIXO_LINKS: ${{ vars.PREFIXO_LINKS || '' }}
         run: |
           python -u - <<'PYEOF'
-          import html as htmllib, json, os, re, unicodedata
+          import html as htmllib, itertools, json, os, re, shutil, sys, unicodedata
 
           IGNORAR = {"index.html", "serie.html", "404.html"}
+          PASTA = "catalogo"
+          TAMANHO_PARTE = 6 * 1024 * 1024        # bytes por parte (o Pages aceita até 25 MiB por arquivo; 6 MB deixa folga e carrega rápido)
+          PREFIXO = (os.environ.get("PREFIXO_LINKS") or "").strip().rstrip("/")
           RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(\d+)|(\d+)x(\d+))$", re.I)
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
@@ -79,10 +91,31 @@ jobs:
 
           def listar():
               for raiz, dirs, files in os.walk("."):
-                  dirs[:] = [d for d in dirs if not d.startswith(".") and d != "node_modules"]
+                  dirs[:] = [d for d in dirs if not d.startswith(".") and d != "node_modules" and d != PASTA]
                   for f in files:
                       if f.endswith(".html") and f not in IGNORAR:
                           yield os.path.relpath(os.path.join(raiz, f), ".").replace("\\", "/"), f
+
+
+          def tamanho(item):
+              """Bytes que o item ocupa no JSON minificado (+1 da vírgula)."""
+              return len(json.dumps(item, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) + 1
+
+
+          def dividir(itens):
+              """Agrupa por série (uma série nunca é cortada) e fecha uma parte quando passa de TAMANHO_PARTE."""
+              partes, atual, tam = [], [], 2
+              for _, grupo in itertools.groupby(itens, key=lambda x: x["serie"].lower()):
+                  grupo = list(grupo)
+                  t = sum(tamanho(i) for i in grupo)
+                  if atual and tam + t > TAMANHO_PARTE:
+                      partes.append(atual)
+                      atual, tam = [], 2
+                  atual += grupo
+                  tam += t
+              if atual:
+                  partes.append(atual)
+              return partes
 
 
           def main():
@@ -109,29 +142,52 @@ jobs:
                   else:
                       t = e = 1
                       serie = titulo = corrigido(slug) or do_html(conteudo, norm(re.sub(r"_(\d{4})_\1$", r"_\1", slug))) or do_arquivo(slug)
+                  link = f"{PREFIXO}/{caminho}" if PREFIXO else caminho
                   itens.append({"titulo": titulo, "serie": serie, "temporada": t, "episodio": e,
-                                "link": caminho, "thumbnailUrl": thumb, "videoUrl": video})
+                                "link": link, "thumbnailUrl": thumb, "videoUrl": video})
+              if not itens:
+                  print("❌ Nenhum .html encontrado; mantendo o catálogo atual sem mexer.")
+                  sys.exit(1)
               itens.sort(key=lambda x: (x["serie"].lower(), x["temporada"], x["episodio"], x["link"]))
-              tmp = "catalogo.json.tmp"
-              with open(tmp, "w", encoding="utf-8") as f:
-                  json.dump(itens, f, indent=2, ensure_ascii=False)
-              os.replace(tmp, "catalogo.json")
-              print(f"catalogo.json: {len(itens)} itens, {sem_video} sem vídeo")
+
+              partes = dividir(itens)
+              tmp = PASTA + ".tmp"
+              shutil.rmtree(tmp, ignore_errors=True)
+              os.makedirs(tmp)
+              indice = {"versao": 1, "total": len(itens), "partes": []}
+              for n, parte in enumerate(partes, 1):
+                  nome = f"parte-{n:03d}.json"
+                  with open(f"{tmp}/{nome}", "w", encoding="utf-8") as f:
+                      json.dump(parte, f, ensure_ascii=False, separators=(",", ":"))
+                  indice["partes"].append({"arquivo": f"{PASTA}/{nome}", "itens": len(parte),
+                                           "bytes": os.path.getsize(f"{tmp}/{nome}"),
+                                           "primeira": parte[0]["serie"], "ultima": parte[-1]["serie"]})
+              with open(f"{tmp}/indice.json", "w", encoding="utf-8") as f:
+                  json.dump(indice, f, ensure_ascii=False, separators=(",", ":"))
+              shutil.rmtree(PASTA, ignore_errors=True)
+              os.replace(tmp, PASTA)
+              if os.path.exists("catalogo.json"):
+                  os.remove("catalogo.json")            # o arquivo único antigo passava do limite de 25 MiB do Pages
+              maior = max(p["bytes"] for p in indice["partes"])
+              print(f"{PASTA}/: {len(itens)} itens em {len(partes)} partes (maior: {maior / 1048576:.1f} MiB), {sem_video} sem vídeo")
+              if maior > 20 * 1048576:
+                  print("⚠️  Uma série sozinha passa de 20 MiB; confira o limite de 25 MiB do Pages.")
 
 
           main()
           PYEOF
 
-      - name: Commitar catalogo.json
+      - name: Commitar o catalogo
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add catalogo.json
+          git add -A catalogo
+          git rm -q --ignore-unmatch catalogo.json
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
             exit 0
           fi
-          git commit -m "chore: atualiza catalogo.json [skip ci]"
+          git commit -m "chore: atualiza catalogo [skip ci]"
           for i in 1 2 3; do
             if git pull origin "$GITHUB_REF_NAME" -X ours --no-rebase && git push; then
               exit 0
