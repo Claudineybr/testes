@@ -532,7 +532,7 @@
   let pendente = null;
   /** Rave: abre o link RAW da página .html no GitHub (ex.: .../refs/heads/main/100010s01e03.html).
    *  Mude RAVE_BASE para o seu repositório/branch (ou passe opts.raveBase). Sem arquivo .html, usa o link original. */
-  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/api_pobreflix_filmes/refs/heads/main/';
+  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/testes/refs/heads/main/';
   function destinoRave(o) {
     const nome = String(o.link || '').split(/[?#]/)[0].split('/').pop();
     if (!/\.html?$/i.test(nome)) return o.link || o.videoUrl;
