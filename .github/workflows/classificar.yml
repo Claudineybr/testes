@@ -1,10 +1,10 @@
-name: Classificar filmes e séries com NVIDIA
+name: Classificar filmes e séries com TMDB
 
 # Push de .html -> classifica só o que falta (modo "novos").
 # Botão "Run workflow" -> você escolhe o modo:
 #   novos        só o que falta (padrão)
-#   indefinidos  re-tenta os que a IA não soube, ignorando o limite de tentativas
-#   tudo         reclassifica tudo; nada é apagado, a entrada só é trocada quando a IA responde
+#   indefinidos  re-tenta os que o TMDB não encontrou, ignorando o limite de tentativas
+#   tudo         reclassifica tudo; nada é apagado, a entrada só é trocada quando o TMDB responde
 # O campo "filtro" limita o trabalho a arquivos cujo nome contenha o texto (ex.: scooby).
 on:
   workflow_dispatch:
@@ -48,11 +48,11 @@ jobs:
           python-version: '3.12'
 
       - name: Instalar deps
-        run: pip install beautifulsoup4 openai
+        run: pip install requests beautifulsoup4
 
-      - name: Rodar classificador
+      - name: Rodar classificador TMDB
         env:
-          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           MODO: ${{ inputs.modo || 'novos' }}
           FILTRO: ${{ inputs.filtro || '' }}
           PYTHONUNBUFFERED: "1"
@@ -62,16 +62,11 @@ jobs:
           from collections import Counter
           from concurrent.futures import ThreadPoolExecutor, as_completed
           from bs4 import BeautifulSoup
-          from openai import OpenAI
+          import requests
 
           # ==================================================================
           # CONFIGURAÇÃO
           # ==================================================================
-          # MODO (vem do botão "Run workflow"; nos pushes é sempre "novos"):
-          #   novos       -> classifica só o que falta (arquivo novo, ou título que a IA não soube)
-          #   indefinidos -> re-tenta os "indefinidos" ignorando o limite de tentativas
-          #   tudo        -> reclassifica tudo; nada é apagado: a entrada só é trocada quando a IA responde
-          # FILTRO (opcional): só mexe em arquivos cujo nome case com este texto (ex.: scooby)
           MODO = (os.environ.get("MODO") or "novos").strip().lower()
           FILTRO = (os.environ.get("FILTRO") or "").strip()
           if MODO not in ("novos", "indefinidos", "tudo"):
@@ -83,49 +78,54 @@ jobs:
               print(f"FILTRO inválido ({e}).", flush=True)
               sys.exit(1)
 
-          MODELOS = [
-              # Só os que responderam sem travar no log real (os outros davam timeout ou 404).
-              "nvidia/nemotron-3-ultra-550b-a55b",
-              "nvidia/nemotron-3.5-lightning-30b-a3b",
-              "minimaxai/minimax-m3.1-flash",
-              "nvidia/nemotron-3.5-super-vl-120b-a12b",
-              "openai/gpt-oss-20b",
-          ]
+          TMDB_API_KEY = os.environ.get("TMDB_API_KEY")
+          if not TMDB_API_KEY:
+              print("[x] Falta o secret TMDB_API_KEY (Settings > Secrets and variables > Actions).", flush=True)
+              sys.exit(1)
 
-          LOTE = 20
-          MAX_WORKERS = 10
-          MAX_TENTATIVAS = 2          # quantas vezes re-tentar (modo "novos") um título que a IA disse não conhecer
-          RODADAS = 2                 # se TODOS os modelos falharem, espera um pouco e percorre a lista de novo
-          PAUSA_ENTRE_RODADAS = 30
-          TEMPO_LIMITE = 330 * 60     # segurança: para de processar antes do limite de 6h do job
-          LIMITE_PODA = 0.20          # nunca apaga mais de 20% do cache de uma vez (proteção contra checkout vazio)
+          # ------------------------------------------------------------------
+          # Mapeamento de gêneros do TMDB (IDs) para a lista fixa usada no site
+          # ------------------------------------------------------------------
+          TMDB_GENERO_MAP = {
+              # Filmes
+              28: "Ação",
+              12: "Aventura",
+              16: "Animação",
+              35: "Comédia",
+              80: "Crime",
+              99: "Documentário",
+              18: "Drama",
+              10751: "Família",
+              14: "Fantasia",
+              36: "História",
+              27: "Terror",
+              10402: "Música",
+              9648: "Mistério",
+              10749: "Romance",
+              878: "Ficção Científica",
+              53: "Thriller",
+              10752: "Guerra",
+              37: "Faroeste",
+              # Séries (alguns IDs adicionais)
+              10759: "Ação",          # Action & Adventure
+              10765: "Ficção Científica", # Sci-Fi & Fantasy
+              10768: "Guerra",        # War & Politics
+          }
 
           GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
                      "Família","Fantasia","História","Terror","Música","Mistério","Romance",
                      "Ficção Científica","Thriller","Guerra","Faroeste"]
+
+          LOTE = 20                    # não usado para TMDB, mantido por compatibilidade
+          MAX_WORKERS = 8              # requisições paralelas ao TMDB
+          MAX_TENTATIVAS = 2           # tentativas antes de desistir (modo "novos")
+          TEMPO_LIMITE = 330 * 60      # segurança: para antes do limite de 6h do job
+          LIMITE_PODA = 0.20           # nunca apaga mais de 20% do cache de uma vez
+
           PASTA, SAIDA = ".", "classificacao.json"
           IGNORAR = {"index.html", "sobre.html", "contato.html", "404.html", "serie.html"}
 
-          # Mesmo padrão que o site usa para reconhecer episódio no nome do arquivo (_t1e1 ou _1x1)
-          RX_EPISODIO = re.compile(r"_(?:t(\d+)e(\d+)|(\d+)x(\d+))", re.I)
-
-          SCHEMA = {
-              "type": "object",
-              "properties": {
-                  "itens": {
-                      "type": "array",
-                      "items": {
-                          "type": "object",
-                          "properties": {
-                              "id":      {"type": "string"},
-                              "generos": {"type": "array", "items": {"type": "string", "enum": GENEROS}}
-                          },
-                          "required": ["id", "generos"],
-                      },
-                  }
-              },
-              "required": ["itens"],
-          }
+          RX_EPISODIO = re.compile(r"_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))", re.I)
 
           log_lock = threading.Lock()
           def log(msg):
@@ -133,7 +133,7 @@ jobs:
                   print(msg, flush=True)
 
           # ==================================================================
-          # CACHE (classificacao.json)
+          # CACHE
           # ==================================================================
           def carregar_cache():
               if not os.path.exists(SAIDA):
@@ -145,12 +145,13 @@ jobs:
                       raise ValueError("o JSON não é um objeto")
                   return dados
               except Exception as e:
-                  # Abortar é melhor do que começar do zero e sobrescrever o que já foi classificado
                   log(f"[x] {SAIDA} ilegível ({e}). Abortando para não perder o histórico.")
                   sys.exit(1)
 
           def salvar():
-              """Grava em arquivo temporário e troca de uma vez: se o job cair no meio, o JSON antigo continua intacto."""
+              for v in cache.values():
+                  if isinstance(v, dict) and v.get("modelo") is None:
+                      v.pop("modelo", None)
               tmp = SAIDA + ".tmp"
               with open(tmp, "w", encoding="utf-8") as f:
                   json.dump(cache, f, ensure_ascii=False, indent=2)
@@ -159,7 +160,7 @@ jobs:
           cache = carregar_cache()
 
           # ==================================================================
-          # NOMES, TÍTULOS E TIPO (tudo determinístico, sem IA)
+          # NOMES, TÍTULOS E TIPO (sem IA)
           # ==================================================================
           def normalizar(s):
               s = unicodedata.normalize("NFD", str(s)).encode("ascii", "ignore").decode()
@@ -169,14 +170,12 @@ jobs:
               return bool(RX_EPISODIO.search(arq))
 
           def prefixo_serie(arq):
-              """'game_of_thrones_t1e1.html' -> 'game_of_thrones'"""
               return RX_EPISODIO.split(arq[:-5], 1)[0]
 
           def palavras_do_arquivo(arq):
-              """Palavras do nome do arquivo, sem ano nem episódio."""
               s = prefixo_serie(arq) if eh_serie(arq) else arq[:-5]
-              s = re.sub(r"_(\d{4})_\1$", "", s)      # ..._2006_2006
-              s = re.sub(r"_\d{4}_\d{4}$", "", s)     # ..._2017_1922
+              s = re.sub(r"_(\d{4})_\1$", "", s)
+              s = re.sub(r"_\d{4}_\d{4}$", "", s)
               return [w for w in s.lower().split("_") if w]
 
           MINUSCULAS = {"de","da","do","das","dos","e","a","o","as","os","em","no","na","um","uma","para","por","com"}
@@ -189,7 +188,6 @@ jobs:
               return int(t), int(e)
 
           def titulo_do_arquivo(arq):
-              """Título reconstruído a partir do nome do arquivo (plano B quando o HTML não ajuda)."""
               nome = capitalizar(palavras_do_arquivo(arq))
               if eh_serie(arq):
                   t, e = numeros_do_episodio(arq)
@@ -198,8 +196,6 @@ jobs:
               return f"{nome} ({ano.group(1)})" if ano else nome
 
           def tem_titulo_cortado(arq, titulo):
-              """A regex antiga cortava no 1º hífen ('Scooby-Doo' virou 'Scooby'). O nome do arquivo guarda o título inteiro:
-              se o título é só o começo das palavras do arquivo, ele foi cortado."""
               base = re.sub(r"\(\d{4}\)", " ", titulo or "")
               base = re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", base, flags=re.I)
               tw = normalizar(base).split()
@@ -207,16 +203,15 @@ jobs:
               return bool(tw) and len(tw) < len(sw) and sw[:len(tw)] == tw
 
           def limpar_titulo(txt):
-              """Tira só o que é do site ('- Assistir Online', '| Clau Flix'). Hífen dentro de palavra e subtítulo ficam."""
               t = re.sub(r"\s+", " ", txt or "").strip()
               ep = re.search(r"\bT\d+E\d+\b", t, re.I)
               m = re.match(r"^(.*?\(\d{4}\))", t)
               if m:
-                  t = m.group(1).strip()                       # "Nome (2019) - Assistir..." -> "Nome (2019)"
+                  t = m.group(1).strip()
               else:
                   t = re.sub(r"\s+[-|–—]\s+(?:assistir|online|dublado|legendado|gr[aá]tis|download|hd|clau\s*flix)\b.*$", "", t, flags=re.I).strip()
               if ep and ep.group(0).lower() not in t.lower():
-                  t = f"{t} {ep.group(0)}"                     # mantém o T1E1 quando o ano vinha antes
+                  t = f"{t} {ep.group(0)}"
               return t
 
           def ler_titulo_html(arq):
@@ -230,7 +225,6 @@ jobs:
                   return ""
 
           def descobrir_titulo(arq):
-              """Só abre o HTML de arquivo novo (ou no modo 'tudo'); o resto usa o título já salvo."""
               e = cache.get(arq)
               antigo = (e or {}).get("titulo") or ""
               if e is None or MODO == "tudo":
@@ -243,11 +237,9 @@ jobs:
               return antigo or titulo_do_arquivo(arq)
 
           # ==================================================================
-          # CORREÇÕES GRATUITAS NO CACHE (sem IA)
+          # CORREÇÕES GRATUITAS NO CACHE
           # ==================================================================
           def corrigir_cache():
-              """1) tipo vem do nome do arquivo (a IA errou 308 vezes: Game of Thrones, Flash, 'A Série Divergente'...)
-                 2) título cortado pelo hífen é refeito pelo nome do arquivo e o item volta para revisão."""
               n_tipo = n_titulo = 0
               for arq, e in cache.items():
                   tipo = "serie" if eh_serie(arq) else "filme"
@@ -257,13 +249,12 @@ jobs:
                   if tem_titulo_cortado(arq, e.get("titulo")):
                       e["titulo"] = titulo_do_arquivo(arq)
                       e.pop("tentativas", None)
-                      if e.get("fonte") == "ia":
-                          e["fonte"] = "revisar"   # gêneros foram chutados em cima do título cortado: mantém, mas reclassifica
+                      if e.get("fonte") == "tmdb":
+                          e["fonte"] = "revisar"
                       n_titulo += 1
               return n_tipo, n_titulo
 
           def podar(arquivos):
-              """Remove do cache quem não existe mais na pasta (inclui serie.html, que nunca devia estar lá)."""
               obsoletos = [a for a in cache if a not in arquivos]
               if not obsoletos:
                   return 0
@@ -275,7 +266,7 @@ jobs:
               return len(obsoletos)
 
           # ==================================================================
-          # UNIDADES: filme = 1 item; série = 1 item para TODOS os episódios
+          # UNIDADES (filme = 1 item; série = 1 item para todos os episódios)
           # ==================================================================
           def montar_unidades(arquivos, titulos):
               unidades = {}
@@ -289,7 +280,7 @@ jobs:
                   else:
                       nomes = []
                       for a in u["arqs"]:
-                          n = re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", titulos[a], flags=re.I).strip()
+                          n = re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", titulos[a], flags=re.I).strip(" -–—|:")
                           if n:
                               nomes.append(n)
                       nome = Counter(nomes).most_common(1)[0][0] if nomes else ""
@@ -300,16 +291,21 @@ jobs:
               return unidades
 
           def generos_da_serie(arqs):
-              """Gêneros mais frequentes entre os episódios já classificados pela IA."""
               cont = Counter()
               for a in arqs:
                   e = cache.get(a)
-                  if e and e.get("fonte") == "ia":
+                  if e and e.get("fonte") == "tmdb":
                       cont.update(g for g in e.get("generos", []) if g in GENEROS)
               return [g for g, _ in sorted(cont.items(), key=lambda kv: (-kv[1], GENEROS.index(kv[0])))][:3]
 
+          def modelo_da_serie(arqs, gs):
+              for a in arqs:
+                  e = cache.get(a)
+                  if e and e.get("fonte") == "tmdb" and e.get("generos") == gs and e.get("modelo") and not e.get("herdado"):
+                      return e["modelo"]
+              return None
+
           def herdar_series(unidades, titulos):
-              """Episódio novo (ou 'indefinido') de uma série já classificada herda os gêneros dela: custo zero de IA."""
               herdados = 0
               for u in unidades.values():
                   if u["tipo"] != "serie":
@@ -320,14 +316,14 @@ jobs:
                   for arq in u["arqs"]:
                       e = cache.get(arq)
                       if e is None or e.get("fonte") == "indefinido":
-                          cache[arq] = {"titulo": titulos[arq], "tipo": "serie", "generos": gs, "fonte": "ia"}
+                          cache[arq] = {"titulo": titulos[arq], "tipo": "serie", "generos": gs, "fonte": "tmdb",
+                                        "modelo": modelo_da_serie(u["arqs"], gs), "herdado": True}
                           herdados += 1
               return herdados
 
           CORRIGIDOS = {}
 
           def carregar_corrigidos():
-              """titulos.json (workflow 'Corrigir titulos com IA'): nomes com acento, melhores para a IA reconhecer."""
               try:
                   with open("titulos.json", encoding="utf-8") as f:
                       dados = json.load(f)
@@ -340,16 +336,13 @@ jobs:
               return CORRIGIDOS.get(k)
 
           def nome_tentado(e):
-              """Nome que foi enviado à IA da última vez que ela não soube."""
               return e.get("nome") or re.sub(r"\s*(?:T\d+E\d+|\d+x\d+)\b.*$", "", e.get("titulo", ""), flags=re.I).strip()
 
           def renomeado(u, es):
-              """Indefinido cujo nome mudou (título corrigido): vale tentar de novo, mesmo sem tentativas sobrando."""
               c = corrigido(u["arqs"][0])
               return bool(c) and any(e and e.get("fonte") == "indefinido" and nome_tentado(e) != c for e in es)
 
           def pendente(u):
-              """Esta unidade precisa ir para a IA?"""
               if RX_FILTRO and not any(RX_FILTRO.search(a) for a in u["arqs"]):
                   return False
               if MODO == "tudo":
@@ -357,7 +350,7 @@ jobs:
               es = [cache.get(a) for a in u["arqs"]]
               if u["tipo"] == "serie":
                   revisar = any(e and e.get("fonte") == "revisar" for e in es)
-                  conhecida = any(e and e.get("fonte") == "ia" for e in es)
+                  conhecida = any(e and e.get("fonte") == "tmdb" for e in es)
                   precisa = revisar or not conhecida
               else:
                   e = es[0]
@@ -367,100 +360,122 @@ jobs:
               if MODO == "novos":
                   tentativas = max([e.get("tentativas", 0) for e in es if e] or [0])
                   if tentativas >= MAX_TENTATIVAS and not renomeado(u, es):
-                      return False       # a IA já disse "não sei" demais; só o modo "indefinidos"/"tudo" tenta de novo
+                      return False
               return True
 
-          def aplicar(u, gs, titulos):
-              """Grava o resultado da IA. Regra de ouro: nunca troca dado bom por dado pior."""
+          def aplicar(u, gs, imdb_id, titulos, modelo=None):
               for arq in u["arqs"]:
                   e = cache.get(arq)
                   if gs:
-                      cache[arq] = {"titulo": titulos[arq], "tipo": u["tipo"], "generos": gs, "fonte": "ia"}
-                  elif e and e.get("fonte") == "ia":
-                      continue                                    # já tinha classificação boa: mantém
+                      cache[arq] = {
+                          "titulo": titulos[arq],
+                          "tipo": u["tipo"],
+                          "generos": gs,
+                          "fonte": "tmdb",
+                          "modelo": modelo or "tmdb",
+                          "imdb_id": imdb_id,
+                      }
+                  elif e and e.get("fonte") == "tmdb":
+                      continue
                   elif e and e.get("fonte") == "revisar":
-                      e["tentativas"] = e.get("tentativas", 0) + 1  # mantém os gêneros antigos
+                      e["tentativas"] = e.get("tentativas", 0) + 1
                   else:
                       tent = (e or {}).get("tentativas", 0) + 1
                       cache[arq] = {"titulo": titulos[arq], "tipo": u["tipo"], "generos": ["indefinido"],
-                                    "fonte": "indefinido", "tentativas": tent, "nome": u["nome"]}
+                                    "fonte": "indefinido", "tentativas": tent, "nome": u["nome"], "modelo": modelo or "tmdb"}
 
           # ==================================================================
-          # IA
+          # TMDB – BUSCA E DETALHES
           # ==================================================================
-          def classificar_lote_com_fallback(lote, lote_num, modelo_inicial):
-              """Devolve {posição_no_lote: [gêneros]} só para os itens que a IA respondeu ([] = 'não conheço')."""
-              entrada = [{"id": str(i), "titulo": u["nome"], "formato": "série" if u["tipo"] == "serie" else "filme"}
-                         for i, u in enumerate(lote)]
+          SESSION = requests.Session()
+          SESSION.headers.update({
+              "User-Agent": "ClassificadorTMDB/1.0 (https://github.com/seu-usuario/seu-repo)",
+              "Accept": "application/json",
+          })
 
-              prompt = (
-                  "Classifique cada item em 1 a 3 gêneros da lista fixa.\n"
-                  f"Gêneros permitidos: {', '.join(GENEROS)}\n"
-                  "O campo 'formato' diz se é filme ou série; o ano entre parênteses ajuda a identificar a obra.\n"
-                  "Regras: Use APENAS os gêneros listados acima. Ignore formatos como 'Dublado' ou 'Legendado'.\n"
-                  "Se não reconhecer o título de jeito nenhum, retorne generos: [].\n"
-                  "Responda APENAS o JSON.\n\n"
-                  + json.dumps({"itens": entrada}, ensure_ascii=False)
-              )
+          def tmdb_get(path, params=None):
+              url = f"https://api.themoviedb.org/3{path}"
+              p = {"api_key": TMDB_API_KEY, "language": "pt-BR"}
+              if params:
+                  p.update(params)
+              try:
+                  r = SESSION.get(url, params=p, timeout=30)
+                  r.raise_for_status()
+                  return r.json()
+              except requests.HTTPError as e:
+                  if e.response.status_code == 404:
+                      return None
+                  log(f"[!] TMDB HTTP {e.response.status_code} em {path}: {e}")
+                  return None
+              except Exception as e:
+                  log(f"[!] TMDB erro em {path}: {e}")
+                  return None
 
-              idx_inicial = MODELOS.index(modelo_inicial) if modelo_inicial in MODELOS else 0
-              modelos_para_tentar = MODELOS[idx_inicial:] + MODELOS[:idx_inicial]
+          def extrair_ano(titulo):
+              m = re.search(r"\((\d{4})\)", titulo)
+              return int(m.group(1)) if m else None
 
-              for rodada in range(RODADAS):
-                  for modelo in modelos_para_tentar:
-                      for tentativa in range(2):
-                          try:
-                              resp = client.chat.completions.create(
-                                  model=modelo,
-                                  messages=[{"role": "user", "content": prompt}],
-                                  temperature=0,
-                                  max_tokens=8192,  # espaço para os modelos que "pensam" antes de responder
-                                  response_format={"type": "json_schema", "json_schema": {"name": "F", "schema": SCHEMA}},
-                              )
+          def buscar_tmdb(titulo, tipo, ano=None):
+              """
+              Retorna (tmdb_id, media_type) ou (None, None).
+              tipo: "filme" ou "serie"
+              """
+              query = re.sub(r"\(\d{4}\)", "", titulo).strip()
+              if tipo == "filme":
+                  params = {"query": query}
+                  if ano:
+                      params["year"] = ano
+                  data = tmdb_get("/search/movie", params)
+                  if data and data.get("results"):
+                      return data["results"][0]["id"], "movie"
+              else:
+                  params = {"query": query}
+                  if ano:
+                      params["first_air_date_year"] = ano
+                  data = tmdb_get("/search/tv", params)
+                  if data and data.get("results"):
+                      return data["results"][0]["id"], "tv"
+              return None, None
 
-                              content = resp.choices[0].message.content
-                              if not content:
-                                  raise ValueError("JSON vazio")
+          def obter_detalhes_tmdb(tmdb_id, media_type):
+              """
+              Retorna (generos_lista, imdb_id).
+              generos_lista: lista de strings da GENEROS (pode ser vazia).
+              imdb_id: string "tt..." ou None.
+              """
+              generos = []
+              imdb_id = None
+              # 1) Detalhes (gêneros)
+              details = tmdb_get(f"/{media_type}/{tmdb_id}")
+              if details:
+                  for g in details.get("genres", []):
+                      nome = TMDB_GENERO_MAP.get(g["id"])
+                      if nome and nome in GENEROS and nome not in generos:
+                          generos.append(nome)
+              # 2) External IDs (IMDb)
+              ext = tmdb_get(f"/{media_type}/{tmdb_id}/external_ids")
+              if ext:
+                  imdb_id = ext.get("imdb_id")
+              return generos[:3], imdb_id
 
-                              data = json.loads(content)
-                              por_id = {str(x.get("id")): x for x in data.get("itens", []) if isinstance(x, dict)}
-                              if len(por_id) < len(lote) * 0.5:
-                                  raise ValueError("resposta incompleta")
-
-                              resultado = {}
-                              for i in range(len(lote)):
-                                  item = por_id.get(str(i))
-                                  if item is None:
-                                      continue                      # a IA pulou este item: ele continua pendente
-                                  gs = []
-                                  for g in item.get("generos", []):
-                                      if g in GENEROS and g not in gs:
-                                          gs.append(g)
-                                  resultado[i] = gs[:3]
-                              log(f"[✓] Lote {lote_num} concluído com {modelo} ({len(resultado)}/{len(lote)} respondidos)")
-                              return resultado
-
-                          except Exception as e:
-                              msg = str(e)
-                              status = getattr(e, "status_code", None)
-                              if status in (404, 410) or "410" in msg or "404" in msg:
-                                  log(f"[!] {modelo} indisponível. Pulando...")
-                                  break
-                              elif status == 429 or "429" in msg:
-                                  log(f"[!] Rate limit (429) em {modelo}. Pulando...")
-                                  break
-                              elif isinstance(e, ValueError):   # inclui JSONDecodeError, "JSON vazio" e "resposta incompleta"
-                                  log(f"[!] {modelo} respondeu algo inválido ({msg[:60]}). Pulando...")
-                                  break
-                              else:
-                                  log(f"[x] Erro no lote {lote_num} ({modelo}): {e}")
-                                  time.sleep(1)
-                  if rodada < RODADAS - 1:
-                      log(f"[!] Lote {lote_num}: todos os modelos falharam. Aguardando {PAUSA_ENTRE_RODADAS}s para tentar de novo...")
-                      time.sleep(PAUSA_ENTRE_RODADAS)
-
-              log(f"[x] Lote {lote_num} falhou em todos os modelos. Os itens continuam pendentes para a próxima execução.")
-              return {}
+          def classificar_unidade_tmdb(u):
+              """
+              Retorna (generos, imdb_id, modelo="tmdb").
+              generos vazio significa "não encontrado".
+              """
+              titulo = u["nome"]
+              ano = extrair_ano(titulo)
+              tipo = "filme" if u["tipo"] == "filme" else "serie"
+              tmdb_id, media_type = buscar_tmdb(titulo, tipo, ano)
+              if not tmdb_id:
+                  log(f"[?] TMDB não encontrou: {titulo!r} ({tipo})")
+                  return [], None, "tmdb"
+              generos, imdb_id = obter_detalhes_tmdb(tmdb_id, media_type)
+              if not generos:
+                  log(f"[?] TMDB encontrou {titulo!r} mas sem gêneros mapeáveis (ID {tmdb_id})")
+              else:
+                  log(f"[✓] {titulo!r} -> {generos} | IMDb: {imdb_id}")
+              return generos, imdb_id, "tmdb"
 
           # ==================================================================
           # EXECUÇÃO
@@ -489,21 +504,10 @@ jobs:
               salvar()
               sys.exit(0)
 
-          if not os.environ.get("NVIDIA_API_KEY"):
-              log("[x] Falta o secret NVIDIA_API_KEY (Settings > Secrets and variables > Actions).")
-              sys.exit(1)
-
-          client = OpenAI(
-              api_key=os.environ["NVIDIA_API_KEY"],
-              base_url="https://integrate.api.nvidia.com/v1",
-              timeout=90,
-              max_retries=0,   # as tentativas e o rodízio de modelos são feitos aqui em cima
-          )
-
           unid_pendentes = [u for _, u in pendentes]
-          total_lotes = (len(unid_pendentes) + LOTE - 1) // LOTE
-          log(f"🚀 {len(unid_pendentes)} itens para a IA em {total_lotes} lotes (séries contam 1 vez, não 1 por episódio).")
-          log(f"⚙️  {MAX_WORKERS} threads paralelas, {len(MODELOS)} modelos na rotação.")
+          total = len(unid_pendentes)
+          log(f"🚀 {total} itens para o TMDB (séries contam 1 vez, não 1 por episódio).")
+          log(f"⚙️  {MAX_WORKERS} threads paralelas.")
           log("==================================================")
 
           inicio_execucao = time.time()
@@ -511,42 +515,38 @@ jobs:
           processados = 0
 
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
-              futures = {}
-              for i in range(0, len(unid_pendentes), LOTE):
-                  lote = unid_pendentes[i:i + LOTE]
-                  lote_num = (i // LOTE) + 1
-                  modelo_inicial = MODELOS[(lote_num - 1) % len(MODELOS)]
-                  futures[executor.submit(classificar_lote_com_fallback, lote, lote_num, modelo_inicial)] = lote
-
-              for future in as_completed(futures):
+              futuros = {executor.submit(classificar_unidade_tmdb, u): u for u in unid_pendentes}
+              for futuro in as_completed(futuros):
                   if time.time() - inicio_execucao > TEMPO_LIMITE:
-                      log("⏰ Tempo limite de segurança atingido (5h30m). Parando de processar...")
-                      for f in futures:
+                      log("⏰ Tempo limite de segurança atingido. Parando de processar...")
+                      for f in futuros:
                           f.cancel()
                       break
-
-                  lote = futures[future]
-                  resultado = future.result()
-                  for pos, gs in resultado.items():
-                      aplicar(lote[pos], gs, titulos)
-                      respondidos += 1
-                      desconhecidos += 0 if gs else 1
-                  if resultado:
-                      salvar()
-
+                  u = futuros[futuro]
+                  try:
+                      gs, imdb_id, modelo = futuro.result()
+                  except Exception as e:
+                      log(f"[x] Erro ao classificar {u['nome']!r}: {e}")
+                      gs, imdb_id, modelo = [], None, "tmdb"
+                  aplicar(u, gs, imdb_id, titulos, modelo)
+                  respondidos += 1
+                  if not gs:
+                      desconhecidos += 1
                   processados += 1
-                  log(f"📊 PROGRESSO: {processados}/{total_lotes} lotes ({processados / total_lotes * 100:.1f}%) salvos.")
+                  if processados % 10 == 0 or processados == total:
+                      salvar()
+                      log(f"📊 PROGRESSO: {processados}/{total} salvos.")
 
-          herdar_series(unidades, titulos)   # séries recém-classificadas passam os gêneros para os episódios novos
+          herdar_series(unidades, titulos)
           salvar()
 
-          sem_resposta = len(unid_pendentes) - respondidos
+          sem_resposta = total - respondidos
           log("==================================================")
-          log(f"🎉 FINALIZADO! {respondidos} itens classificados ({desconhecidos} a IA não conheceu), {sem_resposta} sem resposta (ficam para a próxima).")
+          log(f"🎉 FINALIZADO! {respondidos} itens processados, {desconhecidos} não encontrados no TMDB, {sem_resposta} sem resposta.")
           log(f"💾 {len(cache)} títulos no cache. O passo de commit fará o push.")
           log("==================================================")
           if respondidos == 0:
-              log("[x] A IA não respondeu nada. Confira o secret NVIDIA_API_KEY e a lista de modelos.")
+              log("[x] O TMDB não retornou nenhum resultado. Verifique a chave e a conectividade.")
               sys.exit(1)
           PYEOF
 
@@ -562,7 +562,7 @@ jobs:
             echo "Sem mudanças — nada a commitar."
             exit 0
           fi
-          git commit -m "chore: atualiza classificacao (${MODO}) [skip ci]"
+          git commit -m "chore: atualiza classificacao via TMDB (${MODO}) [skip ci]"
           for i in 1 2 3; do
             if git pull origin "$GITHUB_REF_NAME" -X ours --no-rebase && git push; then
               exit 0
