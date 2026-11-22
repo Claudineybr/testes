@@ -6,7 +6,7 @@ name: Gerar Catalogo de Filmes e Series
 #   catalogo/parte-001.json  itens no MESMO formato do antigo catalogo.json (lista de objetos), JSON minificado
 #   catalogo/parte-002.json  ...  cada parte tem no máximo ~6 MB e uma série nunca é cortada ao meio
 # O antigo catalogo.json (arquivo único) é apagado do repositório.
-# NOMES: arquivos cujo nome é o ID do TMDB (filme: 10002.html; série: 100010s01e01.html) recebem o nome assim:
+# NOMES: arquivos cujo nome é um ID (TMDB: 10002.html, 100010s01e01.html; IMDb: tt0018773.html, tt0903747s01e01.html) recebem o nome assim:
 #   1) titulos.json (correção manual)  2) nome do TMDB já guardado pelo capas.yml (capas.json + detalhes/, sem chamar a API)
 #   3) título que está dentro do próprio .html  4) o número do arquivo, em último caso.
 # Arquivos com nome antigo (nome_do_filme_2020.html, nome_t1e2.html) continuam como antes.
@@ -47,8 +47,8 @@ jobs:
           TAMANHO_PARTE = 6 * 1024 * 1024        # bytes por parte (o Pages aceita até 25 MiB por arquivo; 6 MB deixa folga e carrega rápido)
           PREFIXO = (os.environ.get("PREFIXO_LINKS") or "").strip().rstrip("/")
           RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(\d+)|(\d+)x(\d+))$", re.I)
-          RX_ID_SERIE = re.compile(r"^(\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 = ID da série no TMDB + temporada/episódio
-          RX_ID_FILME = re.compile(r"^(\d+)$")                       # 10002 = ID do filme no TMDB
+          RX_ID_SERIE = re.compile(r"^((?:tt)?\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 (ID do TMDB) ou tt0903747s01e01 (ID do IMDb)
+          RX_ID_FILME = re.compile(r"^((?:tt)?\d+)$", re.I)                  # 10002 (ID do TMDB) ou tt0018773 (ID do IMDb)
           RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
           RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
           RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
@@ -192,7 +192,7 @@ jobs:
                   num = (ms or mf).group(1) if (ms or mf) else None
                   m = None if num else RX_EP.match(slug)
                   if num:
-                      chave = f"serie:{num}" if ms else num
+                      chave = f"serie:{num.lower()}" if ms else slug      # mesma chave que o capas.yml usa no capas.json
                       if chave not in nomes:                       # o mesmo nome para todos os episódios da série
                           nomes[chave] = nome_do_id(chave, num, conteudo)
                       serie = nomes[chave]
