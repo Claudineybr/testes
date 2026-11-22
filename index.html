@@ -339,7 +339,7 @@
     // ===================================================================
     const CONFIG = {
       WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/', // proxy p/ vídeos HTTP no PC
-      CATALOGO_URL: 'catalogo.json',
+      CATALOGO_INDICE_URL: 'catalogo/indice.json', // catálogo dividido em partes (catalogo/parte-001.json ...)
       FETCH_TIMEOUT_MS: 12000,
       ITENS_POR_PAGINA: 50,
       QTD_DESTAQUES: 20,
@@ -671,6 +671,14 @@
       } finally {
         clearTimeout(timer);
       }
+    }
+
+    /** Baixa o catálogo: lê catalogo/indice.json e junta as partes (cada uma abaixo do limite de 25 MiB do Pages). */
+    async function buscarCatalogo(limiteMs) {
+      const indice = await buscarJson(CONFIG.CATALOGO_INDICE_URL, limiteMs);
+      if (!indice || !Array.isArray(indice.partes)) throw new Error('Índice do catálogo inválido');
+      const partes = await Promise.all(indice.partes.map((p) => buscarJson(p.arquivo, limiteMs)));
+      return partes.flat(); // mesma lista (e mesma ordem) do antigo catalogo.json
     }
 
     // ===================================================================
@@ -1276,7 +1284,7 @@
       mostrarSkeleton();
       try {
         const promessaCls = carregarClassificacao(); // baixa em paralelo com o catálogo
-        const catalogo = await buscarJson(CONFIG.CATALOGO_URL, CONFIG.FETCH_TIMEOUT_MS);
+        const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
         if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
 
         // Espera só um instante pela classificação (evita "pulo" visual); se atrasar, aplica quando chegar.
