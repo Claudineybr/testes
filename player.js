@@ -13,7 +13,12 @@
  *              Sem segmentos (ou em embed/iframe) o botão nunca aparece. Tecla "S" aciona o botão.
  * }
  *
- * ClauPlayer.buscarSegmentos(tmdbId, temporada, episodio) -> Promise<[{tipo, ini, fim}]>   (TheIntroDB; filme: só tmdbId)
+ * ClauPlayer.buscarSegmentos(id, temporada, episodio) -> Promise<[{tipo, ini, fim}]>   (TheIntroDB; filme: só o id)
+ *   id = número do TMDB ou texto do IMDb ("tt0944947").
+ * ClauPlayer.segmentosDoArquivo(link, temporada, episodio) -> Promise<[...]>   descobre o id sozinho:
+ *   1) nome do arquivo com id:  100010s01e03.html (TMDB)  |  tt0944947s01e03.html (IMDb)  |  tt0111161.html (filme IMDb)
+ *   2) senão, procura no capas.json (chaves "serie:<prefixo>" e "<arquivo>") o tmdb_id gravado pelo workflow capas.
+ *   Uso: segmentos: () => ClauPlayer.segmentosDoArquivo(ep.link, ep.temporada, ep.episodio)
  *   Nunca rejeita: falha de rede, 404 ou título sem dados = [].
  *   Uso: segmentos: () => ClauPlayer.buscarSegmentos(18165, 1, 3)
  */
@@ -162,10 +167,11 @@
   }
 
   async function buscarSegmentos(tmdbId, temporada, episodio) {
-    const id = Number(tmdbId);
-    if (!Number.isInteger(id) || id <= 0) return [];
+    const imdb = /^tt\d{5,10}$/i.test(String(tmdbId).trim());
+    const id = imdb ? String(tmdbId).trim().toLowerCase() : Number(tmdbId);
+    if (!imdb && (!Number.isInteger(id) || id <= 0)) return [];
     const serie = temporada != null && episodio != null && Number.isInteger(Number(temporada)) && Number.isInteger(Number(episodio));
-    const url = `https://api.theintrodb.org/v2/media?tmdb_id=${id}` + (serie ? `&season=${Number(temporada)}&episode=${Number(episodio)}` : '');
+    const url = `https://api.theintrodb.org/v2/media?${imdb ? 'imdb_id' : 'tmdb_id'}=${id}` + (serie ? `&season=${Number(temporada)}&episode=${Number(episodio)}` : '');
     if (SEG_CACHE.has(url)) return SEG_CACHE.get(url);
     const ctl = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = ctl ? setTimeout(() => ctl.abort(), 6000) : null;
@@ -178,6 +184,36 @@
       return lista;
     } catch { return []; }
     finally { if (timer) clearTimeout(timer); }
+  }
+
+  // ---------- descobrir o id (TMDB/IMDb) a partir do nome do arquivo ----------
+  let capasPromessa = null;
+  const lerCapas = () => capasPromessa || (capasPromessa = fetch('capas.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((j) => (j && typeof j === 'object' ? j : {})));
+
+  /** {id, temporada, episodio} se o NOME do arquivo já traz o id; senão null. */
+  function idDoArquivo(link) {
+    const nome = String(link || '').split(/[?#]/)[0].split('/').pop().replace(/\.html?$/i, '');
+    let m = nome.match(/^(\d+|tt\d+)s(\d+)e(\d+)$/i);      // 100010s01e03 | tt0944947s01e03
+    if (m) return { id: /^tt/i.test(m[1]) ? m[1].toLowerCase() : Number(m[1]), temporada: Number(m[2]), episodio: Number(m[3]) };
+    m = nome.match(/^(tt\d{5,10})$/i);                         // filme: tt0111161
+    if (m) return { id: m[1].toLowerCase(), temporada: null, episodio: null };
+    return null;
+  }
+
+  /** Segmentos de um item do catálogo: id no nome do arquivo ou, na falta, tmdb_id do capas.json. Nunca rejeita. */
+  async function segmentosDoArquivo(link, temporada, episodio) {
+    try {
+      const direto = idDoArquivo(link);
+      if (direto) return await buscarSegmentos(direto.id, direto.temporada, direto.episodio);
+      const nome = String(link || '').split(/[?#]/)[0].split('/').pop().replace(/\.html?$/i, '').toLowerCase();
+      if (!nome) return [];
+      const m = nome.match(/^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/);   // mesma regra do capas.py
+      const capas = await lerCapas();
+      const e = capas[m ? 'serie:' + m[1] : nome];
+      if (!e || !e.tmdb_id) return [];
+      if (m) return await buscarSegmentos(e.tmdb_id, temporada != null ? temporada : Number(m[2] || m[4]), episodio != null ? episodio : Number(m[3] || m[5]));
+      return await buscarSegmentos(e.tmdb_id);
+    } catch { return []; }
   }
 
   /** Normaliza o que veio em opts.segmentos (array | Promise | função) e liga o botão. */
@@ -532,7 +568,7 @@
   let pendente = null;
   /** Rave: abre o link RAW da página .html no GitHub (ex.: .../refs/heads/main/100010s01e03.html).
    *  Mude RAVE_BASE para o seu repositório/branch (ou passe opts.raveBase). Sem arquivo .html, usa o link original. */
-  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/testes/refs/heads/main/';
+  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/api_pobreflix_filmes/refs/heads/main/';
   function destinoRave(o) {
     const nome = String(o.link || '').split(/[?#]/)[0].split('/').pop();
     if (!/\.html?$/i.test(nome)) return o.link || o.videoUrl;
@@ -603,5 +639,5 @@
     video.play().catch(() => { el.pp.innerHTML = svg('play'); el.spin.style.display = 'none'; });
   }
 
-  window.ClauPlayer = { escolher, abrir, fechar, buscarSegmentos };
+  window.ClauPlayer = { escolher, abrir, fechar, buscarSegmentos, segmentosDoArquivo };
 })();
