@@ -1,677 +1,279 @@
-name: Classificar filmes e séries com TMDB
+name: Gerar Catalogo de Filmes e Series
 
-# === SOBRE O classificacao.json ===
-# O arquivo único estourou o limite de 25 MB do Cloudflare. Agora o resultado é
-# dividido em "shards":
-#   classificacao_1.json, classificacao_2.json, ...  -> dados (cada um < 20 MB)
-#   classificacao.json                                -> manifesto
-#     {"parts": ["classificacao_1.json", "classificacao_2.json", ...], "total": N}
-#
-# O index.html e o serie.html já carregam o manifesto e juntam os shards sozinhos
-# (e continuam aceitando o formato antigo, de arquivo único).
-#
-# Os arquivos já estão renomeados com ID do TMDB e/ou IMDb (ex.: 1399.html,
-# 100010s01e01.html, tt0903747s01e01.html). A identificação segue as MESMAS
-# regras do "Trocar capas pelo TMDB".
-#
-# === GÊNEROS ===
-# Filmes e séries têm listas de gêneros diferentes no TMDB. Séries de novela, reality,
-# talk show, notícias e infantil NÃO existem na lista de filmes; antes elas ficavam sem
-# gênero ("indefinido") para sempre. Agora viram: Novela, Reality, Talk Show, Notícias e
-# Infantil (os botões de gênero do site aparecem sozinhos conforme os dados).
-# Para juntar com um gênero que já existe, é só trocar o texto nos dicionários GEN_FILME / GEN_SERIE.
-
-on:
+# Botão "Run workflow": varre os .html, gera o catálogo e commita só se mudou.
+# O catálogo agora sai em PARTES pequenas (o Cloudflare Pages recusa arquivo acima de 25 MiB):
+#   catalogo/indice.json     lista das partes (pequeno)
+#   catalogo/parte-001.json  itens no MESMO formato do antigo catalogo.json (lista de objetos), JSON minificado
+#   catalogo/parte-002.json  ...  cada parte tem no máximo ~6 MB e uma série nunca é cortada ao meio
+# O antigo catalogo.json (arquivo único) é apagado do repositório.
+# NOMES: arquivos cujo nome é um ID (TMDB: 10002.html, 100010s01e01.html; IMDb: tt0018773.html, tt0903747s01e01.html) recebem o nome assim:
+#   1) titulos.json (correção manual)  2) nome do TMDB já guardado pelo capas.yml (capas.json + detalhes/, sem chamar a API)
+#   3) título que está dentro do próprio .html  4) o número do arquivo, em último caso.
+# Arquivos com nome antigo (nome_do_filme_2020.html, nome_t1e2.html) continuam como antes.
+# Opcional: crie a variável PREFIXO_LINKS (Settings > Secrets and variables > Actions > Variables) se as páginas
+# .html passarem a ficar em outro endereço (ex.: https://paginas.exemplo.com). Ela é colocada na frente de cada "link".
+"on":
   workflow_dispatch:
-    inputs:
-      modo:
-        description: "O que classificar"
-        type: choice
-        default: novos
-        options:
-          - novos
-          - indefinidos
-          - tudo
-      filtro:
-        description: "Opcional: só arquivos cujo nome contenha este texto"
-        type: string
-        required: false
-        default: ""
-  push:
-    paths:
-      - '**.html'
-      - '!index.html'
-      - '!serie.html'
 
 permissions:
   contents: write
 
 concurrency:
-  group: classificar
+  group: catalogo
   cancel-in-progress: false
 
 jobs:
-  classificar:
-    if: github.actor != 'github-actions[bot]'
+  build-catalog:
     runs-on: ubuntu-latest
-    timeout-minutes: 360
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - name: Baixar o codigo do repositorio
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
 
-      - name: Rodar classificador TMDB
+      - name: Gerar o catalogo (em partes)
         env:
-          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
-          MODO: ${{ inputs.modo || 'novos' }}
-          FILTRO: ${{ inputs.filtro || '' }}
-          PYTHONUNBUFFERED: "1"
+          PREFIXO_LINKS: ${{ vars.PREFIXO_LINKS || '' }}
         run: |
           python -u - <<'PYEOF'
-          import html as htmllib, json, os, re, sys, threading, time, unicodedata, glob
-          import urllib.error, urllib.parse, urllib.request
-          import difflib
-          from concurrent.futures import ThreadPoolExecutor, as_completed
+          import html as htmllib, itertools, json, os, re, shutil, sys, unicodedata
 
-          # ========= Config =========
-          MODO = (os.environ.get("MODO") or "novos").strip().lower()
-          FILTRO = (os.environ.get("FILTRO") or "").strip()
-          if MODO not in ("novos", "indefinidos", "tudo"):
-              print(f"Modo inválido: {MODO!r}"); sys.exit(1)
-          try:
-              RX_FILTRO = re.compile(FILTRO, re.I) if FILTRO else None
-          except re.error as e:
-              print(f"FILTRO inválido ({e})."); sys.exit(1)
+          IGNORAR = {"index.html", "serie.html", "404.html"}
+          PASTA = "catalogo"
+          TAMANHO_PARTE = 6 * 1024 * 1024        # bytes por parte (o Pages aceita até 25 MiB por arquivo; 6 MB deixa folga e carrega rápido)
+          PREFIXO = (os.environ.get("PREFIXO_LINKS") or "").strip().rstrip("/")
+          RX_EP = re.compile(r"^(.+?)_(?:t(\d+)e(\d+)|(\d+)x(\d+))$", re.I)
+          RX_ID_SERIE = re.compile(r"^((?:tt)?\d+)s(\d+)e(\d+)$", re.I)   # 100010s01e01 (ID do TMDB) ou tt0903747s01e01 (ID do IMDb)
+          RX_ID_FILME = re.compile(r"^((?:tt)?\d+)$", re.I)                  # 10002 (ID do TMDB) ou tt0018773 (ID do IMDb)
+          RX_THUMB = re.compile(r'"thumbnailUrl"\s*:\s*\[\s*["\']([^"\']+)["\']', re.I)
+          RX_VIDEO = re.compile(r'"contentUrl"\s*:\s*["\']([^"\']+)["\']', re.I)
+          RX_IMG = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.I)
+          RX_DATASRC = re.compile(r'data-src=["\']([^"\']+)["\']', re.I)
+          RX_TITULO = re.compile(r"<h1[^>]*>(.*?)</h1>|<title[^>]*>(.*?)</title>", re.I | re.S)
+          SUFIXOS = re.compile(r"\s*[-|–—]\s*(assistir|assista|online|dublado|legendado|clau\s*flix|hd|completo)[^|]*$", re.I)
 
-          CHAVE = (os.environ.get("TMDB_API_KEY") or "").strip()
-          if not CHAVE:
-              print("[x] Falta o secret TMDB_API_KEY."); sys.exit(1)
 
-          # Gêneros do TMDB -> nomes que o site mostra. Filmes e séries usam listas diferentes.
-          GEN_FILME = {
-              28: ["Ação"], 12: ["Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
-              99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 14: ["Fantasia"], 36: ["História"],
-              27: ["Terror"], 10402: ["Música"], 9648: ["Mistério"], 10749: ["Romance"],
-              878: ["Ficção Científica"], 10770: ["Cinema TV"], 53: ["Thriller"], 10752: ["Guerra"],
-              37: ["Faroeste"],
-          }
-          GEN_SERIE = {
-              10759: ["Ação", "Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
-              99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 10762: ["Infantil"],
-              9648: ["Mistério"], 10763: ["Notícias"], 10764: ["Reality"],
-              10765: ["Ficção Científica", "Fantasia"], 10766: ["Novela"], 10767: ["Talk Show"],
-              10768: ["Guerra"], 37: ["Faroeste"],
-          }
-
-          IGNORAR = {"index.html","sobre.html","contato.html","404.html","serie.html"}
-          SAIDA = "classificacao.json"
-          LIMITE_SHARD = 20 * 1024 * 1024   # 20 MB por shard (margem de 5 MB pro Cloudflare)
-          MAX_TENTATIVAS = 2
-          MAX_WORKERS = 8
-          TEMPO_LIMITE = 330 * 60
-          LIMITE_PODA = 0.20
-
-          RX_ID_SERIE = re.compile(r"^(\d+)s(\d+)e(\d+)$", re.I)
-          RX_ID_FILME = re.compile(r"^(\d+)$")
-          RX_TT_SERIE = re.compile(r"^(tt\d+)s(\d+)e(\d+)$", re.I)
-          RX_TT_FILME = re.compile(r"^(tt\d+)$", re.I)
-          RX_EP       = re.compile(r"^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$", re.I)
-          RX_TITULO   = re.compile(r"<h1[^>]*>(.*?)</h1>|<title[^>]*>(.*?)</title>", re.I | re.S)
-          SUFIXOS     = re.compile(r"\s*[-|–—]\s*(assistir|assista|online|dublado|legendado|clau\s*flix|hd|completo)[^|]*$", re.I)
-
-          trava = threading.Lock()
-          def log(msg):
-              with trava:
-                  print(msg, flush=True)
-
-          class ChaveInvalida(Exception): pass
-
-          def tmdb(caminho, **params):
-              params.setdefault("language", "pt-BR")
-              cab = {"accept": "application/json"}
-              if CHAVE.startswith("eyJ"):
-                  cab["Authorization"] = "Bearer " + CHAVE
-              else:
-                  params["api_key"] = CHAVE
-              url = f"https://api.themoviedb.org/3/{caminho}?" + urllib.parse.urlencode(params)
-              for tent in range(5):
-                  try:
-                      with urllib.request.urlopen(urllib.request.Request(url, headers=cab), timeout=20) as r:
-                          return json.load(r)
-                  except urllib.error.HTTPError as e:
-                      if e.code in (401,403):
-                          raise ChaveInvalida(f"TMDB respondeu {e.code}")
-                      if e.code == 404:
-                          return {}
-                      if e.code == 429:
-                          time.sleep(int(e.headers.get("Retry-After") or 2) + 1)
-                      else:
-                          time.sleep(2 * (tent + 1))
-                  except (urllib.error.URLError, TimeoutError, ValueError, OSError):
-                      time.sleep(2 * (tent + 1))
-              raise ConnectionError(f"TMDB sem resposta em {caminho}")
-
-          # ========= Helpers (idênticos ao capas) =========
           def norm(s):
               s = unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode().lower()
               return re.sub(r"[^a-z0-9]+", " ", s).strip()
 
+
           def do_arquivo(slug):
+              """Título legível a partir do nome do arquivo: ano duplicado vira (ANO)."""
               slug = re.sub(r"_(\d{4})_\1$", r"_\1", slug)
-              slug = re.sub(r"^(.*_(?:19|20)\d{2})_\d{1,2}$", r"\1", slug)
               m = re.search(r"^(.*?)_(\d{4})$", slug)
               base, ano = (m.group(1), m.group(2)) if m else (slug, "")
               nome = " ".join(w.capitalize() for w in re.split(r"[_\-\s]+", base) if w)
               return f"{nome} ({ano})" if ano else nome
 
-          def do_html(conteudo, slug_norm):
+
+          def limpar_titulo(conteudo, forte=False):
+              """Título cru da página (<h1> ou <title>) sem os sufixos ("- 🍿Clau", "Assistir", "T1E1"...). None se não houver.
+              forte=True também corta tudo depois do "T1E1" (ex.: "Série - T1E1 – Nome do episódio")."""
               m = RX_TITULO.search(conteudo)
               if not m:
                   return None
               t = htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1) or m.group(2) or "")).strip()
-              t = re.sub(r"\s*[-|–—]?\s*[^\w\s]*\s*clau(\s*flix)?\s*$", "", t, flags=re.I)
+              t = re.sub(r"\s*[-|–—]?\s*[^\w\s]*\s*clau(\s*flix)?\s*$", "", t, flags=re.I)   # "- 🍿Clau"
               t = SUFIXOS.sub("", t)
-              t = re.sub(r"(\(\d{4}\))(\s*[-|–—]\s*\1)+", r"\1", t)
+              t = re.sub(r"(\(\d{4}\))(\s*[-|–—]\s*\1)+", r"\1", t)                         # "(2010) - (2010)"
               t = re.sub(r"[\s\-|–—]+$", "", t)
-              t = re.sub(r"\s*[-|–—]?\s*(?:T\d+\s*E(?:P)?\d+|\d+x\d+)\b.*$", "", t, flags=re.I).strip()
+              if forte:
+                  t = re.sub(r"\s*[-|–—]?\s*(?:T\d+\s*E(?:P)?\d+|\d+x\d+)\b.*$", "", t, flags=re.I).strip()
+              else:
+                  t = re.sub(r"\s*[-|–]?\s*(T\d+E\d+|\d+x\d+)\s*$", "", t, flags=re.I).strip()
               t = re.sub(r"\s*\(?\b(\d{4})\b\)?\s+\(?\1\)?$", r" (\1)", t).strip()
+              return t or None
+
+
+          def do_html(conteudo, slug_norm):
+              """Título do HTML (com acentos), só se bater com o nome do arquivo; senão None."""
+              t = limpar_titulo(conteudo)
+              if not t:
+                  return None
               sem_ano = re.sub(r"\(\d{4}\)|\b\d{4}\b", "", t)
-              if t and norm(sem_ano) and slug_norm.startswith(norm(sem_ano)):
+              if norm(sem_ano) and slug_norm.startswith(norm(sem_ano)):
                   return t
               return None
 
-          ROMANOS = {"ii":"2","iii":"3","iv":"4","v":"5","vi":"6","vii":"7","viii":"8","ix":"9","x":"10"}
-          EXTRAS_OK = {"parte","part","vol","volume","capitulo","chapter","o","a","filme","the","movie"}
 
-          def nm(t):
-              t = unicodedata.normalize("NFKD", str(t or "")).encode("ascii","ignore").decode().lower().replace("&"," e ")
-              return " ".join(ROMANOS.get(w,w) for w in re.sub(r"[^a-z0-9]+"," ",t).split())
+          def arquivo_det(chave):
+              """Mesmo nome que o capas.yml usa: 'serie:19' -> detalhes/serie--19.json ; filme '10002' -> detalhes/10002.json"""
+              return os.path.join("detalhes", re.sub(r"[^a-z0-9_.\-]", "_", chave.lower().replace(":", "--")) + ".json")
 
-          def variantes(nome):
-              v = [nome]
-              sem_par = re.sub(r"\s*\((?!\d{4}\))[^)]*\)", "", nome).strip()
-              v += [sem_par] + re.findall(r"\((?!\d{4}\))([^)]+)\)", nome)
-              partes = [x.strip() for x in re.split(r"\s+[-–—]\s+|:\s+", sem_par) if len(x.strip()) >= 3]
-              limpo = re.sub(r"\b(?:19|20)\d{2}\b(?=.*\b(?:19|20)\d{2}\b)", "", sem_par)
-              limpo = re.sub(r"\s+\d{1,2}$", "", re.sub(r"\s+"," ",limpo).strip())
-              v.append(limpo)
-              visto, res = set(), []
-              for x, forte in [(x,True) for x in v] + [(x,False) for x in partes]:
-                  x = re.sub(r"\s+"," ",x).strip(" -–—:")
-                  if len(x) >= 3 and nm(x) not in visto:
-                      visto.add(nm(x)); res.append((x,forte))
-              return res[:6]
 
-          def aceitar(q, ano, r, filme, primeiro):
-              nq = nm(q)
-              cands = [nm(r.get("title" if filme else "name","")), nm(r.get("original_title" if filme else "original_name",""))]
-              brutos = [r.get("title" if filme else "name",""), r.get("original_title" if filme else "original_name","")]
-              y = int(((r.get("release_date" if filme else "first_air_date")) or "0")[:4] or 0)
-              ano_ok = (not ano) or (y and abs(y - ano) <= 1)
-              if nq in cands: return ano_ok
-              for c, b in zip(cands, brutos):
-                  if not c: continue
-                  rt = difflib.SequenceMatcher(None, nq, c).ratio()
-                  if rt >= (0.88 if ano else 0.92) and ano_ok: return True
-                  wq, wc = nq.split(), c.split()
-                  if ano and ano_ok and wc and wq[:len(wc)] == wc and all(w.isdigit() or w in EXTRAS_OK for w in wq[len(wc):]): return True
-                  antes = nm(re.split(r":\s|\s[-–—]\s", b, maxsplit=1)[0]) if re.search(r":\s|\s[-–—]\s", b or "") else ""
-                  if antes and antes == nq and (ano_ok if ano else primeiro): return True
-                  if not ano and not filme and primeiro and len(wq) >= 2 and wc[:len(wq)] == wq: return True
-              return False
+          def com_ano(nome, ano):
+              return f"{nome} ({ano})" if ano and not re.search(r"\(\d{4}\)\s*$", nome) else nome
 
-          def achar(tipo, titulo):
-              m = re.search(r"\((\d{4})\)\s*$", titulo)
-              ano = int(m.group(1)) if m else None
-              nome = re.sub(r"\s*\(\d{4}\)\s*$", "", titulo).strip()
-              filme = tipo == "movie"
-              for q, forte in variantes(nome):
-                  if not forte and not ano: continue
-                  for filtro_ano in ([ano, None] if ano else [None]):
-                      params = {"query": q}
-                      if filtro_ano: params["year" if filme else "first_air_date_year"] = filtro_ano
-                      resultados = tmdb(f"search/{tipo}", **params).get("results", [])
-                      for n, r in enumerate(resultados):
-                          if aceitar(q, ano, r, filme, n == 0):
-                              return r
-              return None
 
-          def mapear_generos(details, tipo):
-              """Gêneros do TMDB -> até 3 nomes do site, na ordem do TMDB (filme e série têm tabelas diferentes)."""
-              mapa = GEN_SERIE if tipo == "tv" else GEN_FILME
-              gs = []
-              for g in details.get("genres", []) or []:
-                  for nome in mapa.get(g.get("id"), []):
-                      if nome not in gs:
-                          gs.append(nome)
-              return gs[:3]
+          def extrair(conteudo):
+              m = RX_THUMB.search(conteudo) or RX_IMG.search(conteudo)
+              v = RX_VIDEO.search(conteudo) or RX_DATASRC.search(conteudo)
+              return (m.group(1) if m else ""), (v.group(1) if v else "")
 
-          def parece_id(t):
-              if not t: return True
-              t = t.strip().lower()
-              if re.match(r'^tt\d+', t): return True
-              if re.match(r'^\d+([_\-\s]|$)', t): return True
-              return False
 
-          # ========= Cache (carrega todos os shards + legado) =========
-          def carregar_cache():
-              dados = {}
-              # Legado (single-file) — base, se existir e for cache de verdade
-              if os.path.exists(SAIDA):
-                  try:
-                      with open(SAIDA, encoding="utf-8") as f:
-                          d = json.load(f)
-                      if isinstance(d, dict) and not isinstance(d.get("parts"), list):
-                          dados.update(d)
-                  except Exception as e:
-                      log(f"[x] {SAIDA} ilegível ({e}). Abortando.")
-                      sys.exit(1)
-              # Shards (sobrepõem o legado)
-              for f in sorted(glob.glob("classificacao_*.json")):
-                  try:
-                      with open(f, encoding="utf-8") as fh:
-                          d = json.load(fh)
-                      if not isinstance(d, dict):
-                          raise ValueError("não é objeto")
-                      dados.update(d)
-                  except Exception as e:
-                      log(f"[x] {f} ilegível ({e}). Abortando.")
-                      sys.exit(1)
-              return dados
+          def listar():
+              for raiz, dirs, files in os.walk("."):
+                  dirs[:] = [d for d in dirs if not d.startswith(".") and d != "node_modules" and d != PASTA]
+                  for f in files:
+                      if f.endswith(".html") and f not in IGNORAR:
+                          yield os.path.relpath(os.path.join(raiz, f), ".").replace("\\", "/"), f
 
-          def _serializar_compacto(obj):
-              return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
 
-          def salvar():
-              # Limpa campos legados
-              for v in cache.values():
-                  if isinstance(v, dict):
-                      v.pop("modelo", None)
+          def tamanho(item):
+              """Bytes que o item ocupa no JSON minificado (+1 da vírgula)."""
+              return len(json.dumps(item, ensure_ascii=False, separators=(",", ":")).encode("utf-8")) + 1
 
-              # Agrupa em shards respeitando o limite de bytes por shard
-              entries = list(cache.items())
-              shards, current, cur_size = [], {}, 2   # 2 = "{}"
-              for k, v in entries:
-                  entry_size = len(_serializar_compacto({k: v}).encode("utf-8")) + 1  # +1 vírgula
-                  if current and cur_size + entry_size > LIMITE_SHARD:
-                      shards.append(current)
-                      current, cur_size = {}, 2
-                  current[k] = v
-                  cur_size += entry_size
-              if current or not shards:
-                  shards.append(current)
 
-              # Escreve cada shard num arquivo .tmp e depois renomeia (atômico)
-              nomes_novos = []
-              for i, shard in enumerate(shards, 1):
-                  nome = f"classificacao_{i}.json"
-                  nomes_novos.append(nome)
-                  tmp = nome + ".tmp"
-                  with open(tmp, "w", encoding="utf-8") as f:
-                      f.write(_serializar_compacto(shard))
-                  os.replace(tmp, nome)
+          def dividir(itens):
+              """Agrupa por série (uma série nunca é cortada) e fecha uma parte quando passa de TAMANHO_PARTE."""
+              partes, atual, tam = [], [], 2
+              for _, grupo in itertools.groupby(itens, key=lambda x: x["serie"].lower()):
+                  grupo = list(grupo)
+                  t = sum(tamanho(i) for i in grupo)
+                  if atual and tam + t > TAMANHO_PARTE:
+                      partes.append(atual)
+                      atual, tam = [], 2
+                  atual += grupo
+                  tam += t
+              if atual:
+                  partes.append(atual)
+              return partes
 
-              # Manifesto
-              manifest = {
-                  "parts": nomes_novos,
-                  "total": len(cache),
-                  "gerado_em": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-              }
-              with open(SAIDA + ".tmp", "w", encoding="utf-8") as f:
-                  json.dump(manifest, f, ensure_ascii=False, indent=2)
-              os.replace(SAIDA + ".tmp", SAIDA)
 
-              # Remove shards antigos que sobraram
-              for f in glob.glob("classificacao_*.json"):
-                  if f not in nomes_novos:
-                      try:
-                          os.remove(f)
-                      except OSError:
-                          pass
-
-          cache = carregar_cache()
-
-          # ========= Agrupamento (igual ao capas) =========
-          def chave_unidade(slug):
-              m = RX_ID_SERIE.match(slug)
-              if m: return f"serie:{m.group(1)}"
-              if RX_ID_FILME.match(slug): return slug
-              m = RX_TT_SERIE.match(slug)
-              if m: return f"serie:{m.group(1).lower()}"
-              if RX_TT_FILME.match(slug): return slug
-              m = RX_EP.match(slug)
-              if m: return "serie:" + m.group(1).lower()
-              return slug
-
-          def montar_unidades(arquivos):
+          def main():
               try:
                   tit = json.load(open("titulos.json", encoding="utf-8"))
               except (OSError, ValueError):
                   tit = {}
-              res = {}
-              for arq in sorted(arquivos):
-                  slug = arq[:-5]
-                  chave = chave_unidade(slug)
-                  u = res.setdefault(chave, {"arqs": [], "_pronto": False})
-                  u["arqs"].append(arq)
-                  if u["_pronto"]: continue
-                  ms = RX_ID_SERIE.match(slug); mf = RX_ID_FILME.match(slug)
-                  ts = RX_TT_SERIE.match(slug);  tf = RX_TT_FILME.match(slug)
-                  m  = RX_EP.match(slug)
-                  if ms or mf:
-                      num = (ms or mf).group(1)
-                      u.update(tmdb_id=int(num), tipo="tv" if ms else "movie", nome=num, alt=num)
-                  elif ts or tf:
-                      num = (ts or tf).group(1).lower()
-                      u.update(imdb_id=num, tipo="tv" if ts else "movie", nome=num, alt=num)
-                  else:
-                      try:
-                          conteudo = open(arq, encoding="utf-8", errors="ignore").read()
-                      except OSError:
-                          conteudo = ""
-                      if m:
-                          alt = do_html(conteudo, norm(m.group(1))) or do_arquivo(m.group(1))
-                          u["tipo"] = "tv"
-                      else:
-                          alt = do_html(conteudo, norm(re.sub(r"_(\d{4})_\1$", r"_\1", slug))) or do_arquivo(slug)
-                          u["tipo"] = "movie"
-                      u["nome"] = (tit.get(chave) or {}).get("titulo") or alt
-                      u["alt"] = alt
-                  u["_pronto"] = True
-              for u in res.values():
-                  u.pop("_pronto", None)
-              return res
-
-          # ========= Resolução =========
-          # Devolve (gêneros, imdb_id, tmdb_id, tipo, título, ids_de_gênero_do_TMDB) ou None se o TMDB não conhece o ID.
-          def resolver_id(tmdb_id, tipo, nome_fallback):
-              d = tmdb(f"{tipo}/{tmdb_id}")
-              if not d:
-                  return None
-              generos = mapear_generos(d, tipo)
-              gids = [g.get("id") for g in d.get("genres", []) or []]
-              titulo = (d.get("name") if tipo == "tv" else d.get("title")) or nome_fallback
-              return generos, None, tmdb_id, tipo, titulo, gids
-
-          def resolver_imdb(u):
-              serie = u["tipo"] == "tv"
-              d = tmdb(f"find/{u['imdb_id']}", external_source="imdb_id")
-              achados = d.get("tv_results" if serie else "movie_results") or []
-              if not achados:
-                  return None
-              r = resolver_id(achados[0]["id"], "tv" if serie else "movie", u.get("nome", ""))
-              if r:
-                  gs, _, tid, tipo, tit, gids = r
-                  return gs, u["imdb_id"], tid, tipo, tit, gids
-              return None
-
-          def resolver(u):
-              if u.get("imdb_id"):
-                  return resolver_imdb(u)
-              if u.get("tmdb_id"):
-                  return resolver_id(u["tmdb_id"], u["tipo"], u["nome"])
-              serie = u["tipo"] == "tv"
-              r = achar("tv" if serie else "movie", u["nome"])
-              if not r and u.get("alt") and u["alt"] != u["nome"]:
-                  r = achar("tv" if serie else "movie", u["alt"])
-              if not r:
-                  return None
-              return resolver_id(r["id"], "tv" if serie else "movie", u["nome"])
-
-          # ========= Título por arquivo =========
-          def titulo_arquivo(arq, base_titulo):
-              base = re.sub(r"\s*T\d+E\d+.*$", "", base_titulo or "", flags=re.I).strip()
-              slug = arq[:-5]
-              m = RX_EP.match(slug)
-              if m:
-                  t, ep = (m.group(2), m.group(3)) if m.group(2) else (m.group(4), m.group(5))
-                  base2 = base or do_arquivo(m.group(1))
-                  return f"{base2} T{int(t)}E{int(ep)}"
-              ms = RX_ID_SERIE.match(slug) or RX_TT_SERIE.match(slug)
-              if ms:
-                  t, ep = int(ms.group(2)), int(ms.group(3))
-                  return f"{base} T{t}E{ep}" if base else ""
-              return base or do_arquivo(slug)
-
-          def titulo_do_html(arq):
+              corrigido = lambda k: (tit.get(k) or {}).get("titulo")
               try:
-                  texto = open(arq, encoding="utf-8", errors="ignore").read()
-              except OSError:
-                  return ""
-              m = RX_TITULO.search(texto)
-              if not m:
-                  return ""
-              t = htmllib.unescape(re.sub(r"<[^>]+>", "", m.group(1) or m.group(2) or "")).strip()
-              t = re.sub(r"\s*[-|–—]?\s*[^\w\s]*\s*clau(\s*flix)?\s*$", "", t, flags=re.I)
-              t = SUFIXOS.sub("", t).strip()
-              t = re.sub(r"\s*[-|–—]?\s*(?:T\d+\s*E(?:P)?\d+|\d+x\d+)\b.*$", "", t, flags=re.I).strip()
-              return t if t and not parece_id(t) else ""
+                  capas = json.load(open("capas.json", encoding="utf-8"))   # nomes do TMDB guardados pelo capas.yml
+              except (OSError, ValueError):
+                  capas = {}
+              nomes, stats = {}, {"tmdb": 0, "html": 0, "numero": 0, "manual": 0}
 
-          # ========= Aplicar resultado =========
-          def aplicar(u, resultado):
-              """resultado = None  -> o TMDB não conhece o título: 'indefinido' (com contagem de tentativas).
-                 resultado achado -> SEMPRE 'tmdb', mesmo sem gênero equivalente (generos: []): não fica re-tentando."""
-              if resultado:
-                  gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb = resultado[:5]
-                  tipo = "serie" if tipo_tmdb == "tv" else "filme"
-              else:
-                  gs = []
-                  imdb_id = u.get("imdb_id")
-                  tmdb_id = u.get("tmdb_id")
-                  tipo = "serie" if u.get("tipo") == "tv" else "filme"
-                  titulo_tmdb = None
+              def nome_do_id(chave, num, conteudo):
+                  """Nome de um título cujo arquivo se chama pelo ID do TMDB. Ordem: manual > TMDB > HTML > número."""
+                  if corrigido(chave):
+                      stats["manual"] += 1
+                      return corrigido(chave)
+                  e = capas.get(chave) or {}
+                  if e.get("fonte") == "tmdb" and e.get("nome"):
+                      ano = None
+                      try:
+                          ano = json.load(open(arquivo_det(chave), encoding="utf-8")).get("ano")
+                      except (OSError, ValueError):
+                          pass
+                      stats["tmdb"] += 1
+                      return com_ano(e["nome"], ano)
+                  h = limpar_titulo(conteudo, forte=True)
+                  if h and not h.isdigit():
+                      stats["html"] += 1
+                      return h
+                  stats["numero"] += 1
+                  return do_arquivo(num)
 
-              for arq in u["arqs"]:
-                  e = cache.get(arq) or {}
-                  titulo_atual = e.get("titulo") or ""
-                  if not titulo_atual or parece_id(titulo_atual):
-                      html_t = titulo_do_html(arq)
-                      if html_t:
-                          titulo_atual = html_t
-                  titulo = titulo_atual if not parece_id(titulo_atual) else titulo_arquivo(arq, titulo_tmdb or "")
-
-                  ids = {}
-                  if imdb_id: ids["imdb_id"] = imdb_id
-                  if tmdb_id: ids["tmdb_id"] = tmdb_id
-
-                  if resultado:
-                      cache[arq] = {"titulo": titulo, "tipo": tipo, "generos": gs, "fonte": "tmdb", **ids}
-                  elif e.get("fonte") == "tmdb":
-                      continue                                    # já tinha classificação boa: mantém
-                  else:
-                      tent = (e.get("tentativas") if e else 0) + 1
-                      cache[arq] = {
-                          "titulo": titulo, "tipo": tipo,
-                          "generos": ["indefinido"], "fonte": "indefinido",
-                          "tentativas": tent, "nome": u.get("nome", ""), **ids,
-                      }
-
-          # ========= Herdar entre irmãs =========
-          def herdar_entre_irmas(unidades):
-              n = 0
-              for k, u in unidades.items():
-                  es = [cache.get(a) for a in u["arqs"]]
-                  clas = [e for e in es if e and e.get("fonte") == "tmdb"
-                          and e.get("generos") and "indefinido" not in e.get("generos", [])]
-                  if not clas:
-                      continue
-                  fonte = clas[0]
-                  for arq in u["arqs"]:
-                      e = cache.get(arq)
-                      if e is None or e.get("fonte") == "indefinido":
-                          base = fonte.get("titulo", "")
-                          titulo = titulo_arquivo(arq, base)
-                          novo = {"titulo": titulo, "tipo": fonte.get("tipo"),
-                                  "generos": fonte.get("generos"), "fonte": "tmdb", "herdado": True}
-                          if fonte.get("imdb_id"): novo["imdb_id"] = fonte["imdb_id"]
-                          if fonte.get("tmdb_id"): novo["tmdb_id"] = fonte["tmdb_id"]
-                          cache[arq] = novo
-                          n += 1
-              return n
-
-          # ========= Pendência / poda / correções =========
-          def pendente(k, u):
-              if RX_FILTRO and not any(RX_FILTRO.search(a) for a in u["arqs"]):
-                  return False
-              if MODO == "tudo":
-                  return True
-              es = [cache.get(a) for a in u["arqs"]]
-              if MODO == "indefinidos":
-                  return any(e and e.get("fonte") == "indefinido" for e in es)
-              if all(e and e.get("fonte") == "tmdb" for e in es):
-                  # Já classificado. Só refaz se o ID no nome do arquivo mudou.
-                  # (Compara IMDb com IMDb e TMDB com TMDB; antes comparava um com o outro e
-                  #  reenfileirava tudo a cada execução.)
-                  if u.get("imdb_id"):
-                      return es[0].get("imdb_id") != u["imdb_id"]
-                  if u.get("tmdb_id"):
-                      return str(es[0].get("tmdb_id")) != str(u["tmdb_id"])
-                  return False
-              tent = max([e.get("tentativas", 0) for e in es if e] or [0])
-              return tent < MAX_TENTATIVAS
-
-          def podar(arquivos):
-              obsoletos = [a for a in cache if a not in arquivos]
-              if not obsoletos:
-                  return 0
-              if not arquivos or len(obsoletos) > LIMITE_PODA * len(cache):
-                  log(f"[!] Poda ignorada ({len(obsoletos)} órfãos > {int(LIMITE_PODA*100)}%).")
-                  return 0
-              for a in obsoletos:
-                  del cache[a]
-              return len(obsoletos)
-
-          def corrigir_cache():
-              n = 0
-              for arq, e in cache.items():
-                  m = (RX_EP.match(arq[:-5]) or RX_ID_SERIE.match(arq[:-5]) or RX_TT_SERIE.match(arq[:-5]))
-                  if m and e.get("tipo") != "serie":
-                      e["tipo"] = "serie"
-                      n += 1
-              return n
-
-          # ========= Execução =========
-          arquivos = [a for a in sorted(os.listdir(".")) if a.endswith(".html") and a not in IGNORAR]
-          log("=" * 50)
-          log(f"🔎 Modo: {MODO}" + (f" | filtro: {FILTRO}" if FILTRO else "") + f" | {len(arquivos)} arquivos | {len(cache)} no cache")
-
-          n_tipo = corrigir_cache()
-          n_podados = podar(set(arquivos))
-          unidades_dict = montar_unidades(arquivos)
-          n_herdados = herdar_entre_irmas(unidades_dict)
-          log(f"🧹 Correções: {n_tipo} tipos, {n_herdados} herdados, {n_podados} removidos.")
-          if n_tipo or n_herdados or n_podados:
-              salvar()
-
-          pendentes = [(k, u) for k, u in sorted(unidades_dict.items()) if pendente(k, u)]
-          if not pendentes:
-              log("[info] Nada pendente. Encerrando.")
-              salvar()
-              sys.exit(0)
-
-          total = len(pendentes)
-          log(f"🚀 {total} unidades para o TMDB.")
-          log("=" * 50)
-
-          inicio = time.time()
-          achou = sem_genero = nao = falhou = 0
-          amostras, diagnostico = [], []
-          processados = 0
-
-          with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-              futs = {ex.submit(resolver, u): (k, u) for k, u in pendentes}
-              for i, fut in enumerate(as_completed(futs), 1):
-                  k, u = futs[fut]
-                  if time.time() - inicio > TEMPO_LIMITE:
-                      log("⏰ Tempo limite atingido.")
-                      for f in futs:
-                          f.cancel()
-                      break
+              itens, metas, sem_video = [], [], 0
+              for caminho, arquivo in listar():
+                  slug = arquivo[:-5]
                   try:
-                      resultado = fut.result()
-                  except ChaveInvalida as err:
-                      print(f"❌ {err}: confira o secret.")
-                      salvar()
-                      sys.exit(1)
-                  except Exception as err:
-                      falhou += 1
-                      log(f"[!] {k}: {str(err)[:80]} (continua na fila)")
-                      continue                                    # erro de rede: NÃO grava nada, fica para a próxima rodada
-                  aplicar(u, resultado)
-                  if resultado is None:
-                      nao += 1
-                      if len(diagnostico) < 40:
-                          qual = (f"o TMDB não conhece o IMDb {u['imdb_id']}" if u.get("imdb_id")
-                                  else f"o TMDB não conhece o ID {u['tmdb_id']} ({'série' if u['tipo'] == 'tv' else 'filme'})" if u.get("tmdb_id")
-                                  else f"não achou pelo nome '{u.get('nome')}'")
-                          diagnostico.append(f"{k} ({len(u['arqs'])} arq.): {qual}")
-                  elif resultado[0]:
-                      achou += 1
-                      if (u.get("imdb_id") or u.get("tmdb_id")) and len(amostras) < 15:
-                          amostras.append(f"{k} → {resultado[4]} | {', '.join(resultado[0])}")
+                      conteudo = open(caminho, encoding="utf-8", errors="ignore").read()
+                  except OSError as e:
+                      print(f"Erro ao ler {caminho}: {e}")
+                      conteudo = ""
+                  thumb, video = extrair(conteudo)
+                  sem_video += not video
+                  ms, mf = RX_ID_SERIE.match(slug), RX_ID_FILME.match(slug)
+                  num = (ms or mf).group(1) if (ms or mf) else None
+                  m = None if num else RX_EP.match(slug)
+                  if num:
+                      chave = f"serie:{num.lower()}" if ms else slug      # mesma chave que o capas.yml usa no capas.json
+                      if chave not in nomes:                       # o mesmo nome para todos os episódios da série
+                          nomes[chave] = nome_do_id(chave, num, conteudo)
+                      serie = nomes[chave]
+                      if ms:
+                          t, e = int(ms.group(2)), int(ms.group(3))
+                          titulo = f"{serie} - T{t}E{e:02d}"
+                      else:
+                          t = e = 1
+                          titulo = serie
+                  elif m:
+                      t = int(m.group(2) or m.group(4)); e = int(m.group(3) or m.group(5))
+                      serie = corrigido("serie:" + m.group(1).lower()) or do_html(conteudo, norm(m.group(1))) or do_arquivo(m.group(1))
+                      titulo = f"{serie} - T{t}E{e:02d}"
                   else:
-                      sem_genero += 1
-                      if len(diagnostico) < 40:
-                          diagnostico.append(f"{k} ({len(u['arqs'])} arq.): TMDB {resultado[2]} '{resultado[4]}' tem gêneros sem equivalente no site: {resultado[5]}")
-                  processados += 1
-                  if processados % 500 == 0:
-                      salvar()
-                      log(f"📊 {processados}/{total}")
+                      t = e = 1
+                      serie = titulo = corrigido(slug) or do_html(conteudo, norm(re.sub(r"_(\d{4})_\1$", r"_\1", slug))) or do_arquivo(slug)
+                  link = f"{PREFIXO}/{caminho}" if PREFIXO else caminho
+                  itens.append({"titulo": titulo, "serie": serie, "temporada": t, "episodio": e,
+                                "link": link, "thumbnailUrl": thumb, "videoUrl": video})
+                  metas.append((chave if num else "legado", num))
+              if not itens:
+                  print("❌ Nenhum .html encontrado; mantendo o catálogo atual sem mexer.")
+                  sys.exit(1)
+              usos = {}
+              for it, (ident, num) in zip(itens, metas):
+                  usos.setdefault(it["serie"].lower(), set()).add(ident)
+              repetidos = 0
+              for it, (ident, num) in zip(itens, metas):
+                  if num and len(usos[it["serie"].lower()]) > 1:     # o site agrupa pelo nome: títulos diferentes não podem se misturar
+                      antigo = it["serie"]
+                      it["serie"] = f"{antigo} #{num}"
+                      if it["titulo"].startswith(antigo):
+                          it["titulo"] = it["serie"] + it["titulo"][len(antigo):]
+                      repetidos += 1
+              print(f"Nomes dos arquivos com ID: {stats['tmdb']} do TMDB, {stats['html']} do HTML, {stats['manual']} manuais, "
+                    f"{stats['numero']} só o número; {repetidos} itens com #ID por nome repetido")
+              itens.sort(key=lambda x: (x["serie"].lower(), x["temporada"], x["episodio"], x["link"]))
 
-          salvar()
+              partes = dividir(itens)
+              tmp = PASTA + ".tmp"
+              shutil.rmtree(tmp, ignore_errors=True)
+              os.makedirs(tmp)
+              indice = {"versao": 1, "total": len(itens), "partes": []}
+              for n, parte in enumerate(partes, 1):
+                  nome = f"parte-{n:03d}.json"
+                  with open(f"{tmp}/{nome}", "w", encoding="utf-8") as f:
+                      json.dump(parte, f, ensure_ascii=False, separators=(",", ":"))
+                  indice["partes"].append({"arquivo": f"{PASTA}/{nome}", "itens": len(parte),
+                                           "bytes": os.path.getsize(f"{tmp}/{nome}"),
+                                           "primeira": parte[0]["serie"], "ultima": parte[-1]["serie"]})
+              with open(f"{tmp}/indice.json", "w", encoding="utf-8") as f:
+                  json.dump(indice, f, ensure_ascii=False, separators=(",", ":"))
+              shutil.rmtree(PASTA, ignore_errors=True)
+              os.replace(tmp, PASTA)
+              if os.path.exists("catalogo.json"):
+                  os.remove("catalogo.json")            # o arquivo único antigo passava do limite de 25 MiB do Pages
+              maior = max(p["bytes"] for p in indice["partes"])
+              print(f"{PASTA}/: {len(itens)} itens em {len(partes)} partes (maior: {maior / 1048576:.1f} MiB), {sem_video} sem vídeo")
+              if maior > 20 * 1048576:
+                  print("⚠️  Uma série sozinha passa de 20 MiB; confira o limite de 25 MiB do Pages.")
 
-          log("=" * 50)
-          if diagnostico:
-              log("🩺 Por que alguns não receberam gênero (até 40):")
-              for d in diagnostico:
-                  log(f"   • {d}")
-          # Resumo de "sem classificação" deduplicado por nome (série conta 1x, não 1x por episódio)
-          sem_class = {}
-          for k, e in cache.items():
-              if e.get("fonte") == "indefinido" and e.get("tentativas", 0) >= MAX_TENTATIVAS:
-                  nome = e.get("nome") or e.get("titulo") or k
-                  sem_class[nome] = sem_class.get(nome, 0) + 1
-          if sem_class:
-              log(f"⚠️  {len(sem_class)} título(s) que o TMDB não achou (rode no modo 'indefinidos' após corrigir):")
-              for nome, cnt in sorted(sem_class.items())[:40]:
-                  log(f"   • {nome} ({cnt} arquivo{'s' if cnt>1 else ''})")
-              if len(sem_class) > 40:
-                  log(f"   ... e mais {len(sem_class)-40}.")
-          for a in amostras[:10]:
-              log(f"   ✓ {a}")
-          log(f"🎉 {achou} classificados com gênero, {sem_genero} achados no TMDB sem gênero equivalente, {nao} não encontrados, {falhou} falhas de rede (continuam na fila).")
-          log(f"💾 {len(cache)} entradas | {len(glob.glob('classificacao_*.json'))} shard(s) de saída.")
-          for f in sorted(glob.glob("classificacao_*.json")):
-              log(f"   {f}: {os.path.getsize(f)/1024/1024:.1f} MB")
 
-          if falhou and not achou and not nao and not sem_genero:
-              log("[x] Todas as requisições falharam.")
-              sys.exit(1)
+          main()
           PYEOF
 
-      - name: Commitar índice atualizado
-        if: always()
-        env:
-          MODO: ${{ inputs.modo || 'novos' }}
+      - name: Commitar o catalogo
         run: |
           git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          # 'classificacao*.json' pega o manifesto (classificacao.json) E todos os shards
-          # (classificacao_1.json, classificacao_2.json, ...). -A também estagia deleções
-          # de shards removidos.
-          git add -A -- 'classificacao*.json'
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A catalogo
+          git rm -q --ignore-unmatch catalogo.json
           if git diff --cached --quiet; then
-            echo "Sem mudanças."
+            echo "Sem mudanças — nada a commitar."
             exit 0
           fi
-          git commit -m "chore: atualiza classificacao via TMDB (${MODO}) [skip ci]"
+          git commit -m "chore: atualiza catalogo [skip ci]"
           for i in 1 2 3; do
             if git pull origin "$GITHUB_REF_NAME" -X ours --no-rebase && git push; then
               exit 0
             fi
-            echo "Push falhou (tentativa $i)."
+            echo "Push falhou (tentativa $i). Tentando de novo..."
             sleep 5
           done
           exit 1
