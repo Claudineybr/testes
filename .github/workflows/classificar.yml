@@ -7,18 +7,19 @@ name: Classificar filmes e séries com TMDB
 #   classificacao.json                                -> manifesto
 #     {"parts": ["classificacao_1.json", "classificacao_2.json", ...], "total": N}
 #
-# Para o site continuar funcionando, o frontend precisa carregar todos os shards:
-#
-#   let c = await fetch('classificacao.json').then(r => r.json());
-#   if (Array.isArray(c.parts)) {
-#     const p = await Promise.all(c.parts.map(x => fetch(x).then(r => r.json())));
-#     c = Object.assign({}, ...p);
-#   }
-#   // c agora é o mapa {arquivo: {titulo, generos, ...}} de antes
+# O index.html e o serie.html já carregam o manifesto e juntam os shards sozinhos
+# (e continuam aceitando o formato antigo, de arquivo único).
 #
 # Os arquivos já estão renomeados com ID do TMDB e/ou IMDb (ex.: 1399.html,
 # 100010s01e01.html, tt0903747s01e01.html). A identificação segue as MESMAS
 # regras do "Trocar capas pelo TMDB".
+#
+# === GÊNEROS ===
+# Filmes e séries têm listas de gêneros diferentes no TMDB. Séries de novela, reality,
+# talk show, notícias e infantil NÃO existem na lista de filmes; antes elas ficavam sem
+# gênero ("indefinido") para sempre. Agora viram: Novela, Reality, Talk Show, Notícias e
+# Infantil (os botões de gênero do site aparecem sozinhos conforme os dados).
+# Para juntar com um gênero que já existe, é só trocar o texto nos dicionários GEN_FILME / GEN_SERIE.
 
 on:
   workflow_dispatch:
@@ -88,15 +89,21 @@ jobs:
           if not CHAVE:
               print("[x] Falta o secret TMDB_API_KEY."); sys.exit(1)
 
-          TMDB_GENERO_MAP = {
-              28:"Ação",12:"Aventura",16:"Animação",35:"Comédia",80:"Crime",99:"Documentário",
-              18:"Drama",10751:"Família",14:"Fantasia",36:"História",27:"Terror",10402:"Música",
-              9648:"Mistério",10749:"Romance",878:"Ficção Científica",53:"Thriller",10752:"Guerra",
-              37:"Faroeste",10759:"Ação",10765:"Ficção Científica",10768:"Guerra",
+          # Gêneros do TMDB -> nomes que o site mostra. Filmes e séries usam listas diferentes.
+          GEN_FILME = {
+              28: ["Ação"], 12: ["Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
+              99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 14: ["Fantasia"], 36: ["História"],
+              27: ["Terror"], 10402: ["Música"], 9648: ["Mistério"], 10749: ["Romance"],
+              878: ["Ficção Científica"], 10770: ["Cinema TV"], 53: ["Thriller"], 10752: ["Guerra"],
+              37: ["Faroeste"],
           }
-          GENEROS = ["Ação","Aventura","Animação","Comédia","Crime","Documentário","Drama",
-                     "Família","Fantasia","História","Terror","Música","Mistério","Romance",
-                     "Ficção Científica","Thriller","Guerra","Faroeste"]
+          GEN_SERIE = {
+              10759: ["Ação", "Aventura"], 16: ["Animação"], 35: ["Comédia"], 80: ["Crime"],
+              99: ["Documentário"], 18: ["Drama"], 10751: ["Família"], 10762: ["Infantil"],
+              9648: ["Mistério"], 10763: ["Notícias"], 10764: ["Reality"],
+              10765: ["Ficção Científica", "Fantasia"], 10766: ["Novela"], 10767: ["Talk Show"],
+              10768: ["Guerra"], 37: ["Faroeste"],
+          }
 
           IGNORAR = {"index.html","sobre.html","contato.html","404.html","serie.html"}
           SAIDA = "classificacao.json"
@@ -231,12 +238,14 @@ jobs:
                               return r
               return None
 
-          def mapear_generos(details):
+          def mapear_generos(details, tipo):
+              """Gêneros do TMDB -> até 3 nomes do site, na ordem do TMDB (filme e série têm tabelas diferentes)."""
+              mapa = GEN_SERIE if tipo == "tv" else GEN_FILME
               gs = []
               for g in details.get("genres", []) or []:
-                  nome = TMDB_GENERO_MAP.get(g.get("id"))
-                  if nome and nome in GENEROS and nome not in gs:
-                      gs.append(nome)
+                  for nome in mapa.get(g.get("id"), []):
+                      if nome not in gs:
+                          gs.append(nome)
               return gs[:3]
 
           def parece_id(t):
@@ -376,15 +385,15 @@ jobs:
               return res
 
           # ========= Resolução =========
+          # Devolve (gêneros, imdb_id, tmdb_id, tipo, título, ids_de_gênero_do_TMDB) ou None se o TMDB não conhece o ID.
           def resolver_id(tmdb_id, tipo, nome_fallback):
               d = tmdb(f"{tipo}/{tmdb_id}")
               if not d:
                   return None
-              generos = mapear_generos(d)
+              generos = mapear_generos(d, tipo)
+              gids = [g.get("id") for g in d.get("genres", []) or []]
               titulo = (d.get("name") if tipo == "tv" else d.get("title")) or nome_fallback
-              ext = tmdb(f"{tipo}/{tmdb_id}/external_ids")
-              imdb_id = (ext or {}).get("imdb_id")
-              return generos, imdb_id, tmdb_id, tipo, titulo
+              return generos, None, tmdb_id, tipo, titulo, gids
 
           def resolver_imdb(u):
               serie = u["tipo"] == "tv"
@@ -394,8 +403,8 @@ jobs:
                   return None
               r = resolver_id(achados[0]["id"], "tv" if serie else "movie", u.get("nome", ""))
               if r:
-                  gs, _, tid, tipo, tit = r
-                  return gs, u["imdb_id"], tid, tipo, tit
+                  gs, _, tid, tipo, tit, gids = r
+                  return gs, u["imdb_id"], tid, tipo, tit, gids
               return None
 
           def resolver(u):
@@ -442,8 +451,10 @@ jobs:
 
           # ========= Aplicar resultado =========
           def aplicar(u, resultado):
+              """resultado = None  -> o TMDB não conhece o título: 'indefinido' (com contagem de tentativas).
+                 resultado achado -> SEMPRE 'tmdb', mesmo sem gênero equivalente (generos: []): não fica re-tentando."""
               if resultado:
-                  gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb = resultado
+                  gs, imdb_id, tmdb_id, tipo_tmdb, titulo_tmdb = resultado[:5]
                   tipo = "serie" if tipo_tmdb == "tv" else "filme"
               else:
                   gs = []
@@ -461,20 +472,20 @@ jobs:
                           titulo_atual = html_t
                   titulo = titulo_atual if not parece_id(titulo_atual) else titulo_arquivo(arq, titulo_tmdb or "")
 
-                  if gs:
-                      cache[arq] = {
-                          "titulo": titulo, "tipo": tipo, "generos": gs,
-                          "fonte": "tmdb", "imdb_id": imdb_id, "tmdb_id": tmdb_id,
-                      }
+                  ids = {}
+                  if imdb_id: ids["imdb_id"] = imdb_id
+                  if tmdb_id: ids["tmdb_id"] = tmdb_id
+
+                  if resultado:
+                      cache[arq] = {"titulo": titulo, "tipo": tipo, "generos": gs, "fonte": "tmdb", **ids}
                   elif e.get("fonte") == "tmdb":
-                      continue
+                      continue                                    # já tinha classificação boa: mantém
                   else:
                       tent = (e.get("tentativas") if e else 0) + 1
                       cache[arq] = {
                           "titulo": titulo, "tipo": tipo,
                           "generos": ["indefinido"], "fonte": "indefinido",
-                          "tentativas": tent, "nome": u.get("nome", ""),
-                          "imdb_id": imdb_id, "tmdb_id": tmdb_id,
+                          "tentativas": tent, "nome": u.get("nome", ""), **ids,
                       }
 
           # ========= Herdar entre irmãs =========
@@ -492,13 +503,11 @@ jobs:
                       if e is None or e.get("fonte") == "indefinido":
                           base = fonte.get("titulo", "")
                           titulo = titulo_arquivo(arq, base)
-                          cache[arq] = {
-                              "titulo": titulo, "tipo": fonte.get("tipo"),
-                              "generos": fonte.get("generos"), "fonte": "tmdb",
-                              "herdado": True,
-                              "imdb_id": fonte.get("imdb_id"),
-                              "tmdb_id": fonte.get("tmdb_id"),
-                          }
+                          novo = {"titulo": titulo, "tipo": fonte.get("tipo"),
+                                  "generos": fonte.get("generos"), "fonte": "tmdb", "herdado": True}
+                          if fonte.get("imdb_id"): novo["imdb_id"] = fonte["imdb_id"]
+                          if fonte.get("tmdb_id"): novo["tmdb_id"] = fonte["tmdb_id"]
+                          cache[arq] = novo
                           n += 1
               return n
 
@@ -512,11 +521,13 @@ jobs:
               if MODO == "indefinidos":
                   return any(e and e.get("fonte") == "indefinido" for e in es)
               if all(e and e.get("fonte") == "tmdb" for e in es):
-                  ident = u.get("imdb_id") or u.get("tmdb_id")
-                  if ident and es[0]:
-                      ic = es[0].get("imdb_id") or es[0].get("tmdb_id")
-                      if ic and str(ic) != str(ident):
-                          return True
+                  # Já classificado. Só refaz se o ID no nome do arquivo mudou.
+                  # (Compara IMDb com IMDb e TMDB com TMDB; antes comparava um com o outro e
+                  #  reenfileirava tudo a cada execução.)
+                  if u.get("imdb_id"):
+                      return es[0].get("imdb_id") != u["imdb_id"]
+                  if u.get("tmdb_id"):
+                      return str(es[0].get("tmdb_id")) != str(u["tmdb_id"])
                   return False
               tent = max([e.get("tentativas", 0) for e in es if e] or [0])
               return tent < MAX_TENTATIVAS
@@ -565,8 +576,8 @@ jobs:
           log("=" * 50)
 
           inicio = time.time()
-          achou = nao = falhou = 0
-          amostras = []
+          achou = sem_genero = nao = falhou = 0
+          amostras, diagnostico = [], []
           processados = 0
 
           with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
@@ -586,23 +597,36 @@ jobs:
                       sys.exit(1)
                   except Exception as err:
                       falhou += 1
-                      log(f"[!] {k}: {str(err)[:80]}")
-                      resultado = None
+                      log(f"[!] {k}: {str(err)[:80]} (continua na fila)")
+                      continue                                    # erro de rede: NÃO grava nada, fica para a próxima rodada
                   aplicar(u, resultado)
-                  if resultado and resultado[0]:
+                  if resultado is None:
+                      nao += 1
+                      if len(diagnostico) < 40:
+                          qual = (f"o TMDB não conhece o IMDb {u['imdb_id']}" if u.get("imdb_id")
+                                  else f"o TMDB não conhece o ID {u['tmdb_id']} ({'série' if u['tipo'] == 'tv' else 'filme'})" if u.get("tmdb_id")
+                                  else f"não achou pelo nome '{u.get('nome')}'")
+                          diagnostico.append(f"{k} ({len(u['arqs'])} arq.): {qual}")
+                  elif resultado[0]:
                       achou += 1
                       if (u.get("imdb_id") or u.get("tmdb_id")) and len(amostras) < 15:
-                          amostras.append(f"{k} → {resultado[4]} | {resultado[0]} | IMDb {resultado[1]}")
+                          amostras.append(f"{k} → {resultado[4]} | {', '.join(resultado[0])}")
                   else:
-                      nao += 1
+                      sem_genero += 1
+                      if len(diagnostico) < 40:
+                          diagnostico.append(f"{k} ({len(u['arqs'])} arq.): TMDB {resultado[2]} '{resultado[4]}' tem gêneros sem equivalente no site: {resultado[5]}")
                   processados += 1
-                  if processados % 50 == 0:
+                  if processados % 500 == 0:
                       salvar()
                       log(f"📊 {processados}/{total}")
 
           salvar()
 
           log("=" * 50)
+          if diagnostico:
+              log("🩺 Por que alguns não receberam gênero (até 40):")
+              for d in diagnostico:
+                  log(f"   • {d}")
           # Resumo de "sem classificação" deduplicado por nome (série conta 1x, não 1x por episódio)
           sem_class = {}
           for k, e in cache.items():
@@ -610,19 +634,19 @@ jobs:
                   nome = e.get("nome") or e.get("titulo") or k
                   sem_class[nome] = sem_class.get(nome, 0) + 1
           if sem_class:
-              log(f"⚠️  {len(sem_class)} título(s) ainda sem classificação (rode no modo 'indefinidos' após corrigir):")
+              log(f"⚠️  {len(sem_class)} título(s) que o TMDB não achou (rode no modo 'indefinidos' após corrigir):")
               for nome, cnt in sorted(sem_class.items())[:40]:
                   log(f"   • {nome} ({cnt} arquivo{'s' if cnt>1 else ''})")
               if len(sem_class) > 40:
                   log(f"   ... e mais {len(sem_class)-40}.")
           for a in amostras[:10]:
               log(f"   ✓ {a}")
-          log(f"🎉 {achou} classificados, {nao} sem gêneros, {falhou} falhas de rede.")
+          log(f"🎉 {achou} classificados com gênero, {sem_genero} achados no TMDB sem gênero equivalente, {nao} não encontrados, {falhou} falhas de rede (continuam na fila).")
           log(f"💾 {len(cache)} entradas | {len(glob.glob('classificacao_*.json'))} shard(s) de saída.")
           for f in sorted(glob.glob("classificacao_*.json")):
               log(f"   {f}: {os.path.getsize(f)/1024/1024:.1f} MB")
 
-          if falhou and not achou and not nao:
+          if falhou and not achou and not nao and not sem_genero:
               log("[x] Todas as requisições falharam.")
               sys.exit(1)
           PYEOF
