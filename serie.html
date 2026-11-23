@@ -271,7 +271,7 @@
     // ===================================================================
     const CONFIG = {
       WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/', // proxy p/ vídeos HTTP no PC
-      CATALOGO_INDICE_URL: 'catalogo/indice.json', // catálogo dividido em partes (catalogo/parte-001.json ...)
+      CATALOGO_URL: 'catalogo.json',
       FETCH_TIMEOUT_MS: 12000,
       TROCA_FUNDO_MS: 10000,
       NEVE_INTERVALO_MS: 200,
@@ -417,11 +417,13 @@
     let serieAtual = null;   // { nome, capa, link }
     let episodios = [];      // todos os episódios, ordenados
     let temporadaAtiva = 1;
+    // Chave geral: false = não busca detalhes/*.json (sinopse, banner, nota, trailer e botão Pular). Troque para true quando tiver outra host.
+    const USAR_DETALHES = false;
     let detalhes = {};       // detalhes/<chave>.json: sinopse, fundo, nota, duração, trailer (vem do TMDB pelo workflow capas)
     let secaoAtiva = '';
     let catalogoTodo = null, promessaClsGlobal = null, similaresCache = null;
     const RX_EP = /^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/i;   // mesma regra do capas.py
-    const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+))/i;
+    const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+)|^(?:\d+|tt\d+)s\d+e\d+)/i;
 
     // ===================================================================
     // 5. SKELETON, ERRO E MENSAGENS
@@ -481,28 +483,13 @@
       }
     }
 
-    /** Baixa o catálogo: lê catalogo/indice.json e junta as partes (cada uma abaixo do limite de 25 MiB do Pages). */
-    async function buscarCatalogo(limiteMs) {
-      const indice = await buscarJson(CONFIG.CATALOGO_INDICE_URL, limiteMs);
-      if (!indice || !Array.isArray(indice.partes)) throw new Error('Índice do catálogo inválido');
-      const partes = await Promise.all(indice.partes.map((p) => buscarJson(p.arquivo, limiteMs)));
-      return partes.flat(); // mesma lista (e mesma ordem) do antigo catalogo.json
-    }
-
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
     /** Carrega a classificação (opcional): se falhar, só ficam de fora os gêneros. */
     function carregarClassificacao() {
       return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
-        .then(async (cls) => {
-          // Formato novo: classificacao.json é só um manifesto {parts: [...]}; os dados ficam em classificacao_1.json, _2.json...
-          if (cls && Array.isArray(cls.parts)) {
-            const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
-            cls = Object.assign({}, ...partes);       // vira o mesmo mapa {arquivo: {titulo, generos, ...}} de antes
-          }
-          return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
-        })
+        .then((cls) => (cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null))
         .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
@@ -539,7 +526,7 @@
     // ===================================================================
     /** Garante temporada/episódio numéricos (usa o título TxxExx como plano B). */
     function normalizarEpisodio(ep) {
-      const m = ep.titulo.match(/T(\d+)E(\d+)/i);
+      const m = ep.titulo.match(/[TS](\d+)E(\d+)/i);
       return {
         ...ep,
         _temp: Number(ep.temporada) || (m ? parseInt(m[1], 10) : 1),
@@ -816,6 +803,7 @@
       return chave.toLowerCase().replace(/:/g, '--').replace(/[^a-z0-9_.-]/g, '_');
     }
     function carregarDetalhes() {
+      if (!USAR_DETALHES) return Promise.resolve(null);
       return buscarJson(`detalhes/${arquivoDetalhes()}.json`, 6000)
         .then((d) => (d && typeof d === 'object' && !Array.isArray(d) ? d : null))
         .catch(() => null);
@@ -825,7 +813,7 @@
       mostrarSkeleton();
       try {
         const promessaCls = promessaClsGlobal = carregarClassificacao(); // baixa em paralelo com o catálogo
-        const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
+        const catalogo = await buscarJson(CONFIG.CATALOGO_URL, CONFIG.FETCH_TIMEOUT_MS);
         if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
         catalogoTodo = catalogo;
         if (ehFilme) {
@@ -938,8 +926,8 @@
       if (window.ClauPlayer) {
         const opcoes = {
           chave: chaveProgresso(ep),
-          // botão "Pular" (TheIntroDB) — usa o tmdb_id gravado em detalhes/<chave>.json pelo workflow capas
-          segmentos: () => (detalhes && detalhes.tmdb_id ? ClauPlayer.buscarSegmentos(detalhes.tmdb_id, ehFilme ? null : ep._temp, ehFilme ? null : ep._ep) : []),
+          // botão "Pular" (TheIntroDB): id vem do nome do arquivo (TMDB/IMDb) ou do capas.json
+          segmentos: () => ClauPlayer.segmentosDoArquivo(ep.link, ehFilme ? null : ep._temp, ehFilme ? null : ep._ep),
           videoUrl: ep.videoUrl, titulo: serieAtual.nome, subtitulo: ehFilme ? 'Filme' : `T${ep._temp} · E${pad2(ep._ep)}`,
           link: ep.link, workerUrl: CONFIG.WORKER_URL,
           aoIniciar: () => registrarVisto(i),
