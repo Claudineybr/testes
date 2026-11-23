@@ -97,7 +97,6 @@
     .acoes { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .serie-sk { position: absolute; inset: 0; }
 
-    /* ---- Hero estilo "Detalhes" (banner grande do TMDB) ---- */
     .serie-hero.pk { min-height: min(74vh, 600px); align-items: flex-end; }
     .serie-hero.pk .serie-bg { inset: 0; transform: none; background: var(--fundo) center 20% / cover; filter: brightness(0.9) saturate(1.1); }
     .serie-hero.pk::after { background: linear-gradient(to top, rgba(7, 13, 11, 0.97) 4%, rgba(7, 13, 11, 0.55) 45%, rgba(7, 13, 11, 0.08) 80%), linear-gradient(90deg, rgba(7, 13, 11, 0.7), transparent 65%); }
@@ -119,7 +118,6 @@
     .btn-play { background: #fff; color: #000; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45); }
     .btn-play:hover { background: #e9e9e9; transform: translateY(-3px); }
 
-    /* ---- Seções: Episódios / Detalhes / Similares / Trailer ---- */
     .secoes { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--vidro-borda); overflow-x: auto; scrollbar-width: none; }
     .secoes::-webkit-scrollbar { display: none; }
     .secao-aba { padding: 12px 18px; background: none; border: 0; border-bottom: 3px solid transparent; font: inherit; font-weight: 700; color: var(--mudo); cursor: pointer; white-space: nowrap; transition: color 0.2s, border-color 0.2s; }
@@ -263,23 +261,22 @@
   (() => {
     'use strict';
 
-    // PWA: registra o service worker (falha silenciosa)
     if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
     // ===================================================================
     // 1. CONFIGURAÇÃO
     // ===================================================================
     const CONFIG = {
-      WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/', // proxy p/ vídeos HTTP no PC
-      CATALOGO_URL: 'catalogo.json',
+      WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/',
+      CATALOGO_INDICE_URL: 'catalogo/indice.json',
       FETCH_TIMEOUT_MS: 12000,
       TROCA_FUNDO_MS: 10000,
       NEVE_INTERVALO_MS: 200,
       NEVE_MAX_FLOCOS: 60,
       QTD_LUZES: 36,
-      CLASSIFICACAO_URL: 'classificacao.json',  // gêneros por arquivo (opcional: a página funciona sem ele)
+      CLASSIFICACAO_URL: 'classificacao.json',
       CLASSIFICACAO_TIMEOUT_MS: 25000,
-      CLASSIFICACAO_GRACA_MS: 1500,             // espera curta antes de desenhar, p/ evitar "pulo" visual
+      CLASSIFICACAO_GRACA_MS: 1500,
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS: 3,
     };
@@ -292,9 +289,8 @@
       'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=1920&q=80&auto=format&fit=crop'
     ];
 
-    // Mesma chave usada pelo index.html: favoritos são compartilhados entre as páginas
     const LS_FAVORITOS = 'clauFlix_favoritos_v1';
-    // Histórico "Continuar assistindo": compartilhado com o index.html
+
     const LS_HISTORICO = 'clauFlix_historico_v1';
     const MAX_HISTORICO = 20;
 
@@ -302,10 +298,9 @@
       try { const v = JSON.parse(localStorage.getItem(LS_HISTORICO)); return Array.isArray(v) ? v : []; } catch { return []; }
     }
     function gravarHistorico(lista) {
-      try { localStorage.setItem(LS_HISTORICO, JSON.stringify(lista.slice(0, MAX_HISTORICO))); } catch { /* ignora */ }
+      try { localStorage.setItem(LS_HISTORICO, JSON.stringify(lista.slice(0, MAX_HISTORICO))); } catch {  }
     }
 
-    // Placeholder local (o antigo via.placeholder.com saiu do ar)
     function semCapa(titulo) {
       const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
       const linhas = [];
@@ -333,10 +328,9 @@
       try { const v = JSON.parse(localStorage.getItem(LS_FAVORITOS)); return Array.isArray(v) ? v : []; } catch { return []; }
     }
     function gravarFavoritos(lista) {
-      try { localStorage.setItem(LS_FAVORITOS, JSON.stringify(lista)); } catch { /* ignora */ }
+      try { localStorage.setItem(LS_FAVORITOS, JSON.stringify(lista)); } catch {  }
     }
 
-    /** Nome limpo da série (mesma regra do index.html). */
     function nomeDaSerie(item) {
       const nome = (item.serie || '').trim();
       return nome || item.titulo.replace(/\s*-\s*(T\d+E\d+|\d+x\d+|\sE\d+$).*/i, '').trim();
@@ -405,7 +399,7 @@
     // ===================================================================
     const params = new URLSearchParams(window.location.search);
     const nomeSerieParam = params.get('nome') || '';
-    const modoFilme = params.get('filme') || '';   // ?filme=<arquivo.html> -> mesma página, em modo filme
+    const modoFilme = params.get('filme') || '';
     const ehFilme = !!modoFilme;
     const conteudo = $('conteudoEpisodios');
     const heroEl = $('serieHero');
@@ -414,15 +408,15 @@
     const modalTitulo = $('modalTitulo');
     const linkOriginal = $('linkOriginal');
 
-    let serieAtual = null;   // { nome, capa, link }
-    let episodios = [];      // todos os episódios, ordenados
+    let serieAtual = null;
+    let episodios = [];
     let temporadaAtiva = 1;
-    // Chave geral: false = não busca detalhes/*.json (sinopse, banner, nota, trailer e botão Pular). Troque para true quando tiver outra host.
+
     const USAR_DETALHES = false;
-    let detalhes = {};       // detalhes/<chave>.json: sinopse, fundo, nota, duração, trailer (vem do TMDB pelo workflow capas)
+    let detalhes = {};
     let secaoAtiva = '';
     let catalogoTodo = null, promessaClsGlobal = null, similaresCache = null;
-    const RX_EP = /^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/i;   // mesma regra do capas.py
+    const RX_EP = /^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/i;
     const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+)|^(?:\d+|tt\d+)s\d+e\d+)/i;
 
     // ===================================================================
@@ -470,7 +464,6 @@
         </div>`;
     }
 
-    /** Baixa um JSON com limite de tempo; lança erro com `name === 'AbortError'` se demorar. */
     async function buscarJson(url, limiteMs) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), limiteMs);
@@ -483,13 +476,25 @@
       }
     }
 
+    async function buscarCatalogo(limiteMs) {
+      const indice = await buscarJson(CONFIG.CATALOGO_INDICE_URL, limiteMs);
+      if (!indice || !Array.isArray(indice.partes)) throw new Error('Índice do catálogo inválido');
+      const partes = await Promise.all(indice.partes.map((p) => buscarJson(p.arquivo, limiteMs)));
+      return partes.flat();
+    }
+
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
-    /** Carrega a classificação (opcional): se falhar, só ficam de fora os gêneros. */
     function carregarClassificacao() {
       return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
-        .then((cls) => (cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null))
+        .then(async (cls) => {
+          if (cls && Array.isArray(cls.parts)) {
+            const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
+            cls = Object.assign({}, ...partes);
+          }
+          return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
+        })
         .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
@@ -498,10 +503,9 @@
       try { return decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()).toLowerCase(); } catch { return ''; }
     };
 
-    /** Gêneros da série = os mais frequentes entre os episódios (a IA classificou episódio a episódio). */
     function generosDaClassificacao(cls, eps) {
       const tem = (k) => Object.prototype.hasOwnProperty.call(cls, k);
-      let porTitulo = null; // índice por título só é montado se algum episódio não casar pelo arquivo
+      let porTitulo = null;
       const cont = new Map();
 
       eps.forEach((ep) => {
@@ -524,7 +528,7 @@
     // ===================================================================
     // 6. HERO, TEMPORADAS E EPISÓDIOS
     // ===================================================================
-    /** Garante temporada/episódio numéricos (usa o título TxxExx como plano B). */
+
     function normalizarEpisodio(ep) {
       const m = ep.titulo.match(/[TS](\d+)E(\d+)/i);
       return {
@@ -534,7 +538,6 @@
       };
     }
 
-    /** Remove nome da série e marcação TxxExx do título exibido. */
     function tituloLimpo(ep, nome) {
       let t = ep.titulo.replace(nome, '').replace(/-\s*T\d+E\d+/i, '').replace(/T\d+E\d+/i, '').trim();
       if (t.startsWith('-')) t = t.substring(1).trim();
@@ -543,9 +546,8 @@
 
     const pad2 = (n) => String(n).padStart(2, '0');
     const listaTemporadas = () => [...new Set(episodios.map((e) => e._temp))];
-    const chaveSerie = () => (ehFilme ? serieAtual.link : 'serie:' + serieAtual.nome);   // mesmas chaves do index.html
+    const chaveSerie = () => (ehFilme ? serieAtual.link : 'serie:' + serieAtual.nome);
 
-    // Progresso salvo pelo player (player.js) -> "Parou em 12:30"
     function lerProgresso() { try { const v = JSON.parse(localStorage.getItem('clauFlix_progresso_v1')); return v && typeof v === 'object' ? v : {}; } catch { return {}; } }
     const chaveProgresso = (ep) => (ehFilme ? ep.link : `${chaveSerie()}:t${ep._temp}e${ep._ep}`);
     const progressoDe = (ep) => (ep ? lerProgresso()[chaveProgresso(ep)] || null : null);
@@ -556,14 +558,12 @@
     }
     const fmtDuracao = (min) => (min >= 60 ? `${Math.floor(min / 60)}h ${String(min % 60).padStart(2, '0')}min` : `${min} min`);
 
-    /** Último episódio assistido desta série (índice em `episodios`) ou -1. */
     function indiceVisto() {
       const h = lerHistorico().find((x) => x.k === chaveSerie());
       if (!h) return -1;
       return episodios.findIndex((e) => e._temp === h.temp && e._ep === h.ep);
     }
 
-    /** Grava o episódio no histórico (mais recente primeiro, 1 entrada por série). */
     function registrarVisto(i) {
       const ep = episodios[i];
       if (!ep) return;
@@ -630,7 +630,6 @@
       pintarGeneros();
     }
 
-    /** Gêneros: o 1º vira etiqueta na linha de meta; os demais aparecem na caixa de gêneros. */
     function pintarGeneros() {
       const box = $('serieGeneros');
       if (!box || !serieAtual) return;
@@ -651,7 +650,6 @@
       ...(detalhes.trailer ? [['tr', 'Trailer']] : []),
     ];
 
-    /** Painel com as seções (Episódios / Detalhes / Similares / Trailer). */
     function renderizarPainel() {
       const secs = secoesDisponiveis();
       if (!secs.some(([id]) => id === secaoAtiva)) secaoAtiva = secs[0][0];
@@ -704,7 +702,6 @@
       return `<div class="info-grid">${itens.join('')}</div>${d.sinopse ? `<p class="info-texto">${esc(d.sinopse)}</p>` : '<p class="vazio-sec">Sinopse ainda não disponível.</p>'}`;
     }
 
-    /** Parecidos: títulos que dividem gêneros com este (classificacao.json), mesmo tipo primeiro. */
     async function montarSimilares() {
       if (similaresCache) return similaresCache;
       const cls = await promessaClsGlobal;
@@ -755,13 +752,11 @@
       $('listaEps').innerHTML = html;
     }
 
-    /** Capa da temporada: a do 1º episódio dela que tiver imagem; senão a capa geral da série. */
     function capaDaTemporada(t) {
       const ep = episodios.find((e) => e._temp === t && (e.thumbnailUrl || '').trim());
       return ep ? ep.thumbnailUrl.trim() : serieAtual.capa;
     }
 
-    /** Troca o pôster (e o fundo desfocado) do topo quando a temporada muda, com um fade curto. */
     function atualizarCapa(t) {
       const img = $('capaSerie');
       const nova = capaDaTemporada(t);
@@ -770,14 +765,14 @@
       img.style.transition = 'opacity 0.25s ease';
       img.style.opacity = '0';
       const aplicar = () => {
-        if (img.dataset.capa !== nova) return;              // o usuário já trocou de novo
+        if (img.dataset.capa !== nova) return;
         img.src = nova || semCapa(serieAtual.nome);
         if (nova) heroEl.style.setProperty('--capa', `url("${nova.replace(/"/g, '%22')}")`);
         img.style.opacity = '1';
       };
       const pre = new Image();
       pre.onload = aplicar;
-      pre.onerror = aplicar;                                // se falhar, o handler de erro mostra o placeholder
+      pre.onerror = aplicar;
       pre.src = nova || semCapa(serieAtual.nome);
     }
 
@@ -790,12 +785,10 @@
       if ($('listaEps')) renderizarLista();
     }
 
-    /** detalhes/<chave>.json — mesma regra de nome do capas.py (minúsculo, ':'→'--', fora [a-z0-9_.-]→'_'). */
     function arquivoDetalhes() {
       let chave;
       if (ehFilme) chave = arquivoDoLink(serieAtual.link).replace(/\.html?$/, '');
       else {
-        // mesma chave do capas.py: prefixo do ARQUIVO do episódio (sem acento), não o nome exibido ("Diários" -> diarios)
         const slug = arquivoDoLink(episodios[0].link).replace(/\.html?$/, '');
         const m = slug.match(RX_EP);
         chave = 'serie:' + (m ? m[1] : serieAtual.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, ''));
@@ -812,8 +805,8 @@
     async function carregarEpisodios() {
       mostrarSkeleton();
       try {
-        const promessaCls = promessaClsGlobal = carregarClassificacao(); // baixa em paralelo com o catálogo
-        const catalogo = await buscarJson(CONFIG.CATALOGO_URL, CONFIG.FETCH_TIMEOUT_MS);
+        const promessaCls = promessaClsGlobal = carregarClassificacao();
+        const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
         if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
         catalogoTodo = catalogo;
         if (ehFilme) {
@@ -835,17 +828,15 @@
 
           if (!episodios.length) { mostrarMensagem('Nenhum episódio encontrado', 'Não encontramos episódios para esta série.'); return; }
 
-          const nome = nomeDaSerie(episodios[0]); // nome canônico (mesma chave usada no index)
+          const nome = nomeDaSerie(episodios[0]);
           const capa = (episodios[0].thumbnailUrl || '').trim();
           serieAtual = { tipo: 'serie', nome, exibicao: nome, capa, link: `serie.html?nome=${encodeURIComponent(nome)}` };
           temporadaAtiva = episodios[0]._temp;
           document.title = `🎄 ${nome} - Clau Flix`;
         }
 
-        // Detalhes do TMDB (sinopse, banner, nota...) gravados pelo workflow; se não existir, a página funciona igual.
         const promDet = carregarDetalhes();
 
-        // Espera só um instante pela classificação (evita "pulo" visual); se atrasar, pinta os gêneros depois.
         const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
         if (cedo !== SEM_RESPOSTA && cedo) serieAtual.generos = generosDaClassificacao(cedo, episodios);
 
@@ -906,8 +897,6 @@
     let epAtual = -1;
     const btnProximo = $('btnProximo');
 
-    /** Toca o episódio i: registra no histórico e prepara o botão "Próximo episódio". */
-    /** Depois do player fechar: atualiza "Continuar" e a marca de visto. */
     function atualizarAposAssistir() {
       epAtual = -1;
       if (serieAtual) {
@@ -922,11 +911,10 @@
       if (!ep) return;
       epAtual = i;
       const prox = episodios[i + 1];
-      // Player novo (player.js): pergunta "Como deseja assistir?" (Player Interno ou Rave)
+
       if (window.ClauPlayer) {
         const opcoes = {
           chave: chaveProgresso(ep),
-          // botão "Pular" (TheIntroDB): id vem do nome do arquivo (TMDB/IMDb) ou do capas.json
           segmentos: () => ClauPlayer.segmentosDoArquivo(ep.link, ehFilme ? null : ep._temp, ehFilme ? null : ep._ep),
           videoUrl: ep.videoUrl, titulo: serieAtual.nome, subtitulo: ehFilme ? 'Filme' : `T${ep._temp} · E${pad2(ep._ep)}`,
           link: ep.link, workerUrl: CONFIG.WORKER_URL,
@@ -944,7 +932,6 @@
       abrirPlayer(ep.videoUrl, `${serieAtual.nome} · T${ep._temp} E${pad2(ep._ep)}`, ep.link);
     }
 
-    /** Abre o episódio no modal (apenas PC; no celular o link original é seguido). */
     function abrirPlayer(videoUrl, titulo, linkHtml) {
       if (!videoUrl || !videoUrl.trim()) {
         alert('Link do vídeo não encontrado no catálogo. Abrindo página original.');
@@ -960,8 +947,6 @@
       document.body.classList.add('modal-aberto');
       $('btnFechar').focus();
 
-      // Arquivo de vídeo (.mp4, .webm...) NUNCA é embed, mesmo que o domínio tenha
-      // "player" no nome (ex.: oneplayer.site) — senão o iframe http é bloqueado no https.
       const ehArquivoDeVideo = /\.(mp4|webm|m4v|mov|ogv|ogg)(\?|#|$)/i.test(videoUrl);
       const ehEmbed = !ehArquivoDeVideo && /youtube\.com|youtu\.be|vimeo\.com|tankie\.tube|dailymotion|\/embed\//i.test(videoUrl);
       if (ehEmbed) {
@@ -969,7 +954,6 @@
         return;
       }
 
-      // Vídeos HTTP puro são bloqueados em páginas HTTPS: passam pelo Worker.
       const urlParaTocar = videoUrl.startsWith('http://') ? `${CONFIG.WORKER_URL}?url=${encodeURIComponent(videoUrl)}` : videoUrl;
       playerContainer.innerHTML = `<video id="meuPlayer" controls playsinline autoplay preload="metadata" src="${esc(urlParaTocar)}">Seu navegador não suporta vídeo HTML5.</video>`;
       $('meuPlayer').addEventListener('error', () => {
@@ -987,7 +971,7 @@
       document.body.classList.remove('modal-aberto');
       playerContainer.innerHTML = '';
       btnProximo.hidden = true;
-      if (epAtual >= 0 && serieAtual) { // atualiza "Continuar" e a marca de visto
+      if (epAtual >= 0 && serieAtual) {
         epAtual = -1;
         renderizarHero();
         if ($('listaEps')) renderizarLista();
@@ -1017,7 +1001,6 @@
       const aba = e.target.closest('.aba');
       if (aba) { trocarTemporada(Number(aba.dataset.temp)); return; }
 
-      // Episódios da lista e botão "Assistir" do hero usam data-i (índice em `episodios`)
       if (e.target.closest('#btnProximo')) { if (epAtual >= 0) { temporadaAtiva = episodios[epAtual + 1]?._temp ?? temporadaAtiva; tocarEpisodio(epAtual + 1); } return; }
 
       const alvo = e.target.closest('[data-i]');
@@ -1030,7 +1013,6 @@
       }
     });
 
-    // Capa quebrada -> placeholder local
     heroEl.addEventListener('error', (e) => {
       if (e.target.id === 'capaSerie' && !e.target.src.startsWith('data:')) e.target.src = semCapa((e.target.alt || '').replace(/^Capa de /, ''));
     }, true);
@@ -1053,6 +1035,6 @@
       carregarEpisodios();
     }
   })();
-  </script>
-<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script><!-- Cloudflare Pages Analytics --></body>
+</script>
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script></body>
 </html>
