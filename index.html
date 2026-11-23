@@ -53,7 +53,6 @@
     .snowflake { position: absolute; top: -10px; color: #fff; font-family: Arial, sans-serif; user-select: none; pointer-events: none; animation: fall linear forwards; text-shadow: 0 0 6px rgba(255, 255, 255, 0.85); }
     @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
 
-    /* Pisca-pisca pendurado no cabeçalho */
     .luzes { position: absolute; left: 0; right: 0; bottom: -10px; height: 16px; display: flex; justify-content: space-around; pointer-events: none; }
     .luzes::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 2px; background: rgba(255, 255, 255, 0.12); }
     .luzes i { width: 8px; height: 12px; margin-top: 2px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; background: var(--c); box-shadow: 0 0 10px 2px var(--c); animation: piscar 2.4s ease-in-out infinite; }
@@ -142,7 +141,7 @@
     .card-media::before { content: ''; position: absolute; inset: auto 0 0 0; height: 45%; background: linear-gradient(to top, rgba(7, 13, 11, 0.85), transparent); z-index: 1; pointer-events: none; }
     .card-media::after { content: '▶'; position: absolute; top: 50%; left: 50%; z-index: 2; width: 62px; height: 62px; margin: -31px 0 0 -31px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding-left: 4px; font-size: 1.5rem; color: #fff; background: rgba(229, 56, 74, 0.92); box-shadow: 0 0 30px rgba(229, 56, 74, 0.7); opacity: 0; transform: scale(0.6); transition: opacity 0.35s var(--ease), transform 0.35s var(--ease); pointer-events: none; }
     .card:hover .card-media::after, .card:focus-within .card-media::after { opacity: 1; transform: scale(1); }
-    /* Placeholder da capa: play + título (aparece se não há capa ou ela falha ao carregar) */
+
     .card-fallback { position: absolute; z-index: 1; inset: 0; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; padding: 16px 12px 22px;
       background: radial-gradient(circle at 50% 35%, #1f4a40, #0d1a16 75%); }
     .card-fallback:not([hidden]) { display: flex; }
@@ -160,7 +159,6 @@
     .card-info .meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .rating { flex-shrink: 0; color: var(--ouro); font-weight: 700; }
 
-    /* Filtro por gênero (chips) */
     .filtro-generos { display: flex; flex-wrap: wrap; gap: 8px; }
     .filtro-generos:not([hidden]) { margin: -6px 0 26px; }
     .chip { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; border: 1px solid var(--vidro-borda); background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(8px); color: var(--suave); font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.25s var(--ease); }
@@ -168,7 +166,6 @@
     .chip:hover { background: rgba(255, 255, 255, 0.15); color: #fff; transform: translateY(-2px); }
     .chip[aria-pressed="true"] { background: var(--ouro); color: #1a1200; border-color: transparent; box-shadow: 0 6px 18px rgba(255, 194, 51, 0.35); transform: none; }
 
-    /* Botão de favorito (estrela) */
     .fav-btn { position: absolute; top: 10px; right: 10px; z-index: 4; width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255, 255, 255, 0.35); background: rgba(7, 13, 11, 0.7); backdrop-filter: blur(6px); color: #fff; font-size: 1.3rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.25s var(--ease), background 0.2s, color 0.2s, border-color 0.2s; }
     .fav-btn:hover { transform: scale(1.15); background: rgba(7, 13, 11, 0.95); }
     .fav-btn.ativo { color: var(--ouro); border-color: var(--ouro); box-shadow: 0 0 14px rgba(255, 194, 51, 0.45); }
@@ -331,49 +328,48 @@
   (() => {
     'use strict';
 
-    // PWA: registra o service worker (falha silenciosa)
     if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
     // ===================================================================
     // 1. CONFIGURAÇÃO
     // ===================================================================
     const CONFIG = {
-      WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/', // proxy p/ vídeos HTTP no PC
-      CATALOGO_INDICE_URL: 'catalogo/indice.json', // catálogo dividido em partes (catalogo/parte-001.json ...)
+      WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/',
+      CATALOGO_INDICE_URL: 'catalogo/indice.json',
       FETCH_TIMEOUT_MS: 12000,
       ITENS_POR_PAGINA: 50,
       QTD_DESTAQUES: 20,
-      DESTAQUES_VALIDADE_MS: 30 * 60 * 1000, // sorteio renovado a cada 30 min
+      DESTAQUES_VALIDADE_MS: 30 * 60 * 1000,
       TROCA_FUNDO_MS: 10000,
       NEVE_INTERVALO_MS: 200,
       NEVE_MAX_FLOCOS: 60,
       QTD_LUZES: 36,
       SKELETONS: 12,
       DEBOUNCE_MS: 300,
-      CLASSIFICACAO_URL: 'classificacao.json',  // gêneros por arquivo (opcional: o site funciona sem ele)
-      CLASSIFICACAO_TIMEOUT_MS: 25000,          // arquivo grande, mas nunca trava o catálogo
-      CLASSIFICACAO_GRACA_MS: 1500,             // espera curta antes do 1º desenho, p/ evitar "pulo" visual
-      GENERO_INDEFINIDO: 'indefinido',          // valor usado pela IA quando não soube classificar
+      CLASSIFICACAO_URL: 'classificacao.json',
+      CLASSIFICACAO_TIMEOUT_MS: 25000,
+      CLASSIFICACAO_GRACA_MS: 1500,
+      GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS_CARD: 2,
       MAX_GENEROS_HERO: 3,
-      RECENTES_DIAS: 30,   // "Adicionados recentemente": janela em dias
+      RECENTES_DIAS: 30,
       MAX_RECENTES: 15,
       MAX_NATAL: 20,
     };
 
     const FUNDOS = [
-      'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920&q=80&auto=format&fit=crop', // árvore
-      'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920&q=80&auto=format&fit=crop', // floresta
-      'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920&q=80&auto=format&fit=crop', // bolas
-      'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1920&q=80&auto=format&fit=crop', // presentes
-      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=1920&q=80&auto=format&fit=crop'  // neve
+      'https://images.unsplash.com/photo-1543589077-47d81606c1bf?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1482517967863-00e15c9b44be?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1512909006721-3d6018887383?w=1920&q=80&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1483664852095-d6cc6870702d?w=1920&q=80&auto=format&fit=crop'
     ];
 
     const LS = {
       DESTAQUES: 'clauFlix_destaques_links_v3',
       TIMESTAMP: 'clauFlix_destaques_timestamp_v3',
       FAVORITOS: 'clauFlix_favoritos_v1',
-      HISTORICO: 'clauFlix_historico_v1', // compartilhado com serie.html
+      HISTORICO: 'clauFlix_historico_v1',
     };
     const MAX_HISTORICO = 20;
     const SS = { VIEW: 'clauFlix_view', SEARCH: 'clauFlix_search', PAGE: 'clauFlix_page', GENRE: 'clauFlix_genero', ORDEM: 'clauFlix_ordem', DECADA: 'clauFlix_decada' };
@@ -386,22 +382,18 @@
     const reduzirMovimento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const collator = new Intl.Collator('pt-BR', { numeric: true, sensitivity: 'base' });
 
-    /** Escapa texto para uso seguro dentro de HTML/atributos. */
     const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-    /** Minúsculas e sem acentos: "Ação" casa com "acao". */
     const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 
     const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
 
-    /** Acesso seguro ao storage (modo privado/quota podem lançar exceção). */
     const storage = {
       ler(store, chave, padrao = null) { try { const v = store.getItem(chave); return v === null ? padrao : v; } catch { return padrao; } },
-      gravar(store, chave, valor) { try { store.setItem(chave, valor); } catch { /* ignora */ } },
+      gravar(store, chave, valor) { try { store.setItem(chave, valor); } catch {  } },
       lerArray(store, chave) { try { const v = JSON.parse(store.getItem(chave)); return Array.isArray(v) ? v : []; } catch { return []; } },
     };
 
-    /** Debounce com cancelamento: só executa após `espera` ms sem novas chamadas. */
     function debounce(fn, espera) {
       let timer;
       const debounced = (...args) => { clearTimeout(timer); timer = setTimeout(() => fn(...args), espera); };
@@ -424,7 +416,7 @@
     // ===================================================================
     // 3. FUNDO, NEVE E LUZES
     // ===================================================================
-    /** Slideshow com crossfade real entre duas camadas. */
+
     function iniciarSlideshow() {
       const container = $('bg-slideshow');
       const camadas = [document.createElement('div'), document.createElement('div')];
@@ -449,7 +441,6 @@
       setInterval(() => { if (!document.hidden) trocar(); }, CONFIG.TROCA_FUNDO_MS);
     }
 
-    /** Neve: limita flocos simultâneos e pausa com a aba oculta. */
     function iniciarNeve() {
       if (reduzirMovimento) return;
       const container = $('snow-container');
@@ -469,7 +460,6 @@
       }, CONFIG.NEVE_INTERVALO_MS);
     }
 
-    /** Pisca-pisca de Natal pendurado na borda do cabeçalho. */
     function iniciarLuzes() {
       const cores = ['#e5384a', '#ffc233', '#2fb59f', '#5aa9ff'];
       const frag = document.createDocumentFragment();
@@ -488,18 +478,18 @@
     const estado = {
       catalogo: [],
       filmes: [],
-      series: [],            // séries já agrupadas (1 card por série)
+      series: [],
       destaques: [],
-      porChave: new Map(),   // chave -> item (para destaques e favoritos)
-      todos: [],             // filmes + séries agrupadas, em ordem alfabética
+      porChave: new Map(),
+      todos: [],
       temClassificacao: false,
-      generos: new Map(),    // gênero -> quantidade, na aba atual (alimenta os chips)
+      generos: new Map(),
       view: 'home',
       busca: '',
-      genero: '',            // gênero filtrado ('' = todos)
-      ordem: '',             // '', az, za, novos, antigos
-      decada: '',            // '' = todas; ex.: '1990'
-      itens: [],             // itens da listagem atual
+      genero: '',
+      ordem: '',
+      decada: '',
+      itens: [],
       pagina: 1,
     };
 
@@ -524,32 +514,22 @@
     const modalTitulo = $('modalTitulo');
     const linkOriginal = $('linkOriginal');
 
-    // Padrões de episódio: no link/arquivo (confiável) e só no título (mais fraco)
-    const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+))/i;
-    const PADRAO_TITULO = /(T\d+E\d+|\d+x\d+|\sE\d+$)/i;
+    const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+)|^(?:\d+|tt\d+)s\d+e\d+)/i;
+    const PADRAO_TITULO = /(T\d+E\d+|S\d+E\d+|\d+x\d+|\sE\d+$)/i;
 
-    /**
-     * Decide se o item é episódio de série.
-     * - TxxExx no link: sempre série (a classificação errou isso em 302 episódios, ex.: Game of Thrones);
-     * - padrão só no título: a classificação desempata (se disser "filme", é filme);
-     * - sem padrão: filme.
-     */
     function isSerie(item, entrada) {
       if (PADRAO_LINK.test(item.link)) return true;
       if (!PADRAO_TITULO.test(item.titulo)) return false;
       return !(entrada && entrada.tipo === 'filme');
     }
 
-    /** Nome limpo da série (campo `serie` ou título sem o sufixo TxxExx). */
     function nomeDaSerie(item) {
       const nome = (item.serie || '').trim();
       return nome || item.titulo.replace(/\s*-\s*(T\d+E\d+|\d+x\d+|\sE\d+$).*/i, '').trim();
     }
 
-    /** Chave única: link para filmes, "serie:Nome" para séries agrupadas. */
     const chave = (item) => (item.isAgrupado ? 'serie:' + item.titulo : item.link);
 
-    /** Agrupa episódios em um único card por série (guarda os episódios em `_eps` p/ somar os gêneros). */
     function agruparSeries(episodios) {
       const mapa = new Map();
       episodios.forEach((item) => {
@@ -566,17 +546,12 @@
       return [...mapa.values()];
     }
 
-    // ---- Classificação (classificacao.json): { "arquivo.html": { titulo, tipo, generos, fonte } } ----
-
-    /** Nome do arquivo no fim do link, em minúsculas (é a chave do classificacao.json). */
     const arquivoDoLink = (link) => {
       try { return decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()).toLowerCase(); } catch { return ''; }
     };
 
-    /** Remove o "indefinido" que a IA usa quando não sabe o gênero. */
     const limparGeneros = (lista) => (Array.isArray(lista) ? lista : []).filter((g) => g && g !== CONFIG.GENERO_INDEFINIDO);
 
-    /** Índices de busca: por nome de arquivo e, como plano B, por título normalizado. */
     function indexarClassificacao(cls) {
       const porArquivo = new Map(Object.entries(cls));
       const porTitulo = new Map();
@@ -595,20 +570,17 @@
       return porTitulo || null;
     }
 
-    /** Gêneros de uma série = os mais frequentes entre os episódios (a IA classificou episódio a episódio). */
     function generosDaSerie(eps) {
       const cont = new Map();
       eps.forEach((ep) => (ep._generos || []).forEach((g) => cont.set(g, (cont.get(g) || 0) + 1)));
       return [...cont].sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0])).slice(0, CONFIG.MAX_GENEROS_HERO).map(([g]) => g);
     }
 
-    /** Ano do título: "(2019)" no título ou "_2019" no nome do arquivo; 0 se não achar. */
     function extrairAno(item) {
       const m = String(item.titulo || '').match(/\(((?:19|20)\d{2})\)/) || arquivoDoLink(item.link).match(/[_\- ]((?:19|20)\d{2})(?:\.html?)?$/);
       return m ? parseInt(m[1], 10) : 0;
     }
 
-    /** Pré-processa o catálogo (tipo, busca, gêneros, listas e índice). Roda de novo se a classificação chegar depois. */
     function prepararCatalogo(dados, cls = null) {
       estado.catalogo = dados;
       const indice = cls ? indexarClassificacao(cls) : null;
@@ -629,9 +601,9 @@
       estado.series = ordenarLista(agruparSeries(dados.filter((i) => i._ehSerie)));
       estado.series.forEach((s) => {
         s._generos = generosDaSerie(s._eps);
-        s._ano = Math.min(...s._eps.map((e) => e._ano || 9999).concat(9999)); // 1º ano encontrado nos episódios
+        s._ano = Math.min(...s._eps.map((e) => e._ano || 9999).concat(9999));
         if (s._ano === 9999) s._ano = 0;
-        s._adicionado = s._eps.reduce((m, e) => (e._adicionado > m ? e._adicionado : m), ''); // episódio mais novo
+        s._adicionado = s._eps.reduce((m, e) => (e._adicionado > m ? e._adicionado : m), '');
       });
       estado.todos = ordenarLista([...estado.filmes, ...estado.series]);
 
@@ -644,7 +616,6 @@
       }
     }
 
-    /** Sorteia 20 destaques e reaproveita o sorteio por 30 minutos (localStorage). */
     function gerenciarDestaques() {
       const agora = Date.now();
       const salvos = storage.lerArray(localStorage, LS.DESTAQUES);
@@ -660,7 +631,6 @@
       storage.gravar(localStorage, LS.TIMESTAMP, String(agora));
     }
 
-    /** Baixa um JSON com limite de tempo; lança erro com `name === 'AbortError'` se demorar. */
     async function buscarJson(url, limiteMs) {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), limiteMs);
@@ -673,12 +643,11 @@
       }
     }
 
-    /** Baixa o catálogo: lê catalogo/indice.json e junta as partes (cada uma abaixo do limite de 25 MiB do Pages). */
     async function buscarCatalogo(limiteMs) {
       const indice = await buscarJson(CONFIG.CATALOGO_INDICE_URL, limiteMs);
       if (!indice || !Array.isArray(indice.partes)) throw new Error('Índice do catálogo inválido');
       const partes = await Promise.all(indice.partes.map((p) => buscarJson(p.arquivo, limiteMs)));
-      return partes.flat(); // mesma lista (e mesma ordem) do antigo catalogo.json
+      return partes.flat();
     }
 
     // ===================================================================
@@ -691,7 +660,6 @@
       storage.gravar(localStorage, LS.FAVORITOS, JSON.stringify(favoritos));
     }
 
-    /** Sincroniza todas as estrelas (card e hero) de um mesmo item. */
     function atualizarBotoesFavorito(k) {
       const ativo = favKeys.has(k);
       document.querySelectorAll('.fav-btn').forEach((b) => {
@@ -703,7 +671,6 @@
       });
     }
 
-    /** Adiciona/remove um item da lista e atualiza a interface. */
     function alternarFavorito(botao) {
       const k = botao.dataset.key;
       if (favKeys.has(k)) {
@@ -725,16 +692,14 @@
     // ===================================================================
     // 6. RENDERIZAÇÃO
     // ===================================================================
-    /** Favoritos mais recentes primeiro, já ligados ao catálogo atual (traz os gêneros); sem match, usa o que foi salvo. */
+
     function favoritosAtuais() {
       return [...favoritos].reverse().map((f) => estado.porChave.get(f.k) || f);
     }
 
-    // ---- Continuar assistindo (histórico compartilhado com serie.html) ----
     const lerHistorico = () => storage.lerArray(localStorage, LS.HISTORICO).filter((h) => h && h.k && h.titulo);
     const gravarHistorico = (lista) => storage.gravar(localStorage, LS.HISTORICO, JSON.stringify(lista.slice(0, MAX_HISTORICO)));
 
-    /** Registra um filme no histórico (séries são registradas pela serie.html, por episódio). */
     function registrarFilme(link, titulo) {
       const item = estado.porChave.get(link);
       const lista = lerHistorico().filter((h) => h.k !== link);
@@ -742,7 +707,6 @@
       gravarHistorico(lista);
     }
 
-    /** Fileira "Continuar assistindo": só no Início, sem pesquisa nem filtros. */
     function renderizarContinuar() {
       const visivel = estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras();
       const itens = visivel
@@ -758,7 +722,6 @@
       continuarEl.hidden = false;
     }
 
-    /** Fileira "Adicionados recentemente" (data gravada pelo gerador; só no Início, sem pesquisa/filtros). */
     function renderizarRecentes() {
       const corte = new Date(Date.now() - CONFIG.RECENTES_DIAS * 864e5).toISOString().slice(0, 10);
       const itens = (estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras())
@@ -772,10 +735,8 @@
       recentesEl.hidden = false;
     }
 
-    /** Títulos com cara de Natal pelo nome (o TMDB não entra no navegador; isso cobre o nome). */
     const RX_NATAL = /\b(natal|natalin[oa]s?|christmas|xmas|noel|grinch|navidad|expresso polar|polar express|santa claus)\b/;
 
-    /** Fileira "Especial de Natal 🎄": só no Início, sem pesquisa/filtros. */
     function renderizarNatal() {
       const itens = (estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras())
         ? estado.todos.filter((i) => RX_NATAL.test(normalizar(i.titulo))).slice(0, CONFIG.MAX_NATAL)
@@ -786,7 +747,6 @@
       natalEl.hidden = false;
     }
 
-    /** Dias até o próximo 25/12 (0 = hoje é Natal). */
     function diasParaNatal() {
       const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
       let natal = new Date(hoje.getFullYear(), 11, 25);
@@ -800,7 +760,6 @@
       return `🎁 Faltam ${d} dias para o Natal!`;
     }
 
-    /** "Surpreenda-me": sorteia um título da lista atual (respeita aba, gênero e década) e abre. */
     function surpreenda() {
       let base = universoDaView();
       const genero = generoAtivo();
@@ -811,7 +770,6 @@
       window.location.href = item.isAgrupado ? item.link : urlDetalheFilme(item.link);
     }
 
-    /** Página de detalhes do filme (serie.html em modo filme). */
     const urlDetalheFilme = (link) => `serie.html?filme=${encodeURIComponent(link)}`;
 
     function salvarSessao() {
@@ -831,7 +789,6 @@
       });
     }
 
-    /** Esqueletos animados enquanto o catálogo carrega. */
     function mostrarSkeleton() {
       grid.setAttribute('aria-busy', 'true');
       paginacao.innerHTML = '';
@@ -846,7 +803,6 @@
         </div>`).join('');
     }
 
-    /** Tela de erro amigável com botão de nova tentativa. */
     function mostrarErro(erro) {
       const demorou = erro && erro.name === 'AbortError';
       let titulo = 'Não foi possível carregar o catálogo';
@@ -874,13 +830,11 @@
       return `<div class="estado-grid"><div class="estado-icone" aria-hidden="true">😕</div><h3>Nenhum resultado encontrado</h3><p>Tente outro termo de pesquisa ou outro gênero.</p></div>`;
     }
 
-    /** Texto curto sob o título do card: gêneros (se houver) ou a ação padrão. */
     function legendaCard(item) {
       const generos = (item._generos || []).slice(0, CONFIG.MAX_GENEROS_CARD).join(' · ');
       return generos || (item.isAgrupado ? 'Ver Episódios' : 'Assistir');
     }
 
-    /** HTML de um card (filme ou série agrupada) em formato pôster. */
     function cardHtml(item) {
       const k = chave(item);
       const fav = favKeys.has(k);
@@ -908,16 +862,15 @@
         </article>`;
     }
 
-    /** Hero: destaque do momento (só na aba Início, sem pesquisa ativa). */
     function renderizarHero() {
       if (estado.view !== 'home' || estado.busca || generoAtivo() || filtrosExtras() || !estado.destaques.length) { hero.hidden = true; return; }
 
       const item = estado.destaques.find(temCapa) || estado.destaques[0];
       const k = chave(item);
       const generos = (item._generos || []).slice(0, CONFIG.MAX_GENEROS_HERO);
-      const versao = `${k}|${generos.join(',')}|${diasParaNatal()}`; // redesenha se os gêneros chegarem depois
+      const versao = `${k}|${generos.join(',')}|${diasParaNatal()}`;
       hero.hidden = false;
-      if (hero.dataset.k === versao) { atualizarBotoesFavorito(k); return; } // já desenhado
+      if (hero.dataset.k === versao) { atualizarBotoesFavorito(k); return; }
       hero.dataset.k = versao;
 
       const titulo = esc(item.titulo);
@@ -946,7 +899,6 @@
         </div>`;
     }
 
-    /** Desenha a página atual do grid e a paginação. */
     function renderizar() {
       const total = estado.itens.length;
       grid.setAttribute('aria-busy', 'false');
@@ -1002,10 +954,9 @@
     // ===================================================================
     // 7. NAVEGAÇÃO, BUSCA E FILTRO DE GÊNERO
     // ===================================================================
-    /** Gênero em uso (só vale se a classificação estiver carregada). */
+
     const generoAtivo = () => (estado.temClassificacao ? estado.genero : '');
 
-    /** Título da seção conforme aba, pesquisa e gênero ativos. */
     function tituloAtual() {
       const genero = generoAtivo();
       const base = estado.busca
@@ -1015,16 +966,15 @@
       return partes.join(' · ');
     }
 
-    /** Itens da aba (ou da pesquisa) ANTES do filtro de gênero: é a base dos chips. */
     function universoDaView() {
       if (estado.busca) {
         const termo = normalizar(estado.busca);
-        return estado.todos.filter((i) => i._busca.includes(termo)); // `todos` já está ordenado
+        return estado.todos.filter((i) => i._busca.includes(termo));
       }
       if (estado.view === 'filmes') return estado.filmes;
       if (estado.view === 'series') return estado.series;
       if (estado.view === 'favoritos') return favoritosAtuais();
-      return estado.todos; // Início: chips contam o catálogo todo; sem gênero a lista mostra só os destaques
+      return estado.todos;
     }
 
     function contarGeneros(itens) {
@@ -1033,7 +983,6 @@
       return mapa;
     }
 
-    /** Desenha os chips de gênero (mais frequentes primeiro) preservando rolagem e foco. */
     function renderizarChips() {
       if (!estado.temClassificacao || !estado.generos.size) { filtroGeneros.hidden = true; filtroGeneros.innerHTML = ''; return; }
 
@@ -1055,7 +1004,6 @@
 
     const filtrosExtras = () => !!(estado.decada || estado.ordem);
 
-    /** Aplica década e ordenação à lista. */
     function aplicarOrdemEDecada(lista) {
       let r = lista;
       if (estado.decada) { const d = parseInt(estado.decada, 10); r = r.filter((i) => i._ano >= d && i._ano < d + 10); }
@@ -1068,7 +1016,6 @@
       return cmp ? [...r].sort(cmp) : r;
     }
 
-    /** Desenha o seletor de década (só se algum item da aba tiver ano) e sincroniza os valores. */
     function renderizarOrdem(universo) {
       const decadas = [...new Set(universo.filter((i) => i._ano).map((i) => Math.floor(i._ano / 10) * 10))].sort((a, b) => b - a);
       if (estado.decada && !decadas.includes(parseInt(estado.decada, 10))) estado.decada = '';
@@ -1079,12 +1026,11 @@
       ordemBox.hidden = !universo.length;
     }
 
-    /** Recalcula a lista (aba + pesquisa + gênero), os chips e redesenha. */
     function recalcular({ resetPagina = false } = {}) {
       const universo = universoDaView();
       renderizarOrdem(universo);
       estado.generos = estado.temClassificacao ? contarGeneros(universo) : new Map();
-      if (estado.temClassificacao && estado.genero && !estado.generos.has(estado.genero)) estado.genero = ''; // gênero inexistente nesta aba
+      if (estado.temClassificacao && estado.genero && !estado.generos.has(estado.genero)) estado.genero = '';
 
       const genero = generoAtivo();
       if (genero) estado.itens = universo.filter((i) => (i._generos || []).includes(genero));
@@ -1101,7 +1047,6 @@
       recalcular({ resetPagina: true });
     }
 
-    /** Troca de aba (Início, Filmes, Séries, Minha Lista) limpando a busca; o gênero continua se existir na nova aba. */
     function mudarView(novaView) {
       buscar.cancelar();
       estado.view = novaView;
@@ -1111,7 +1056,6 @@
       recalcular({ resetPagina: true });
     }
 
-    /** Pesquisa (sem acentos) em filmes e séries agrupadas. */
     function executarBusca() {
       const texto = searchInput.value.trim();
       if (!normalizar(texto)) { mudarView(estado.view); return; }
@@ -1120,7 +1064,6 @@
     }
     const buscar = debounce(executarBusca, CONFIG.DEBOUNCE_MS);
 
-    /** Restaura aba, pesquisa, gênero e página salvos na sessão. */
     function restaurarSessao() {
       const viewSalva = storage.ler(sessionStorage, SS.VIEW, 'home');
       estado.view = TITULOS_VIEW[viewSalva] ? viewSalva : 'home';
@@ -1140,24 +1083,12 @@
     // ===================================================================
     let focoAnterior = null;
 
-    /** Nome do detalhes/<chave>.json de um filme (mesma regra do capas.py). */
-    const chaveDetalhes = (link) => {
-      let a = ''; try { a = decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()); } catch { /* */ }
-      return a.toLowerCase().replace(/\.html?$/, '').replace(/:/g, '--').replace(/[^a-z0-9_.-]/g, '_');
-    };
-
-    /** Abre o vídeo no modal (apenas PC; no celular o link original é seguido). */
     function abrirPlayer(videoUrl, titulo, linkHtml) {
-      // Player novo (player.js): pergunta "Como deseja assistir?" (Player Interno ou Rave)
       if (window.ClauPlayer) {
         ClauPlayer.escolher({
           chave: linkHtml, videoUrl, titulo, subtitulo: 'Filme', link: linkHtml, workerUrl: CONFIG.WORKER_URL,
           aoIniciar: () => registrarFilme(linkHtml, titulo),
-          // botão "Pular" (TheIntroDB): tmdb_id vem de detalhes/<filme>.json (gerado pelo workflow capas); sem arquivo = sem botão
-          segmentos: () => fetch(`detalhes/${chaveDetalhes(linkHtml)}.json`)
-            .then((r) => (r.ok ? r.json() : null))
-            .then((d) => (d && d.tmdb_id ? ClauPlayer.buscarSegmentos(d.tmdb_id) : []))
-            .catch(() => []),
+          segmentos: () => ClauPlayer.segmentosDoArquivo(linkHtml),
         });
         return;
       }
@@ -1176,8 +1107,6 @@
       document.body.classList.add('modal-aberto');
       $('btnFechar').focus();
 
-      // Arquivo de vídeo (.mp4, .webm...) NUNCA é embed, mesmo que o domínio tenha
-      // "player" no nome (ex.: oneplayer.site) — senão o iframe http é bloqueado no https.
       const ehArquivoDeVideo = /\.(mp4|webm|m4v|mov|ogv|ogg)(\?|#|$)/i.test(videoUrl);
       const ehEmbed = !ehArquivoDeVideo && /youtube\.com|youtu\.be|vimeo\.com|tankie\.tube|dailymotion|\/embed\//i.test(videoUrl);
       if (ehEmbed) {
@@ -1185,7 +1114,6 @@
         return;
       }
 
-      // Vídeos HTTP puro são bloqueados em páginas HTTPS: passam pelo Worker.
       const urlParaTocar = videoUrl.startsWith('http://') ? `${CONFIG.WORKER_URL}?url=${encodeURIComponent(videoUrl)}` : videoUrl;
       playerContainer.innerHTML = `<video id="meuPlayer" controls playsinline autoplay preload="metadata" src="${esc(urlParaTocar)}">Seu navegador não suporta vídeo HTML5.</video>`;
       $('meuPlayer').addEventListener('error', () => {
@@ -1222,14 +1150,13 @@
       const teclaModificadora = e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0;
       if (filme && !teclaModificadora) {
         e.preventDefault();
-        // Grade/fileiras de descoberta -> página de detalhes; "Assistir" do destaque e "Continuar assistindo" -> direto no player.
+
         const direto = filme.classList.contains('btn') || filme.closest('#continuar');
         if (direto) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link);
         else window.location.href = urlDetalheFilme(filme.dataset.link);
       }
     });
 
-    // Imagem quebrada -> mostra o placeholder (play + título) no lugar
     grid.addEventListener('error', (e) => {
       if (e.target.tagName !== 'IMG') return;
       e.target.hidden = true;
@@ -1273,14 +1200,12 @@
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
-    /** Carrega a classificação (opcional): se falhar, o site funciona normalmente, só sem gêneros. */
     function carregarClassificacao() {
       return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
         .then(async (cls) => {
-          // Formato novo: classificacao.json é só um manifesto {parts: [...]}; os dados ficam em classificacao_1.json, _2.json...
           if (cls && Array.isArray(cls.parts)) {
             const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
-            cls = Object.assign({}, ...partes);       // vira o mesmo mapa {arquivo: {titulo, generos, ...}} de antes
+            cls = Object.assign({}, ...partes);
           }
           return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
         })
@@ -1290,11 +1215,10 @@
     async function iniciar() {
       mostrarSkeleton();
       try {
-        const promessaCls = carregarClassificacao(); // baixa em paralelo com o catálogo
+        const promessaCls = carregarClassificacao();
         const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
         if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
 
-        // Espera só um instante pela classificação (evita "pulo" visual); se atrasar, aplica quando chegar.
         const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
         const chegouCedo = cedo !== SEM_RESPOSTA;
         prepararCatalogo(catalogo, chegouCedo ? cedo : null);
@@ -1306,7 +1230,7 @@
             if (!cls) return;
             prepararCatalogo(catalogo, cls);
             gerenciarDestaques();
-            recalcular(); // mantém aba, pesquisa e página
+            recalcular();
           });
         }
       } catch (erro) {
@@ -1321,6 +1245,6 @@
     iniciarLuzes();
     iniciar();
   })();
-  </script>
-<!-- Cloudflare Pages Analytics --><script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script><!-- Cloudflare Pages Analytics --></body>
+</script>
+<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script></body>
 </html>
