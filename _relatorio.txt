@@ -65,6 +65,7 @@
 105288 | Curta Essa com Zac Efron -> TMDB 105288 | Curta Essa com Zac Efron (2020) | 2 temp. no TMDB, 2 no txt
 10545 | True Blood -> TMDB 10545 | True Blood (2008) | 7 temp. no TMDB, 7 no txt
 105521 | Breathe: Into the Shadows -> TMDB 105521 | Breathe: Pelas Sombras (2020) | 2 temp. no TMDB, 2 no txt
+105804 | Candy -> TMDB 105804 | Candy: Uma História de Paixão e Crime (2022) | 1 temp. no TMDB, 1 no txt
 105883 | Um Rapaz Adequado -> TMDB 105883 | Um Rapaz Adequado (2020) | 1 temp. no TMDB, 1 no txt
 105971 | Star Wars: The Bad Batch -> TMDB 105971 | Star Wars: The Bad Batch (2021) | 3 temp. no TMDB, 3 no txt
 106005 | Operação autoestima: antes e depois -> TMDB 106005 | Operação Autoestima: Antes e Depois (2020) | 1 temp. no TMDB, 1 no txt
@@ -222,6 +223,7 @@
 122841 | World's Greatest Cars -> TMDB 122841 | Apaixonados por Carros (2020) | 1 temp. no TMDB, 1 no txt
 123138 | Fatma -> TMDB 123138 | Fatma (2021) | 1 temp. no TMDB, 1 no txt
 123348 | República Selvagem -> TMDB 123348 | República Selvagem (2021) | 1 temp. no TMDB, 1 no txt
+123377 | Dom -> TMDB 123377 | Dom (2021) | 3 temp. no TMDB, 2 no txt
 123531 | Se Eu Soubesse -> TMDB 123531 | Se Eu Soubesse (2022) | 1 temp. no TMDB, 1 no txt
 123591 | Os Smurfs -> TMDB 123591 | Os Smurfs (2021) | 3 temp. no TMDB, 2 no txt
 123594 | Eu (Heart emoji) Arlo -> TMDB 123594 | Eu S2 Arlo (2021) | 1 temp. no TMDB, 1 no txt
@@ -252,6 +254,7 @@
 12637 | Rebelde -> TMDB 12637 | Rebelde (2004) | 3 temp. no TMDB, 3 no txt
 126410 | SuperNormal -> TMDB 126410 | Supernormal (2021) | 2 temp. no TMDB, 1 no txt
 126477 | A Maldição de Akakor -> TMDB 126477 | A Maldição de Akakor (2019) | 1 temp. no TMDB, 1 no txt
+126538 | Vitória -> TMDB 126538 | Vitória (2014) | 1 temp. no TMDB, 1 no txt
 12656 | Rosalinda -> TMDB 12656 | Rosalinda (1999) | 1 temp. no TMDB, 1 no txt
 126794 | O Mundo dos Animais -> TMDB 126794 | O Mundo dos Animais (2021) | 1 temp. no TMDB, 1 no txt
 126824 | O Show do Patrick Estrela -> TMDB 126824 | O Show do Patrick Estrela (2021) | 6 temp. no TMDB, 1 no txt
@@ -531,6 +534,7 @@
 195623 | Mi Tío -> TMDB 195623 | Meu Tio (2022) | 1 temp. no TMDB, 1 no txt
 195861 | Dance, Dance, Dance -> TMDB 195861 | Dance Dance Dance (2007) | 1 temp. no TMDB, 1 no txt
 195926 | As Crônicas de Usagi: O Coelho Samurai -> TMDB 195926 | As Crônicas de Usagi: O Coelho Samurai (2022) | 2 temp. no TMDB, 2 no txt
+19615 | A Intrusa -> TMDB 19615 | A Intrusa (2001) | 1 temp. no TMDB, 1 no txt
 196322 | Matéria Escura -> TMDB 196322 | Matéria Escura (2024) | 2 temp. no TMDB, 2 no txt
 196564 | Largados e Pelados: Latinos -> TMDB 196564 | Largados e Pelados: Latinos (2022) | 3 temp. no TMDB, 2 no txt
 196603 | Solte o Ar Bem Devagar -> TMDB 196603 | Solte o Ar Bem Devagar (2022) | 1 temp. no TMDB, 1 no txt
@@ -891,6 +895,7 @@
 262727 | Acerte ou Caia! -> TMDB 262727 | Acerte ou Caia! (2024) | 2 temp. no TMDB, 1 no txt
 262955 | NBA: 5 em Quadra -> TMDB 262955 | NBA: 5 em Quadra (2024) | 2 temp. no TMDB, 1 no txt
 263089 | Mr. McMahon -> TMDB 263089 | Mr. McMahon (2024) | 1 temp. no TMDB, 1 no txt
+26440 | Chiquititas -> TMDB 26440 | Chiquititas (1997) | 5 temp. no TMDB, 1 no txt
 26453 | Trigun -> TMDB 26453 | Trigun (1998) | 1 temp. no TMDB, 1 no txt
 2673 | O.C.: Um Estranho no Paraíso -> TMDB 2673 | O.C.: Um Estranho no Paraíso (2003) | 4 temp. no TMDB, 4 no txt
 269 | One Tree Hill: Lances da Vida -> TMDB 269 | Lances da Vida (2003) | 9 temp. no TMDB, 9 no txt
@@ -1277,6 +1282,7 @@
 61886 | As Aventuras do Gato de Botas -> TMDB 61886 | As Aventuras do Gato de Botas (2015) | 6 temp. no TMDB, 6 no txt
 61888 | O Último Cara da Terra -> TMDB 61888 | O Último Cara da Terra (2015) | 4 temp. no TMDB, 4 no txt
 61915 | Agente K.C. -> TMDB 61915 | Agente K.C (2015) | 3 temp. no TMDB, 3 no txt
+61920 | Catastrophe -> TMDB 61920 | Catastrophe (2015) | 4 temp. no TMDB, 4 no txt
 61923 | Star vs. As Forças do Mal -> TMDB 61923 | Star vs. As Forças do Mal (2015) | 4 temp. no TMDB, 4 no txt
 61960 | Acerto de Contas -> TMDB 61960 | Acerto de Contas (2014) | 1 temp. no TMDB, 1 no txt
 61969 | Angie Tribeca -> TMDB 61969 | Angie Tribeca (2016) | 4 temp. no TMDB, 3 no txt
@@ -1442,6 +1448,7 @@
 67026 | Designated Survivor -> TMDB 67026 | Designated Survivor (2016) | 3 temp. no TMDB, 3 no txt
 67027 | Last Chance U -> TMDB 67027 | Last Chance U (2016) | 5 temp. no TMDB, 5 no txt
 67070 | Fleabag -> TMDB 67070 | Fleabag (2016) | 2 temp. no TMDB, 2 no txt
+67075 | 100% -> TMDB 67075 | Mob Psycho 100 (2016) | 3 temp. no TMDB, 3 no txt
 67106 | The Deep -> TMDB 67106 | Sob O Mar (2015) | 4 temp. no TMDB, 2 no txt
 67116 | Máquina Mortífera -> TMDB 67116 | Máquina Mortífera (2016) | 3 temp. no TMDB, 3 no txt
 67117 | Bela, Recatada e do Lar -> TMDB 67117 | Bela, Recatada e do Lar (2016) | 5 temp. no TMDB, 5 no txt
@@ -1893,7 +1900,7 @@
 87829 | Carlo e Malik -> TMDB 87829 | Carlo e Malik (2018) | 3 temp. no TMDB, 1 no txt
 87846 | Memórias de Idhún -> TMDB 87846 | Memórias de Idhún (2020) | 2 temp. no TMDB, 2 no txt
 87983 | Unidentified: Inside America's UFO Investigation -> TMDB 87983 | Óvnis: Investigação Secreta (2019) | 2 temp. no TMDB, 2 no txt
-87994 | Vale dos Reis: Tesouros do Egito -> TMDB 87994 | Vale dos Reis: Tesouros do Egito (2019) | 6 temp. no TMDB, 4 no txt
+87994 | Vale dos Reis: Tesouros do Egito -> TMDB 87994 | Vale dos Reis: Tesouros do Egito (2019) | 7 temp. no TMDB, 4 no txt
 88052 | Black Summer -> TMDB 88052 | Black Summer (2019) | 2 temp. no TMDB, 2 no txt
 88055 | Servant -> TMDB 88055 | Servant (2019) | 4 temp. no TMDB, 4 no txt
 88069 | Drama Total Kids -> TMDB 88069 | Drama Total Kids (2018) | 3 temp. no TMDB, 1 no txt
@@ -2030,6 +2037,7 @@
 94305 | The Walking Dead: Um Novo Universo -> TMDB 94305 | The Walking Dead: Um Novo Universo (2020) | 2 temp. no TMDB, 2 no txt
 94372 | FBI: Os Mais Procurados -> TMDB 94372 | FBI: Os Mais Procurados (2020) | 6 temp. no TMDB, 6 no txt
 94413 | El desorden que dejas -> TMDB 94413 | A Desordem que Ficou (2020) | 1 temp. no TMDB, 1 no txt
+94423 | 2020 -> TMDB 94423 | 2020 - Japão Submerso (2020) | 1 temp. no TMDB, 1 no txt
 94490 | Love Me -> TMDB 94490 | Love Me (2019) | 2 temp. no TMDB, 2 no txt
 94536 | Hernan -> TMDB 94536 | Hernán - O Grande Conquistador Espanhol (2019) | 1 temp. no TMDB, 1 no txt
 94551 | Doze Jurados -> TMDB 94551 | Doze Jurados (2019) | 3 temp. no TMDB, 1 no txt
@@ -2049,12 +2057,14 @@
 95272 | Lincoln Rhyme: A Caçada pelo Colecionador de Ossos -> TMDB 95272 | Lincoln Rhyme: A Caçada pelo Colecionador de Ossos (2020) | 1 temp. no TMDB, 1 no txt
 95292 | Dani Who? -> TMDB 95292 | Dani Who? (2019) | 1 temp. no TMDB, 1 no txt
 95341 | Shantaram -> TMDB 95341 | Shantaram (2022) | 1 temp. no TMDB, 1 no txt
+95386 | Nurses -> TMDB 95386 | Nurses: Plantão Enfermagem (2020) | 2 temp. no TMDB, 2 no txt
 95403 | Periféricos -> TMDB 95403 | Periféricos (2022) | 1 temp. no TMDB, 1 no txt
 95409 | Sua Parte do Trato -> TMDB 95409 | Sua Parte do Trato (2019) | 1 temp. no TMDB, 1 no txt
 95432 | Encore! -> TMDB 95432 | Bis! (2019) | 1 temp. no TMDB, 1 no txt
 95515 | Epidemia -> TMDB 95515 | Outbreak (2020) | 1 temp. no TMDB, 1 no txt
 95532 | Carinha de Anjo -> TMDB 95532 | Carinha de Anjo (2016) | 1 temp. no TMDB, 1 no txt
 95557 | Invincible -> TMDB 95557 | INVENCÍVEL (2021) | 5 temp. no TMDB, 4 no txt
+95558 | O Poder -> TMDB 95558 | O Poder (2023) | 1 temp. no TMDB, 1 no txt
 95594 | Velozes & Furiosos: Espiões do Asfalto -> TMDB 95594 | Velozes e Furiosos: Espiões do Asfalto (2019) | 6 temp. no TMDB, 6 no txt
 95599 | Kipo e os Animonstros -> TMDB 95599 | Kipo e os Animonstros (2020) | 3 temp. no TMDB, 3 no txt
 95601 | Merlí. Sapere Aude -> TMDB 95601 | Merlí. Sapere Aude (2019) | 2 temp. no TMDB, 2 no txt
