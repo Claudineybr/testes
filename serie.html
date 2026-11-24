@@ -412,7 +412,10 @@
     let episodios = [];
     let temporadaAtiva = 1;
 
-    const USAR_DETALHES = false;
+    // As fichas (detalhes/*.json) NÃO vão para o deploy: são ~21 mil arquivos e o Cloudflare tem cota.
+    // Elas são lidas do RAW do GitHub (mesmo repositório), onde já estão publicadas com CORS liberado.
+    const USAR_DETALHES = true;
+    const DETALHES_URL = 'https://raw.githubusercontent.com/Claudineybr/testes/refs/heads/main/detalhes/';
     let detalhes = {};
     let secaoAtiva = '';
     let catalogoTodo = null, promessaClsGlobal = null, similaresCache = null;
@@ -785,19 +788,21 @@
       if ($('listaEps')) renderizarLista();
     }
 
+    // Mesma chave usada pelo capas.yml: detalhes/<slug>.json
+    //   100010s01e01 -> serie--100010 | tt0944947s01e01 -> serie--tt0944947 | nome_t1e2 -> serie--nome | filme -> <slug>
     function arquivoDetalhes() {
-      let chave;
-      if (ehFilme) chave = arquivoDoLink(serieAtual.link).replace(/\.html?$/, '');
-      else {
-        const slug = arquivoDoLink(episodios[0].link).replace(/\.html?$/, '');
-        const m = slug.match(RX_EP);
-        chave = 'serie:' + (m ? m[1] : serieAtual.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, ''));
-      }
+      if (ehFilme) return arquivoDoLink(serieAtual.link).replace(/\.html?$/, '');
+      const slug = arquivoDoLink(episodios[0].link).replace(/\.html?$/, '');
+      const mId = slug.match(/^(\d+|tt\d+)s\d+e\d+$/i);
+      const mEp = slug.match(RX_EP);
+      const chave = mId ? 'serie:' + mId[1].toLowerCase()
+        : mEp ? 'serie:' + mEp[1]
+        : 'serie:' + serieAtual.nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '');
       return chave.toLowerCase().replace(/:/g, '--').replace(/[^a-z0-9_.-]/g, '_');
     }
     function carregarDetalhes() {
       if (!USAR_DETALHES) return Promise.resolve(null);
-      return buscarJson(`detalhes/${arquivoDetalhes()}.json`, 6000)
+      return buscarJson(`${DETALHES_URL}${arquivoDetalhes()}.json`, 6000)
         .then((d) => (d && typeof d === 'object' && !Array.isArray(d) ? d : null))
         .catch(() => null);
     }

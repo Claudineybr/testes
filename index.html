@@ -370,6 +370,7 @@
       TIMESTAMP: 'clauFlix_destaques_timestamp_v3',
       FAVORITOS: 'clauFlix_favoritos_v1',
       HISTORICO: 'clauFlix_historico_v1',
+      PROGRESSO: 'clauFlix_progresso_v1',
     };
     const MAX_HISTORICO = 20;
     const SS = { VIEW: 'clauFlix_view', SEARCH: 'clauFlix_search', PAGE: 'clauFlix_page', GENRE: 'clauFlix_genero', ORDEM: 'clauFlix_ordem', DECADA: 'clauFlix_decada' };
@@ -700,6 +701,17 @@
     const lerHistorico = () => storage.lerArray(localStorage, LS.HISTORICO).filter((h) => h && h.k && h.titulo);
     const gravarHistorico = (lista) => storage.gravar(localStorage, LS.HISTORICO, JSON.stringify(lista.slice(0, MAX_HISTORICO)));
 
+    // Progresso gravado pelo player (mesmo formato de player.js/serie.html)
+    function lerProgressoPlayer() {
+      try { const v = JSON.parse(localStorage.getItem(LS.PROGRESSO)); return v && typeof v === 'object' ? v : {}; } catch { return {}; }
+    }
+    const chaveProgressoHistorico = (h) => (h.tipo === 'serie' ? `${h.k}:t${h.temp}e${h.ep}` : h.k);
+    function percentualVisto(h, progresso) {
+      const p = progresso[chaveProgressoHistorico(h)];
+      if (!p || !(p.dur > 0)) return 0;
+      return Math.max(1, Math.min(99, Math.round((p.time / p.dur) * 100)));
+    }
+
     function registrarFilme(link, titulo) {
       const item = estado.porChave.get(link);
       const lista = lerHistorico().filter((h) => h.k !== link);
@@ -714,9 +726,12 @@
         : [];
       if (!itens.length) { continuarEl.hidden = true; continuarEl.innerHTML = ''; return; }
 
+      const progresso = lerProgressoPlayer();
       continuarEl.innerHTML = `<h2>▶ Continuar assistindo</h2><div class="fila">${itens.map(({ h, item }) => {
-        const rotulo = h.tipo === 'serie' ? `T${h.temp} · E${String(h.ep).padStart(2, '0')}` : 'Retomar';
-        return `<div class="fila-item">${cardHtml(item)}<span class="fila-rotulo">${esc(rotulo)}</span>` +
+        const pct = percentualVisto(h, progresso);
+        const base = h.tipo === 'serie' ? `T${h.temp} · E${String(h.ep).padStart(2, '0')}` : 'Retomar';
+        const rotulo = pct ? `${base} · ${pct}%` : base;
+        return `<div class="fila-item">${cardHtml(item)}<span class="fila-rotulo"${pct ? ` title="Você já assistiu ${pct}%"` : ''}>${esc(rotulo)}</span>` +
           `<button type="button" class="fila-x" data-remover="${esc(h.k)}" aria-label="Remover ${esc(h.titulo)} de Continuar assistindo" title="Remover">✕</button></div>`;
       }).join('')}</div>`;
       continuarEl.hidden = false;
@@ -854,7 +869,7 @@
             </div>
             <div class="card-info">
               <h3>${titulo}</h3>
-              <div class="meta"><span>${esc(legendaCard(item))}</span><span class="rating">▶ Play</span></div>
+              <div class="meta"><span>${esc(legendaCard(item))}</span><span class="rating">${item._ano || '▶ Play'}</span></div>
             </div>
           </a>
           <button type="button" class="fav-btn${fav ? ' ativo' : ''}" data-key="${esc(k)}" data-titulo="${titulo}"
@@ -1088,6 +1103,7 @@
         ClauPlayer.escolher({
           chave: linkHtml, videoUrl, titulo, subtitulo: 'Filme', link: linkHtml, workerUrl: CONFIG.WORKER_URL,
           aoIniciar: () => registrarFilme(linkHtml, titulo),
+          aoFechar: () => renderizarContinuar(),
           segmentos: () => ClauPlayer.segmentosDoArquivo(linkHtml),
         });
         return;
@@ -1130,6 +1146,7 @@
       videoModal.classList.remove('aberto');
       document.body.classList.remove('modal-aberto');
       playerContainer.innerHTML = '';
+      renderizarContinuar();
       if (focoAnterior && focoAnterior.focus) focoAnterior.focus();
     }
 

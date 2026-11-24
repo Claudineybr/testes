@@ -27,6 +27,7 @@
   if (window.ClauPlayer) return;
 
   const LS_PROGRESSO = 'clauFlix_progresso_v1';
+  const LS_VOLUME = 'clauFlix_volume_v1';
   const MAX_PROGRESSOS = 60;
 
   const ICONES = {
@@ -290,6 +291,21 @@
     gravarProg(o);
   }
 
+  // ---------- volume lembrado entre sessões ----------
+  function aplicarVolumeSalvo() {
+    try {
+      const s = JSON.parse(localStorage.getItem(LS_VOLUME));
+      if (s && typeof s === 'object') {
+        if (typeof s.v === 'number' && Number.isFinite(s.v)) video.volume = Math.max(0, Math.min(1, s.v));
+        video.muted = !!s.m;
+      }
+    } catch { /* sem storage: mantém o padrão */ }
+    atualizarMudo();
+  }
+  function gravarVolume() {
+    try { localStorage.setItem(LS_VOLUME, JSON.stringify({ v: video.volume, m: video.muted })); } catch { /* ignora */ }
+  }
+
   // ---------- montagem do DOM (uma vez) ----------
   function montar() {
     if (montado) return;
@@ -520,7 +536,7 @@
     video.addEventListener('canplay', () => { el.spin.style.display = 'none'; });
     video.addEventListener('playing', () => { el.spin.style.display = 'none'; el.pp.innerHTML = svg('pause'); mostrarControles(); });
     video.addEventListener('pause', () => { el.pp.innerHTML = svg('play'); ov.classList.remove('oculto'); clearTimeout(timerOculta); });
-    video.addEventListener('volumechange', atualizarMudo);
+    video.addEventListener('volumechange', () => { atualizarMudo(); gravarVolume(); });
     video.addEventListener('error', aoErro);
     video.addEventListener('ended', () => {
       const o = lerProg(); if (opts) { delete o[opts.chave || opts.videoUrl]; gravarProg(o); }
@@ -567,12 +583,28 @@
 
   let pendente = null;
   /** Rave: abre o link RAW da página .html no GitHub (ex.: .../refs/heads/main/100010s01e03.html).
-   *  Mude RAVE_BASE para o seu repositório/branch (ou passe opts.raveBase). Sem arquivo .html, usa o link original. */
-  const RAVE_BASE = 'https://raw.githubusercontent.com/Claudineybr/api_pobreflix_filmes/refs/heads/main/';
+   *  O repositório é descoberto pela URL do site em *.github.io (usuário/repositório atuais);
+   *  fora do GitHub Pages usa RAVE_REPO. Dá para forçar com opts.raveBase. Sem arquivo .html, usa o link original. */
+  const RAVE_REPO = { usuario: 'Claudineybr', repo: 'testes', branch: 'main' };
+  function baseRave() {
+    const m = location.hostname.match(/^([\w-]+)\.github\.io$/i);
+    const partes = location.pathname.split('/').filter(Boolean);
+    const repoPagina = m && partes.length > 1 && !/\.html?$/i.test(partes[0]) ? partes[0] : '';
+    const usuario = m ? m[1] : RAVE_REPO.usuario;
+    const repo = repoPagina || RAVE_REPO.repo;
+    return `https://raw.githubusercontent.com/${usuario}/${repo}/refs/heads/${RAVE_REPO.branch}/`;
+  }
+  /** Nome do arquivo .html do item, decodificado e re-codificado para a URL RAW (espaços, #, acentos). */
+  function nomeRaw(link) {
+    const bruto = String(link || '').split(/[?#]/)[0].split('/').pop() || '';
+    let nome = bruto;
+    try { nome = decodeURIComponent(bruto); } catch { /* mantém como veio */ }
+    return encodeURIComponent(nome);
+  }
   function destinoRave(o) {
-    const nome = String(o.link || '').split(/[?#]/)[0].split('/').pop();
-    if (!/\.html?$/i.test(nome)) return o.link || o.videoUrl;
-    return (o.raveBase || RAVE_BASE) + nome;
+    const nome = nomeRaw(o.link);
+    if (!/\.html?$/i.test(decodeURIComponent(nome))) return o.link || o.videoUrl;
+    return (o.raveBase || baseRave()) + nome;
   }
   function fecharEscolha() {
     el.escolha.classList.remove('on');
@@ -614,7 +646,7 @@
     raiz.classList.add('on');
     document.body.style.overflow = 'hidden';
     raiz.focus();
-    atualizarMudo();
+    aplicarVolumeSalvo();
 
     const url = String(o.videoUrl);
     // Arquivo de vídeo NUNCA é embed (ex.: oneplayer.site tem "player" no nome mas é .mp4)
