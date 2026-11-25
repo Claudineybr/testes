@@ -646,8 +646,9 @@ jobs:
               n = d.get("nota")
               if isinstance(n, (int, float)) and n > 0:
                   notas[f.stem] = round(float(n), 1)
-          Path("notas.json").write_text(json.dumps(notas, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-          print(f"notas.json: {len(notas)} títulos com nota")
+          Path("catalogo").mkdir(exist_ok=True)
+          Path("catalogo/notas.json").write_text(json.dumps(notas, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+          print(f"catalogo/notas.json: {len(notas)} títulos com nota")
           PYEOF
 
       - name: Commitar capas.json e HTML
@@ -656,7 +657,7 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p detalhes
-          git add capas.json notas.json detalhes '*.html'
+          git add capas.json catalogo/notas.json detalhes '*.html'
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
             exit 0
