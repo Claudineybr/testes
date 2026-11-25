@@ -355,6 +355,8 @@
       CLASSIFICACAO_GRACA_MS: 1500,
       NOTAS_URL: 'catalogo/notas.json',
       NOTAS_TIMEOUT_MS: 15000,
+      HOME_URL: 'catalogo/home.json',
+      HOME_TIMEOUT_MS: 8000,
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS_CARD: 2,
       MAX_GENEROS_HERO: 3,
@@ -497,6 +499,11 @@
       decada: '',
       itens: [],
       pagina: 1,
+      completo: false,
+      homeOk: false,
+      natal: [],
+      decadas: [],
+      totalTitulos: 0,
     };
 
     let favoritos = storage.lerArray(localStorage, LS.FAVORITOS);
@@ -649,6 +656,56 @@
       }
     }
 
+    // ---- Home leve: catalogo/home.json (gerado por gerar_home.py) ----
+    function prepararItemHome(bruto) {
+      const origem = bruto && typeof bruto === 'object' ? bruto : {};
+      const agrupado = !!origem.isAgrupado;
+      const titulo = String(origem.titulo || '').trim();
+      const nome = String(origem.serie || '').trim();
+      return {
+        titulo,
+        serie: agrupado ? (nome || titulo) : nome,
+        temporada: origem.temporada || 0,
+        episodio: origem.episodio || 0,
+        link: origem.link || '',
+        thumbnailUrl: origem.thumbnailUrl || '',
+        videoUrl: origem.videoUrl || '',
+        isAgrupado: agrupado,
+        _ehSerie: agrupado,
+        _generos: limparGeneros(origem.generos),
+        _ano: Number(origem.ano) || 0,
+        _nota: Number(origem.nota) || 0,
+        _busca: normalizar(agrupado ? (nome || titulo) : titulo),
+        _eps: [],
+      };
+    }
+
+    // Considera a home "leve" pronta; o catálogo completo continua vazio até ser pedido.
+    function aplicarHome(dados) {
+      const home = dados && typeof dados === 'object' ? dados : {};
+      const lista = (brutos) => (Array.isArray(brutos) ? brutos : [])
+        .map(prepararItemHome)
+        .filter((i) => i.titulo && i.link);
+
+      estado.destaques = lista(home.destaques);
+      if (!estado.destaques.length) throw new Error('home.json sem destaques');
+      estado.natal = lista(home.natal);
+      estado.generos = new Map(Object.entries(home.generos && typeof home.generos === 'object' ? home.generos : {}));
+      estado.decadas = Array.isArray(home.decadas) ? home.decadas.slice() : [];
+      estado.totalTitulos = Number(home.total) || 0;
+      estado.homeOk = true;
+
+      [...estado.destaques, ...estado.natal].forEach((item) => {
+        const k = chave(item);
+        if (!estado.porChave.has(k)) estado.porChave.set(k, item);
+      });
+    }
+
+    function carregarHome() {
+      return buscarJson(CONFIG.HOME_URL, CONFIG.HOME_TIMEOUT_MS)
+        .catch((erro) => { console.warn('[Clau Flix] home.json indisponível; carregando o catálogo completo.', erro); return null; });
+    }
+
     function gerenciarDestaques() {
       const agora = Date.now();
       const salvos = storage.lerArray(localStorage, LS.DESTAQUES);
@@ -747,7 +804,7 @@
     function registrarFilme(link, titulo) {
       const item = estado.porChave.get(link);
       const lista = lerHistorico().filter((h) => h.k !== link);
-      lista.unshift({ k: link, titulo, link, thumbnailUrl: item ? item.thumbnailUrl : '', tipo: 'filme', t: Date.now() });
+      lista.unshift({ k: link, titulo, link, thumbnailUrl: item ? item.thumbnailUrl : '', videoUrl: (item && item.videoUrl) || '', tipo: 'filme', t: Date.now() });
       gravarHistorico(lista);
     }
 
@@ -761,10 +818,35 @@
       }).join('|');
     }
 
+    // A fila precisa funcionar sem o catálogo completo: o histórico já guarda o que o card mostra.
+    function itemDoHistorico(h) {
+      const carregado = estado.porChave.get(h.k);
+      if (carregado) return carregado;
+      const titulo = h.titulo || 'Título';
+      const serie = h.tipo === 'serie';
+      const item = {
+        titulo,
+        serie: serie ? titulo : '',
+        temporada: h.temp || 0,
+        episodio: h.ep || 0,
+        link: h.link || (serie ? `serie.html?nome=${encodeURIComponent(titulo)}` : h.k),
+        thumbnailUrl: h.thumbnailUrl || '',
+        videoUrl: h.videoUrl || '',
+        isAgrupado: serie,
+        _ehSerie: serie,
+        _generos: [],
+        _ano: 0,
+        _nota: 0,
+        _busca: normalizar(titulo),
+      };
+      estado.porChave.set(h.k, item);
+      return item;
+    }
+
     function renderizarContinuar() {
       const visivel = estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras();
       const itens = visivel
-        ? lerHistorico().map((h) => ({ h, item: estado.porChave.get(h.k) })).filter((x) => x.item)
+        ? lerHistorico().map((h) => ({ h, item: itemDoHistorico(h) }))
         : [];
       assinaturaContinuar = assinaturaDoContinuar();
       if (!itens.length) { continuarEl.hidden = true; continuarEl.innerHTML = ''; return; }
@@ -784,7 +866,9 @@
 
     function renderizarNatal() {
       const itens = (estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras())
-        ? estado.todos.filter((i) => RX_NATAL.test(normalizar(i.titulo))).slice(0, CONFIG.MAX_NATAL)
+        ? (estado.completo
+          ? estado.todos.filter((i) => RX_NATAL.test(normalizar(i.titulo))).slice(0, CONFIG.MAX_NATAL)
+          : estado.natal)
         : [];
       if (!itens.length) { natalEl.hidden = true; natalEl.innerHTML = ''; return; }
       natalEl.innerHTML = `<h2>🎄 Especial de Natal</h2><div class="fila">${itens.map((item) =>
@@ -805,7 +889,8 @@
       return `🎁 Faltam ${d} dias para o Natal!`;
     }
 
-    function surpreenda() {
+    async function surpreenda() {
+      if (!(await garantirCatalogoCompleto())) return;
       let base = universoDaView();
       const genero = generoAtivo();
       if (genero) base = base.filter((i) => (i._generos || []).includes(genero));
@@ -1002,7 +1087,7 @@
     // 7. NAVEGAÇÃO, BUSCA E FILTRO DE GÊNERO
     // ===================================================================
 
-    const generoAtivo = () => (estado.temClassificacao ? estado.genero : '');
+    const generoAtivo = () => (estado.generos.size ? estado.genero : '');
 
     function tituloAtual() {
       const genero = generoAtivo();
@@ -1031,7 +1116,7 @@
     }
 
     function renderizarChips() {
-      if (!estado.temClassificacao || !estado.generos.size) { filtroGeneros.hidden = true; filtroGeneros.innerHTML = ''; return; }
+      if (!estado.generos.size) { filtroGeneros.hidden = true; filtroGeneros.innerHTML = ''; return; }
 
       const rolagem = filtroGeneros.scrollLeft;
       const focado = filtroGeneros.contains(document.activeElement) ? document.activeElement.dataset.genero : null;
@@ -1063,17 +1148,29 @@
       return cmp ? [...r].sort(cmp) : r;
     }
 
-    function renderizarOrdem(universo) {
-      const decadas = [...new Set(universo.filter((i) => i._ano).map((i) => Math.floor(i._ano / 10) * 10))].sort((a, b) => b - a);
+    function renderizarOrdem(universo, decadasProntas = null) {
+      const decadas = decadasProntas || [...new Set(universo.filter((i) => i._ano).map((i) => Math.floor(i._ano / 10) * 10))].sort((a, b) => b - a);
       if (estado.decada && !decadas.includes(parseInt(estado.decada, 10))) estado.decada = '';
       selDecada.innerHTML = '<option value="">Todas</option>' + decadas.map((d) => `<option value="${d}">${d}s</option>`).join('');
       selDecada.value = estado.decada;
       selOrdem.value = estado.ordem;
       selDecada.closest('label').hidden = !decadas.length;
-      ordemBox.hidden = !universo.length;
+      ordemBox.hidden = !(universo.length || decadas.length);
     }
 
     function recalcular({ resetPagina = false } = {}) {
+      if (!estado.completo) {
+        // Home leve: chips, décadas e destaques já vêm prontos do home.json.
+        renderizarOrdem([], estado.decadas);
+        renderizarChips();
+        const genero = generoAtivo();
+        const lista = genero ? estado.destaques.filter((i) => (i._generos || []).includes(genero)) : estado.destaques;
+        estado.itens = aplicarOrdemEDecada(lista);
+        if (resetPagina) estado.pagina = 1;
+        renderizar();
+        return;
+      }
+
       const universo = universoDaView();
       renderizarOrdem(universo);
       estado.generos = estado.temClassificacao ? contarGeneros(universo) : new Map();
@@ -1089,27 +1186,33 @@
       renderizar();
     }
 
-    function alternarGenero(genero) {
+    async function alternarGenero(genero) {
       estado.genero = estado.genero === genero ? '' : genero;
+      if (estado.genero && !(await garantirCatalogoCompleto())) return;
       recalcular({ resetPagina: true });
     }
 
-    function mudarView(novaView) {
+    async function mudarView(novaView) {
       buscar.cancelar();
       estado.view = novaView;
       estado.busca = '';
       searchInput.value = '';
       marcarNavAtiva(novaView);
+      if (novaView !== 'home' && !(await garantirCatalogoCompleto())) return;
       recalcular({ resetPagina: true });
     }
 
-    function executarBusca() {
+    async function executarBusca() {
       const texto = searchInput.value.trim();
       if (!normalizar(texto)) { mudarView(estado.view); return; }
       estado.busca = texto;
+      if (!(await garantirCatalogoCompleto())) return;
       recalcular({ resetPagina: true });
     }
     const buscar = debounce(executarBusca, CONFIG.DEBOUNCE_MS);
+
+    // Sessão com filtro, busca ou aba que não seja a home só funciona com o catálogo completo.
+    const precisaCatalogoCompleto = () => estado.view !== 'home' || !!estado.busca || !!estado.genero || !!estado.ordem || !!estado.decada;
 
     function restaurarSessao() {
       const viewSalva = storage.ler(sessionStorage, SS.VIEW, 'home');
@@ -1122,7 +1225,6 @@
 
       searchInput.value = estado.busca;
       marcarNavAtiva(estado.view);
-      recalcular();
     }
 
     // ===================================================================
@@ -1200,7 +1302,7 @@
       if (filme && !teclaModificadora) {
         e.preventDefault();
 
-        const direto = filme.classList.contains('btn') || filme.closest('#continuar');
+        const direto = (filme.classList.contains('btn') || filme.closest('#continuar')) && filme.dataset.url;
         if (direto) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link);
         else window.location.href = urlDetalheFilme(filme.dataset.link);
       }
@@ -1240,14 +1342,22 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && videoModal.classList.contains('aberto')) fecharModal(); });
     searchInput.addEventListener('input', buscar);
     $('btnSurpresa').addEventListener('click', surpreenda);
-    selOrdem.addEventListener('change', () => { estado.ordem = selOrdem.value; recalcular({ resetPagina: true }); });
-    selDecada.addEventListener('change', () => { estado.decada = selDecada.value; recalcular({ resetPagina: true }); });
+    selOrdem.addEventListener('change', async () => {
+      estado.ordem = selOrdem.value;
+      if (estado.ordem && !(await garantirCatalogoCompleto())) return;
+      recalcular({ resetPagina: true });
+    });
+    selDecada.addEventListener('change', async () => {
+      estado.decada = selDecada.value;
+      if (estado.decada && !(await garantirCatalogoCompleto())) return;
+      recalcular({ resetPagina: true });
+    });
 
     // A home pode voltar do cache de navegação (botão voltar) sem rodar o script de novo:
     // relê histórico e favoritos do storage para "Continuar assistindo" e as estrelas não ficarem velhos.
     let assinaturaFavoritos = '';
     function recarregarDoStorage() {
-      if (!estado.todos.length) return;
+      if (!estado.homeOk && !estado.completo) return;
 
       favoritos = storage.lerArray(localStorage, LS.FAVORITOS);
       favKeys = new Set(favoritos.map((f) => f.k));
@@ -1292,7 +1402,37 @@
         .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
-    async function iniciar() {
+    // Catálogo completo (37 MB em partes + 19 MB de classificação): só quando a home leve não basta.
+    let carregandoCompleto = null;
+    function garantirCatalogoCompleto() {
+      if (estado.completo) return Promise.resolve(true);
+      if (carregandoCompleto) return carregandoCompleto;
+
+      carregandoCompleto = (async () => {
+        mostrarSkeleton();
+        const [cls, notas, catalogo] = await Promise.all([
+          carregarClassificacao(),
+          carregarNotas(),
+          buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS),
+        ]);
+        if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
+        if (notas) estado.notas = notas;
+        prepararCatalogo(catalogo, cls);
+        estado.completo = true;
+        return true;
+      })()
+        .catch((erro) => {
+          console.error('[Clau Flix] falha ao carregar o catálogo completo:', erro);
+          mostrarErro(erro);
+          return false;
+        })
+        .finally(() => { carregandoCompleto = null; });
+
+      return carregandoCompleto;
+    }
+
+    // Plano B: sem home.json (deploy antigo ou arquivo corrompido), carrega tudo como antes.
+    async function iniciarCatalogoCompleto() {
       mostrarSkeleton();
       try {
         const promessaCls = carregarClassificacao();
@@ -1303,14 +1443,15 @@
         const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
         const chegouCedo = cedo !== SEM_RESPOSTA;
         prepararCatalogo(catalogo, chegouCedo ? cedo : null);
+        estado.completo = true;
         gerenciarDestaques();
         restaurarSessao();
+        recalcular();
 
         if (!chegouCedo) {
           promessaCls.then((cls) => {
             if (!cls) return;
             prepararCatalogo(catalogo, cls);
-            gerenciarDestaques();
             recalcular();
           });
         }
@@ -1325,6 +1466,24 @@
         console.error('Falha ao carregar o catálogo:', erro);
         mostrarErro(erro);
       }
+    }
+
+    async function iniciar() {
+      mostrarSkeleton();
+      const home = await carregarHome();
+      if (!home) { await iniciarCatalogoCompleto(); return; }
+
+      try {
+        aplicarHome(home);
+      } catch (erro) {
+        console.warn('[Clau Flix] home.json inválido; carregando o catálogo completo.', erro);
+        await iniciarCatalogoCompleto();
+        return;
+      }
+
+      restaurarSessao();
+      if (precisaCatalogoCompleto() && !(await garantirCatalogoCompleto())) return;
+      recalcular();
     }
 
     $('anoAtual').textContent = new Date().getFullYear();

@@ -258,6 +258,10 @@ jobs:
           main()
           PYEOF
 
+      # A home baixa só este arquivo pequeno (destaques + especial de Natal) em vez das 6 partes.
+      - name: Gerar a home leve (catalogo/home.json)
+        run: python3 gerar_home.py
+
       - name: Commitar o catalogo
         run: |
           git config user.name  "github-actions[bot]"
