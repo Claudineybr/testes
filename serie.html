@@ -929,7 +929,14 @@
       if (ep._temp !== temporadaAtiva) trocarTemporada(ep._temp);
       const item = document.querySelector(`#listaEps .ep-item[data-i="${i}"]`);
       if (item) item.scrollIntoView({ block: 'center', behavior: reduzirMovimento ? 'auto' : 'smooth' });
-      if (verParam) tocarEpisodio(i, true, (progressoDe(ep) || {}).time || 0);
+      if (!verParam) return;
+      // ver=1 é de uso único: sai da URL para recarregar ou voltar não reabrirem o player.
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('ver');
+        window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+      } catch { /* sem history: abre o player mesmo assim */ }
+      tocarEpisodio(i, true, (progressoDe(ep) || {}).time || 0);
     }
 
     function tocarEpisodio(i, direto, inicio) {
