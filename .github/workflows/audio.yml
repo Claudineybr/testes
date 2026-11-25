@@ -32,6 +32,34 @@ jobs:
       - name: Conferir o idioma do audio de cada titulo
         run: python3 -u audio_ptbr.py --por-host 48 --paralelo 140 --timeout 12
 
+      - name: Disparar próxima run (se fila não vazia)
+        if: |
+          success() && (
+            github.event_name == 'schedule' ||
+            inputs.auto_run == true ||
+            inputs.auto_run == 'true'
+          )
+        env:
+          GH_TOKEN: ${{ secrets.PAT_CHAIN }}
+          REPO: ${{ github.repository }}
+          LOTE_IN: ${{ inputs.lote || '100' }}
+          MODO_IN: ${{ inputs.modo || 'baixar_e_consertar' }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "PAT_CHAIN não configurado: sem auto-chain."; exit 0; fi
+          FALTAM=$(cat /tmp/faltam.txt 2>/dev/null || echo 0)
+          echo "Faltam: $FALTAM"
+          if [ "${FALTAM:-0}" -le 0 ]; then exit 0; fi
+          LIMITE_ISO=$(date -u -d '60 minutes ago' +%Y-%m-%dT%H:%M:%SZ)
+          RECENTES=$(gh run list --workflow="audio.yml" --event workflow_dispatch --limit 100 \
+            --json createdAt --jq "[.[] | select(.createdAt > \"$LIMITE_ISO\")] | length" \
+            --repo "$REPO" 2>/dev/null || echo 0)
+          echo "Encadeamentos na última hora: $RECENTES"
+          if [ "${RECENTES:-0}" -ge 60 ]; then echo "Limite por hora atingido."; exit 0; fi
+          sleep 30
+          gh workflow run "audio.yml" --repo "$REPO" --ref main \
+            -f auto_run=true -f lote="$LOTE_IN" -f reprocessar_tudo=false \
+            -f modo="$MODO_IN"
+
       - name: Commitar o resultado
         run: |
           git config user.name  "github-actions[bot]"
