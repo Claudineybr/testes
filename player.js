@@ -16,8 +16,8 @@
  * ClauPlayer.buscarSegmentos(id, temporada, episodio) -> Promise<[{tipo, ini, fim}]>   (TheIntroDB; filme: só o id)
  *   id = número do TMDB ou texto do IMDb ("tt0944947").
  * ClauPlayer.segmentosDoArquivo(link, temporada, episodio) -> Promise<[...]>   descobre o id sozinho:
- *   1) nome do arquivo com id:  100010s01e03.html (TMDB)  |  tt0944947s01e03.html (IMDb)  |  tt0111161.html (filme IMDb)
- *   2) senão, procura no capas.json (chaves "serie:<prefixo>" e "<arquivo>") o tmdb_id gravado pelo workflow capas.
+ *   1) nome do arquivo com id:  100010s01e03.html (TMDB)  |  tt0944947s01e03.html (IMDb)
+ *   2) filme:  284278.html (TMDB)  |  tt0111161.html (IMDb)
  *   Uso: segmentos: () => ClauPlayer.segmentosDoArquivo(ep.link, ep.temporada, ep.episodio)
  *   Nunca rejeita: falha de rede, 404 ou título sem dados = [].
  *   Uso: segmentos: () => ClauPlayer.buscarSegmentos(18165, 1, 3)
@@ -188,32 +188,22 @@
   }
 
   // ---------- descobrir o id (TMDB/IMDb) a partir do nome do arquivo ----------
-  let capasPromessa = null;
-  const lerCapas = () => capasPromessa || (capasPromessa = fetch('capas.json').then((r) => (r.ok ? r.json() : {})).catch(() => ({})).then((j) => (j && typeof j === 'object' ? j : {})));
-
-  /** {id, temporada, episodio} se o NOME do arquivo já traz o id; senão null. */
+  /** {id, temporada, episodio} do nome do arquivo do catálogo; null se ele não trouxer id. */
   function idDoArquivo(link) {
     const nome = String(link || '').split(/[?#]/)[0].split('/').pop().replace(/\.html?$/i, '');
-    let m = nome.match(/^(\d+|tt\d+)s(\d+)e(\d+)$/i);      // 100010s01e03 | tt0944947s01e03
+    const m = nome.match(/^(\d+|tt\d+)s(\d+)e(\d+)$/i);   // 100010s01e03 | tt0944947s01e03
     if (m) return { id: /^tt/i.test(m[1]) ? m[1].toLowerCase() : Number(m[1]), temporada: Number(m[2]), episodio: Number(m[3]) };
-    m = nome.match(/^(tt\d{5,10})$/i);                         // filme: tt0111161
-    if (m) return { id: m[1].toLowerCase(), temporada: null, episodio: null };
+    if (/^tt\d{5,10}$/i.test(nome)) return { id: nome.toLowerCase(), temporada: null, episodio: null };  // filme IMDb
+    if (/^\d{1,9}$/.test(nome)) return { id: Number(nome), temporada: null, episodio: null };             // filme TMDB
     return null;
   }
 
-  /** Segmentos de um item do catálogo: id no nome do arquivo ou, na falta, tmdb_id do capas.json. Nunca rejeita. */
+  /** Segmentos de um item do catálogo pelo id que já vem no nome do arquivo. Nunca rejeita. */
   async function segmentosDoArquivo(link, temporada, episodio) {
     try {
-      const direto = idDoArquivo(link);
-      if (direto) return await buscarSegmentos(direto.id, direto.temporada, direto.episodio);
-      const nome = String(link || '').split(/[?#]/)[0].split('/').pop().replace(/\.html?$/i, '').toLowerCase();
-      if (!nome) return [];
-      const m = nome.match(/^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/);   // mesma regra do capas.py
-      const capas = await lerCapas();
-      const e = capas[m ? 'serie:' + m[1] : nome];
-      if (!e || !e.tmdb_id) return [];
-      if (m) return await buscarSegmentos(e.tmdb_id, temporada != null ? temporada : Number(m[2] || m[4]), episodio != null ? episodio : Number(m[3] || m[5]));
-      return await buscarSegmentos(e.tmdb_id);
+      const achado = idDoArquivo(link);
+      if (!achado) return [];
+      return await buscarSegmentos(achado.id, temporada != null ? temporada : achado.temporada, episodio != null ? episodio : achado.episodio);
     } catch { return []; }
   }
 
@@ -616,7 +606,7 @@
     montar();
     if (!o.videoUrl || !String(o.videoUrl).trim() || o.videoUrl === 'undefined') {
       alert('Link do vídeo não encontrado no catálogo. Abrindo página original.');
-      window.location.href = o.link;
+      window.location.href = destinoRave(o) || o.link;
       return;
     }
     pendente = o;
@@ -634,7 +624,7 @@
     if (o.aoIniciar) o.aoIniciar();
     el.titulo.textContent = o.titulo || '';
     el.sub.textContent = o.subtitulo || '';
-    el.erroLink.href = o.link || '#';
+    el.erroLink.href = destinoRave(o) || '#';
     el.erro.classList.remove('on');
     ov.classList.remove('so-topo', 'oculto');
     fecharContinuar();

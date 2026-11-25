@@ -4,15 +4,18 @@
    Demais arquivos do mesmo domínio: cache primeiro com revalidação em segundo plano.
    Respostas redirecionadas (308 do Pages em /index.html) são recriadas, senão a navegação falha. Mude VERSAO ao alterar os arquivos. */
 
-const VERSAO = 'clauflix-v17';
+const VERSAO = 'clauflix-v18';
 
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 const CACHE_DADOS = `${VERSAO}-dados`;
 
-const BASE = ['/', '/index.html', '/serie.html', '/player.js', '/manifest.webmanifest'];
+const BASE = ['/', '/serie', '/player.js', '/manifest.webmanifest'];
 const DADOS = ['/classificacao.json'];
 
 const ehDados = (caminho) => DADOS.includes(caminho) || caminho.startsWith('/catalogo/') || /^\/classificacao_\d+\.json$/.test(caminho);
+
+// O Pages devolve a home (200 text/html) para arquivo inexistente: isso nunca deve entrar no cache.
+const ehHtml = (resp) => ((resp.headers.get('content-type') || '').toLowerCase().includes('text/html'));
 
 function canonica(href) {
   const u = new URL(href);
@@ -60,7 +63,7 @@ async function redePrimeiro(req, chave) {
   const cache = await caches.open(CACHE_DADOS);
   try {
     const resp = await semRedirecionamento(await fetch(req.url));
-    if (resp && resp.ok) cache.put(chave, resp.clone());
+    if (resp && resp.ok && !ehHtml(resp)) cache.put(chave, resp.clone());
     return resp;
   } catch (erro) {
     const salvo = await cache.match(chave);
@@ -94,7 +97,7 @@ async function cachePrimeiro(event, req) {
   const rede = (async () => {
     try {
       const resp = await semRedirecionamento(await fetch(alvo));
-      if (resp && resp.ok) await cache.put(chave, resp.clone());
+      if (resp && resp.ok && !ehHtml(resp)) await cache.put(chave, resp.clone());
       return resp;
     } catch (erro) {
       return null;

@@ -506,20 +506,24 @@
       try { return decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()).toLowerCase(); } catch { return ''; }
     };
 
+    // Índice por título montado UMA vez por classificação: os similares consultam milhares de itens.
+    let clsIndexada = null, clsPorTitulo = null;
+    function indicePorTitulo(cls) {
+      if (clsIndexada !== cls) {
+        clsIndexada = cls;
+        clsPorTitulo = new Map();
+        Object.values(cls).forEach((e) => { const t = normalizar(e && e.titulo); if (t && !clsPorTitulo.has(t)) clsPorTitulo.set(t, e); });
+      }
+      return clsPorTitulo;
+    }
+
     function generosDaClassificacao(cls, eps) {
       const tem = (k) => Object.prototype.hasOwnProperty.call(cls, k);
-      let porTitulo = null;
       const cont = new Map();
 
       eps.forEach((ep) => {
-        let entrada = tem(arquivoDoLink(ep.link)) ? cls[arquivoDoLink(ep.link)] : null;
-        if (!entrada) {
-          if (!porTitulo) {
-            porTitulo = new Map();
-            Object.values(cls).forEach((e) => { const t = normalizar(e && e.titulo); if (t && !porTitulo.has(t)) porTitulo.set(t, e); });
-          }
-          entrada = porTitulo.get(normalizar(ep.titulo)) || null;
-        }
+        const arq = arquivoDoLink(ep.link);
+        const entrada = (tem(arq) ? cls[arq] : null) || indicePorTitulo(cls).get(normalizar(ep.titulo)) || null;
         if (!entrada || !Array.isArray(entrada.generos)) return;
         entrada.generos.filter((g) => g && g !== CONFIG.GENERO_INDEFINIDO).forEach((g) => cont.set(g, (cont.get(g) || 0) + 1));
       });
@@ -939,8 +943,7 @@
 
     function abrirPlayer(videoUrl, titulo, linkHtml) {
       if (!videoUrl || !videoUrl.trim()) {
-        alert('Link do vídeo não encontrado no catálogo. Abrindo página original.');
-        window.location.href = linkHtml;
+        alert('Link do vídeo não encontrado no catálogo para este episódio.');
         return;
       }
 
@@ -1041,5 +1044,5 @@
     }
   })();
 </script>
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script></body>
+</body>
 </html>

@@ -240,7 +240,8 @@
       .filtro-generos { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; margin-right: -20px; padding-right: 20px; }
       .filtro-generos::-webkit-scrollbar { display: none; }
       nav::-webkit-scrollbar { display: none; }
-      nav ul { width: max-content; }
+      nav ul { width: max-content; gap: 2px; }
+      nav ul li a { padding: 7px 10px; font-size: 0.83rem; }
       .logo { font-size: 1.6rem; }
       .hero { min-height: 380px; }
       .hero-poster { display: none; }
@@ -249,6 +250,9 @@
       .grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
       .section h2 { font-size: 1.5rem; }
       .card-media::after { width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+    }
+    @media (max-width: 350px) {
+      .nav-minha { display: none; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -273,7 +277,7 @@
         <li><a href="#" id="nav-home" class="active" data-view="home" aria-current="page">Início</a></li>
         <li><a href="#" id="nav-filmes" data-view="filmes">Filmes</a></li>
         <li><a href="#" id="nav-series" data-view="series">Séries</a></li>
-        <li><a href="#" id="nav-favoritos" data-view="favoritos">⭐ Minha Lista</a></li>
+        <li><a href="#" id="nav-favoritos" data-view="favoritos">⭐ <span class="nav-minha">Minha </span>Lista</a></li>
       </ul>
     </nav>
     <div class="luzes" id="luzes" aria-hidden="true"></div>
@@ -285,7 +289,6 @@
 
   <main class="section">
     <section class="continuar" id="continuar" aria-label="Continuar assistindo" hidden></section>
-    <section class="continuar" id="recentes" aria-label="Adicionados recentemente" hidden></section>
     <section class="continuar" id="natal" aria-label="Especial de Natal" hidden></section>
     <div class="section-head">
       <h2 id="tituloSecao">Destaques</h2>
@@ -355,8 +358,6 @@
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS_CARD: 2,
       MAX_GENEROS_HERO: 3,
-      RECENTES_DIAS: 30,
-      MAX_RECENTES: 15,
       MAX_NATAL: 20,
     };
 
@@ -509,7 +510,6 @@
     const filtroGeneros = $('filtroGeneros');
     const hero = $('hero');
     const continuarEl = $('continuar');
-    const recentesEl = $('recentes');
     const natalEl = $('natal');
     const ordemBox = $('ordem');
     const selOrdem = $('selOrdem');
@@ -627,7 +627,6 @@
         item._busca = normalizar(item._ehSerie ? nomeDaSerie(item) : item.titulo);
         item._generos = entrada ? limparGeneros(entrada.generos) : [];
         item._ano = extrairAno(item);
-        item._adicionado = String(item.adicionadoEm || '');
         if (entrada && (entrada.tipo === 'serie') !== item._ehSerie) diag.divergentes++;
       });
 
@@ -637,7 +636,6 @@
         s._generos = generosDaSerie(s._eps);
         s._ano = Math.min(...s._eps.map((e) => e._ano || 9999).concat(9999));
         if (s._ano === 9999) s._ano = 0;
-        s._adicionado = s._eps.reduce((m, e) => (e._adicionado > m ? e._adicionado : m), '');
       });
       aplicarNotas();
       estado.todos = ordenarLista([...estado.filmes, ...estado.series]);
@@ -769,19 +767,6 @@
           `<button type="button" class="fila-x" data-remover="${esc(h.k)}" aria-label="Remover ${esc(h.titulo)} de Continuar assistindo" title="Remover">✕</button></div>`;
       }).join('')}</div>`;
       continuarEl.hidden = false;
-    }
-
-    function renderizarRecentes() {
-      const corte = new Date(Date.now() - CONFIG.RECENTES_DIAS * 864e5).toISOString().slice(0, 10);
-      const itens = (estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras())
-        ? estado.todos.filter((i) => i._adicionado && i._adicionado >= corte)
-            .sort((a, b) => (b._adicionado > a._adicionado ? 1 : b._adicionado < a._adicionado ? -1 : collator.compare(a.titulo, b.titulo)))
-            .slice(0, CONFIG.MAX_RECENTES)
-        : [];
-      if (!itens.length) { recentesEl.hidden = true; recentesEl.innerHTML = ''; return; }
-      recentesEl.innerHTML = `<h2>✨ Adicionados recentemente</h2><div class="fila">${itens.map((item) =>
-        `<div class="fila-item">${cardHtml(item)}<span class="fila-rotulo">Novo</span></div>`).join('')}</div>`;
-      recentesEl.hidden = false;
     }
 
     const RX_NATAL = /\b(natal|natalin[oa]s?|christmas|xmas|noel|grinch|navidad|expresso polar|polar express|santa claus)\b/;
@@ -958,7 +943,6 @@
       contagem.textContent = total ? `${total} ${total === 1 ? 'título' : 'títulos'}` : '';
       renderizarHero();
       renderizarContinuar();
-      renderizarRecentes();
       renderizarNatal();
 
       if (total === 0) { grid.innerHTML = htmlVazio(); paginacao.innerHTML = ''; salvarSessao(); return; }
@@ -1147,8 +1131,8 @@
       }
       registrarFilme(linkHtml, titulo);
       if (!videoUrl || !videoUrl.trim() || videoUrl === 'undefined') {
-        alert('Link do vídeo não encontrado no catálogo. Abrindo página original.');
-        window.location.href = linkHtml;
+        alert('Link do vídeo não encontrado no catálogo. Abrindo a página do título.');
+        window.location.href = urlDetalheFilme(linkHtml);
         return;
       }
 
@@ -1308,5 +1292,5 @@
     iniciar();
   })();
 </script>
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "258183a2cf084d85a9ecd325e5d61fe4"}'></script></body>
+</body>
 </html>
