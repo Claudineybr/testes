@@ -1569,11 +1569,19 @@
       return carregandoLista;
     }
 
-    // Plano B: sem home.json (deploy antigo ou arquivo corrompido), carrega tudo como antes.
+    // Plano B: sem home.json (deploy antigo ou arquivo corrompido). O cartoes.json já tem
+    // título, link, capa, ano, nota e gêneros de todos os títulos — dá para abrir as abas,
+    // a busca e Minha Lista sem baixar as 6 partes (37 MB) + a classificação (19 MB).
     async function iniciarCatalogoCompleto() {
       mostrarSkeleton();
       try {
-        await carregarCatalogoCompleto();
+        const cartoes = await buscarJson(CONFIG.CARTOES_URL, CONFIG.FETCH_TIMEOUT_MS).catch(() => null);
+        if (Array.isArray(cartoes) && cartoes.length) {
+          prepararCartoes(cartoes);
+          if (!estado.homeOk) gerenciarDestaques();
+        } else {
+          await carregarCatalogoCompleto();
+        }
         restaurarSessao();
         recalcular();
       } catch (erro) {

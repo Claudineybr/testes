@@ -1,0 +1,52 @@
+name: Verificar audio pt-BR
+
+# Lê o idioma das faixas de áudio de cada título (série: 1º episódio; filme: o filme)
+# direto nos cabeçalhos dos .mp4 — ~12 KB por título, sem baixar vídeo.
+# Resultado: artifacts/audio_ptbr.json, com pt / original / indefinido / erro.
+# Roda de novo quando quiser: o script retoma de onde parou (só tenta de novo os erros).
+"on":
+  workflow_dispatch:
+  schedule:
+    - cron: '0 7 * * 1'          # toda segunda, 7h UTC
+
+permissions:
+  contents: write
+
+concurrency:
+  group: audio
+  cancel-in-progress: false
+
+jobs:
+  audio:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Baixar o codigo do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar o Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Conferir o idioma do audio de cada titulo
+        run: python3 -u audio_ptbr.py --por-host 48 --paralelo 140 --timeout 12
+
+      - name: Commitar o resultado
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add artifacts/audio_ptbr.json
+          if git diff --cached --quiet; then
+            echo "Sem mudanças — nada a commitar."
+            exit 0
+          fi
+          git commit -m "chore: atualiza o idioma do audio do catalogo [skip ci]"
+          for i in 1 2 3; do
+            if git pull origin "$GITHUB_REF_NAME" -X ours --no-rebase && git push; then
+              exit 0
+            fi
+            echo "Push falhou (tentativa $i). Tentando de novo..."
+            sleep 5
+          done
+          exit 1
