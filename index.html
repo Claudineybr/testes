@@ -1186,11 +1186,29 @@
       return partes.join(' · ');
     }
 
+    // Busca por palavras: "matrix 1999" acha "The Matrix (1999)". Título que contém o
+    // termo inteiro (ou começa por ele) vem antes dos que só têm as palavras soltas.
+    function casarBusca(itens, termo) {
+      const palavras = termo.split(/[^a-z0-9]+/).filter(Boolean);
+      if (!palavras.length) return itens;
+      const achados = [];
+      itens.forEach((i) => {
+        const alvo = i._busca;
+        let primeiro = -1;
+        for (const p of palavras) {
+          const at = alvo.indexOf(p);
+          if (at < 0) return;
+          if (primeiro < 0 || at < primeiro) primeiro = at;
+        }
+        const peso = (alvo.includes(termo) ? 0 : 1) + (alvo.startsWith(palavras[0]) ? 0 : 1);
+        achados.push({ i, peso, primeiro });
+      });
+      achados.sort((a, b) => a.peso - b.peso || a.primeiro - b.primeiro);
+      return achados.map((x) => x.i);
+    }
+
     function universoDaView() {
-      if (estado.busca) {
-        const termo = normalizar(estado.busca);
-        return estado.todos.filter((i) => i._busca.includes(termo));
-      }
+      if (estado.busca) return casarBusca(estado.todos, normalizar(estado.busca));
       if (estado.view === 'filmes') return estado.filmes;
       if (estado.view === 'series') return estado.series;
       if (estado.view === 'favoritos') return favoritosAtuais();

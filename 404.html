@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070d0b">
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="/icones/favicon.svg?v=2">
+  <title>Página não encontrada - Clau Flix</title>
+  <style>
+    :root {
+      --bg: #070d0b;
+      --vidro: rgba(16, 28, 24, 0.66);
+      --vidro-borda: rgba(255, 255, 255, 0.1);
+      --vermelho: #e5384a;
+      --vermelho-esc: #b3202f;
+      --verde: #2fb59f;
+      --texto: #f5f7f6;
+      --suave: rgba(245, 247, 246, 0.82);
+      --mudo: rgba(245, 247, 246, 0.66);
+      --raio: 18px;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif; }
+    body {
+      background: radial-gradient(120% 90% at 50% 0%, #123028 0%, var(--bg) 60%);
+      color: var(--texto); min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 32px 20px; text-align: center; -webkit-font-smoothing: antialiased;
+    }
+    .marca {
+      display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
+      color: var(--texto); font-weight: 800; letter-spacing: 0.4px; font-size: 1.15rem; margin-bottom: 28px;
+    }
+    .marca span.pino { width: 12px; height: 12px; border-radius: 50%; background: var(--vermelho); box-shadow: 0 0 0 4px rgba(229, 56, 74, 0.22); }
+    main {
+      max-width: 560px; width: 100%; padding: 46px 28px 38px; border-radius: 24px;
+      background: var(--vidro); border: 1px dashed var(--vidro-borda); backdrop-filter: blur(10px);
+    }
+    .icone { font-size: 3.6rem; line-height: 1; margin-bottom: 14px; }
+    h1 { font-size: 1.6rem; margin-bottom: 12px; }
+    p { color: var(--suave); line-height: 1.6; margin: 0 auto 26px; max-width: 440px; }
+    code {
+      display: inline-block; max-width: 100%; overflow-wrap: anywhere;
+      background: rgba(255, 255, 255, 0.07); border: 1px solid var(--vidro-borda);
+      border-radius: 8px; padding: 2px 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.86rem; color: var(--texto);
+    }
+    .acoes { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      min-height: 46px; padding: 0 24px; border-radius: 999px; text-decoration: none;
+      font-weight: 700; font-size: 0.98rem; color: #fff; border: 1px solid transparent;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    .btn-primary { background: linear-gradient(135deg, var(--vermelho), var(--vermelho-esc)); box-shadow: 0 8px 24px rgba(229, 56, 74, 0.45); }
+    .btn-vidro { background: rgba(255, 255, 255, 0.08); border-color: var(--vidro-borda); color: var(--texto); }
+    .btn:hover { transform: translateY(-2px); }
+    .btn:focus-visible { outline: 3px solid var(--verde); outline-offset: 3px; }
+    footer { margin-top: 26px; color: var(--mudo); font-size: 0.84rem; }
+  </style>
+</head>
+<body>
+  <a class="marca" href="/"><span class="pino" aria-hidden="true"></span>Clau Flix</a>
+
+  <main role="alert">
+    <div class="icone" aria-hidden="true">🔍</div>
+    <h1>Essa página não existe</h1>
+    <p>O endereço <code id="endereco">/</code> não leva a nenhum título. Use a busca da página inicial ou volte para os destaques.</p>
+    <div class="acoes">
+      <a class="btn btn-primary" href="/">Ver os destaques</a>
+    </div>
+  </main>
+
+  <footer>Erro 404 · Clau Flix</footer>
+
+  <script>
+    (() => {
+      const alvo = document.getElementById('endereco');
+      if (alvo) alvo.textContent = decodeURIComponent(location.pathname.slice(0, 120)) || '/';
+      if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+    })();
+  </script>
+</body>
+</html>

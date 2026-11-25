@@ -5,9 +5,12 @@
   cartoes.json ~3 MB   um cartão por título (nota e gêneros embutidos), para
                        Filmes, Séries, busca e Minha Lista
   videos.json  ~1,6 MB link do filme -> URL do vídeo, só quando for tocar
+  eps-00..15.json      16 pedaços com episódios + filme, para a página da
+                       série/filme baixar só o pedaço do título aberto
 
 Antes, exibir as abas custava catalogo/parte-*.json (37 MB) + classificacao
-(19 MB); agora custa só o cartoes.json.
+(19 MB); agora custa só o cartoes.json. A ficha do título custava os mesmos
+37 MB + 19 MB; agora custa ~80 KB (um pedaço de eps-*.json).
 
 As regras abaixo são as mesmas do index.html (isSerie, nomeDaSerie, extrairAno,
 generosDaSerie, chaveDetalhe, contarGeneros), para que o card não mude quando o
@@ -29,6 +32,10 @@ SAIDA_CARTOES = os.path.join(PASTA, "cartoes.json")
 SAIDA_VIDEOS = os.path.join(PASTA, "videos.json")
 NOTAS = os.path.join(PASTA, "notas.json")
 CLASSIFICACAO = "classificacao_1.json"
+
+# Mesmo número do CONFIG.EPS_SHARDS do serie.html: mudar aqui exige mudar lá.
+SHARDS = 16
+SAIDA_EPS = os.path.join(PASTA, "eps-{:02d}.json")
 
 QTD_DESTAQUES = 20
 QTD_NATAL = 20
@@ -105,6 +112,75 @@ def generos_da_serie(eps):
 
 def chave(item):
     return "serie:" + item["titulo"] if item["isAgrupado"] else item["link"]
+
+
+def fnv1a(texto):
+    """Mesmo hash do serie.html: chave do título -> número do pedaço."""
+    h = 0x811C9DC5
+    for b in texto.encode("utf-8"):
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def chave_serie(nome):
+    return "s:" + normalizar(nome).strip()
+
+
+def chave_filme(link):
+    return "f:" + arquivo_do_link(link)
+
+
+def gerar_episodios(series, filmes):
+    """Um pedaço por faixa de hash: a página baixa só o do título aberto.
+
+    Série: {t: nome, c: capa, a: ano, n: nota, g: gêneros, caps: {temporada: capa},
+            e: [[temporada, episódio, link, vídeo], ...]}
+    Filme: {t: título, c: capa, a: ano, n: nota, g: gêneros, l: link, v: vídeo}
+    """
+    baldes = [{"v": 2, "s": {}, "f": {}} for _ in range(SHARDS)]
+
+    for nome, eps in series.items():
+        eps = sorted(eps, key=lambda e: (int(e.get("temporada") or 1),
+                                        int(e.get("episodio") or 1), str(e.get("link") or "")))
+        capa = (eps[0].get("thumbnailUrl") or "").strip()
+        caps = {}
+        for temp in sorted({int(e.get("temporada") or 1) for e in eps}):
+            achou = next(((e.get("thumbnailUrl") or "").strip() for e in eps
+                          if int(e.get("temporada") or 1) == temp
+                          and (e.get("thumbnailUrl") or "").strip()), "")
+            if achou and achou != capa:      # capa própria da temporada (o resto usa a da série)
+                caps[str(temp)] = achou
+        anos = [e["ano"] for e in eps if e["ano"]]
+        nota = next((e["nota"] for e in eps if e["nota"]), 0.0)
+        dados = {
+            "t": nome,
+            "c": capa,
+            "a": min(anos) if anos else 0,
+            "n": round(nota, 1),
+            "g": generos_da_serie(eps),
+            "e": [[int(e.get("temporada") or 1), int(e.get("episodio") or 1),
+                   e.get("link", ""), (e.get("videoUrl") or "").strip()] for e in eps],
+        }
+        if caps:
+            dados["caps"] = caps
+        baldes[fnv1a(chave_serie(nome)) % SHARDS]["s"][chave_serie(nome)] = dados
+
+    for filme in filmes:
+        link = filme.get("link") or ""
+        if not link:
+            continue
+        chave = chave_filme(link)
+        baldes[fnv1a(chave) % SHARDS]["f"][chave] = {
+            "t": filme.get("titulo", ""),
+            "c": (filme.get("thumbnailUrl") or "").strip(),
+            "a": filme["ano"],
+            "n": round(filme["nota"], 1),
+            "g": filme["generos"],
+            "l": link,
+            "v": (filme.get("videoUrl") or "").strip(),
+        }
+
+    return baldes
 
 
 def carregar(caminho, padrao):
@@ -235,12 +311,24 @@ def main():
     with open(SAIDA_VIDEOS, "w", encoding="utf-8") as f:
         json.dump(videos, f, ensure_ascii=False, separators=(",", ":"))
 
+    # Episódios e filmes em 16 pedaços: é o único arquivo que a ficha do título baixa.
+    baldes = gerar_episodios(series, filmes)
+    bytes_eps = 0
+    for i, balde in enumerate(baldes):
+        caminho = SAIDA_EPS.format(i)
+        with open(caminho, "w", encoding="utf-8") as f:
+            json.dump(balde, f, ensure_ascii=False, separators=(",", ":"))
+        bytes_eps += os.path.getsize(caminho)
+
     kb = lambda p: os.path.getsize(p) / 1024
     print(f"{SAIDA}: {kb(SAIDA):.1f} KB — {len(titulos)} títulos "
           f"({len(filmes)} filmes, {len(series)} séries), {len(destaques)} destaques, "
           f"{len(natal)} no especial de Natal, {len(generos)} gêneros, {len(decadas)} décadas")
     print(f"{SAIDA_CARTOES}: {kb(SAIDA_CARTOES):.1f} KB — {len(cartoes)} cartões")
     print(f"{SAIDA_VIDEOS}: {kb(SAIDA_VIDEOS):.1f} KB — {len(videos)} filmes com vídeo")
+    print(f"{SAIDA_EPS.format(0)} … {SHARDS} pedaços: {bytes_eps / 1024:.0f} KB no total "
+          f"({len(series)} séries, {len(filmes)} filmes; o maior pedaço: "
+          f"{max(os.path.getsize(SAIDA_EPS.format(i)) for i in range(SHARDS)) / 1024:.0f} KB)")
 
 
 if __name__ == "__main__":

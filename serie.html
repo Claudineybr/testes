@@ -269,17 +269,17 @@
     // ===================================================================
     const CONFIG = {
       WORKER_URL: 'https://proxy-videos.claudineibu12.workers.dev/',
-      CATALOGO_INDICE_URL: 'catalogo/indice.json',
       FETCH_TIMEOUT_MS: 12000,
       TROCA_FUNDO_MS: 10000,
       NEVE_INTERVALO_MS: 200,
       NEVE_MAX_FLOCOS: 60,
       QTD_LUZES: 36,
-      CLASSIFICACAO_URL: 'classificacao.json',
-      CLASSIFICACAO_TIMEOUT_MS: 25000,
-      CLASSIFICACAO_GRACA_MS: 1500,
-      GENERO_INDEFINIDO: 'indefinido',
-      MAX_GENEROS: 3,
+      // Índice leve: 16 pedaços em catalogo/ (gerados por gerar_home.py), um por faixa de títulos.
+      EPS_URL: 'catalogo/eps-',
+      EPS_SHARDS: 16,
+      CARTOES_URL: 'catalogo/cartoes.json',
+      CARTOES_TIMEOUT_MS: 25000,
+      DETALHES_GRACA_MS: 1500,
     };
 
     const FUNDOS = [
@@ -330,11 +330,6 @@
     }
     function gravarFavoritos(lista) {
       try { localStorage.setItem(LS_FAVORITOS, JSON.stringify(lista)); } catch {  }
-    }
-
-    function nomeDaSerie(item) {
-      const nome = (item.serie || '').trim();
-      return nome || item.titulo.replace(/\s*-\s*(T\d+E\d+|\d+x\d+|\sE\d+$).*/i, '').trim();
     }
 
     // ===================================================================
@@ -420,12 +415,14 @@
     // As fichas (detalhes/*.json) NÃO vão para o deploy: são ~21 mil arquivos e o Cloudflare tem cota.
     // Elas são lidas do RAW do GitHub (mesmo repositório), onde já estão publicadas com CORS liberado.
     const USAR_DETALHES = true;
-    const DETALHES_URL = 'https://raw.githubusercontent.com/Claudineybr/testes/refs/heads/main/detalhes/';
+    // Ficha: o jsDelivr guarda por 7 dias (o RAW do GitHub, só 5 minutos); se ele falhar, cai no RAW.
+    const DETALHES_CDN = 'https://cdn.jsdelivr.net/gh/Claudineybr/testes@main/detalhes/';
+    const DETALHES_RAW = 'https://raw.githubusercontent.com/Claudineybr/testes/refs/heads/main/detalhes/';
+    let cdnDasFichas = true;
     let detalhes = {};
     let secaoAtiva = '';
-    let catalogoTodo = null, promessaClsGlobal = null, similaresCache = null;
+    let similaresCache = null, promessaCartoes = null;
     const RX_EP = /^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/i;
-    const PADRAO_LINK = /(_t\d+e(?:p)?\d+|_(\d+)x(\d+)|^(?:\d+|tt\d+)s\d+e\d+)/i;
 
     // ===================================================================
     // 5. SKELETON, ERRO E MENSAGENS
@@ -484,58 +481,55 @@
       }
     }
 
-    async function buscarCatalogo(limiteMs) {
-      const indice = await buscarJson(CONFIG.CATALOGO_INDICE_URL, limiteMs);
-      if (!indice || !Array.isArray(indice.partes)) throw new Error('Índice do catálogo inválido');
-      const partes = await Promise.all(indice.partes.map((p) => buscarJson(p.arquivo, limiteMs)));
-      return partes.flat();
+    // ===================================================================
+    // 5b. ÍNDICE LEVE (catalogo/eps-XX.json)
+    // -------------------------------------------------------------------
+    // A ficha não baixa mais as 6 partes do catálogo (37 MB): o gerador
+    // (gerar_home.py) distribui cada série/filme em 16 arquivos pequenos e a
+    // página busca só o pedaço do título aberto. A chave é a mesma dos dois
+    // lados: "s:"+nome normalizado (série) | "f:"+arquivo do link (filme).
+    // ===================================================================
+    const fnv1a = (texto) => {
+      let h = 0x811c9dc5;
+      const bytes = new TextEncoder().encode(texto);
+      for (let i = 0; i < bytes.length; i++) { h ^= bytes[i]; h = Math.imul(h, 0x01000193) >>> 0; }
+      return h;
+    };
+    const chaveDeSerie = (nome) => 's:' + normalizar(nome).trim();
+    const chaveDeFilme = (link) => 'f:' + arquivoDoLink(link);
+    const arquivoShard = (chave) => `${CONFIG.EPS_URL}${String(fnv1a(chave) % CONFIG.EPS_SHARDS).padStart(2, '0')}.json`;
+
+    async function carregarShard(chave, limiteMs) {
+      const dados = await buscarJson(arquivoShard(chave), limiteMs);
+      if (!dados || typeof dados !== 'object' || !dados.s || !dados.f) throw new Error('Índice de episódios inválido');
+      return dados;
     }
+
+    // Mesmo formato dos itens do catálogo: o resto da página não precisa saber que a fonte mudou.
+    const episodiosDaSerie = (item) => (item.e || [])
+      .map(([t, e, link, video]) => normalizarEpisodio({
+        titulo: `${item.t} - T${t}E${String(e).padStart(2, '0')}`, serie: item.t,
+        temporada: t, episodio: e, link, thumbnailUrl: '', videoUrl: video || '',
+      }))
+      .sort((a, b) => a._temp - b._temp || a._ep - b._ep);
 
     const SEM_RESPOSTA = Symbol('sem-resposta');
     const atraso = (ms) => new Promise((resolve) => setTimeout(() => resolve(SEM_RESPOSTA), ms));
 
-    function carregarClassificacao() {
-      return buscarJson(CONFIG.CLASSIFICACAO_URL, CONFIG.CLASSIFICACAO_TIMEOUT_MS)
-        .then(async (cls) => {
-          if (cls && Array.isArray(cls.parts)) {
-            const partes = await Promise.all(cls.parts.map((p) => buscarJson(p, CONFIG.CLASSIFICACAO_TIMEOUT_MS)));
-            cls = Object.assign({}, ...partes);
-          }
-          return cls && typeof cls === 'object' && !Array.isArray(cls) ? cls : null;
-        })
-        .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
+    // Similares usam o índice de cartões (título, capa e gêneros) em vez do catálogo inteiro.
+    function carregarCartoes() {
+      if (!promessaCartoes) {
+        promessaCartoes = buscarJson(CONFIG.CARTOES_URL, CONFIG.CARTOES_TIMEOUT_MS)
+          .then((lista) => (Array.isArray(lista) ? lista : []))
+          .catch((erro) => { console.warn('[Clau Flix] cartoes.json indisponível; seguindo sem similares.', erro); return []; });
+      }
+      return promessaCartoes;
     }
 
     const normalizar = (s) => String(s ?? '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
     const arquivoDoLink = (link) => {
       try { return decodeURIComponent(String(link || '').split(/[?#]/)[0].split('/').pop()).toLowerCase(); } catch { return ''; }
     };
-
-    // Índice por título montado UMA vez por classificação: os similares consultam milhares de itens.
-    let clsIndexada = null, clsPorTitulo = null;
-    function indicePorTitulo(cls) {
-      if (clsIndexada !== cls) {
-        clsIndexada = cls;
-        clsPorTitulo = new Map();
-        Object.values(cls).forEach((e) => { const t = normalizar(e && e.titulo); if (t && !clsPorTitulo.has(t)) clsPorTitulo.set(t, e); });
-      }
-      return clsPorTitulo;
-    }
-
-    function generosDaClassificacao(cls, eps) {
-      const tem = (k) => Object.prototype.hasOwnProperty.call(cls, k);
-      const cont = new Map();
-
-      eps.forEach((ep) => {
-        const arq = arquivoDoLink(ep.link);
-        const entrada = (tem(arq) ? cls[arq] : null) || indicePorTitulo(cls).get(normalizar(ep.titulo)) || null;
-        if (!entrada || !Array.isArray(entrada.generos)) return;
-        entrada.generos.filter((g) => g && g !== CONFIG.GENERO_INDEFINIDO).forEach((g) => cont.set(g, (cont.get(g) || 0) + 1));
-      });
-
-      const collator = new Intl.Collator('pt-BR', { sensitivity: 'base' });
-      return [...cont].sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0])).slice(0, CONFIG.MAX_GENEROS).map(([g]) => g);
-    }
 
     // ===================================================================
     // 6. HERO, TEMPORADAS E EPISÓDIOS
@@ -729,31 +723,24 @@
 
     async function montarSimilares() {
       if (similaresCache) return similaresCache;
-      const cls = await promessaClsGlobal;
       const meus = new Set(serieAtual.generos || []);
-      if (!cls || !catalogoTodo || !meus.size) return (similaresCache = []);
-      const series = new Map();
-      const colecao = [];
-      catalogoTodo.forEach((it) => {
-        if (PADRAO_LINK.test(it.link || '')) {
-          const n = nomeDaSerie(it);
-          if (!series.has(n)) series.set(n, { titulo: n, thumb: (it.thumbnailUrl || '').trim(), link: `serie.html?nome=${encodeURIComponent(n)}`, eps: [], serie: true });
-          series.get(n).eps.push(it);
-        } else {
-          colecao.push({ titulo: it.titulo, thumb: (it.thumbnailUrl || '').trim(), link: `serie.html?filme=${encodeURIComponent(it.link)}`, eps: [it], id: it.link });
-        }
-      });
-      series.forEach((sr) => colecao.push(sr));
+      if (!meus.size) return (similaresCache = []);
+      const cartoes = await carregarCartoes();
       const hash = (t) => { let h = 0; for (const c of t) h = (h * 31 + c.charCodeAt(0)) | 0; return Math.abs(h) % 7; };
       const pont = [];
-      colecao.forEach((c) => {
-        if (!c.thumb) return;
-        if (ehFilme ? c.id === serieAtual.link : (c.serie && c.titulo === serieAtual.nome)) return;
-        const comuns = generosDaClassificacao(cls, c.eps).filter((g) => meus.has(g)).length;
-        if (comuns) pont.push({ c, score: comuns * 10 + (!!c.serie === !ehFilme ? 3 : 0) + hash(c.titulo + serieAtual.nome) / 10 });
+      cartoes.forEach((c) => {
+        if (!c.u) return;
+        if (ehFilme ? c.l === serieAtual.link : (c.s && c.t === serieAtual.nome)) return;
+        const comuns = (c.g || []).filter((g) => meus.has(g)).length;
+        if (!comuns) return;
+        pont.push({ c, score: comuns * 10 + (!!c.s === !ehFilme ? 3 : 0) + hash(c.t + serieAtual.nome) / 10 });
       });
       pont.sort((a, b) => b.score - a.score);
-      return (similaresCache = pont.slice(0, 18).map((x) => x.c));
+      return (similaresCache = pont.slice(0, 18).map((x) => ({
+        titulo: x.c.t,
+        thumb: x.c.u,
+        link: x.c.s ? x.c.l : `serie.html?filme=${encodeURIComponent(x.c.l)}`,
+      })));
     }
 
     function renderizarLista() {
@@ -778,8 +765,8 @@
     }
 
     function capaDaTemporada(t) {
-      const ep = episodios.find((e) => e._temp === t && (e.thumbnailUrl || '').trim());
-      return ep ? ep.thumbnailUrl.trim() : serieAtual.capa;
+      const caps = (serieAtual && serieAtual.caps) || {};
+      return caps[t] || serieAtual.capa;
     }
 
     function atualizarCapa(t) {
@@ -824,66 +811,56 @@
     }
     function carregarDetalhes() {
       if (!USAR_DETALHES) return Promise.resolve(null);
-      return buscarJson(`${DETALHES_URL}${arquivoDetalhes()}.json`, 6000)
+      const ler = (base) => buscarJson(`${base}${arquivoDetalhes()}.json`, 6000)
         .then((d) => (d && typeof d === 'object' && !Array.isArray(d) ? d : null))
         .catch(() => null);
+      if (!cdnDasFichas) return ler(DETALHES_RAW);
+      return ler(DETALHES_CDN).then((d) => {
+        if (d) return d;
+        cdnDasFichas = false;   // CDN fora do ar nesta sessão: as próximas fichas vão direto no RAW
+        return ler(DETALHES_RAW);
+      });
     }
 
     async function carregarEpisodios() {
       mostrarSkeleton();
       try {
-        const promessaCls = promessaClsGlobal = carregarClassificacao();
-        const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
-        if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
-        catalogoTodo = catalogo;
+        const chave = ehFilme ? chaveDeFilme(modoFilme) : chaveDeSerie(nomeSerieParam);
+        const dados = await carregarShard(chave, CONFIG.FETCH_TIMEOUT_MS);
+        let item;
+
         if (ehFilme) {
-          const arq = arquivoDoLink(modoFilme);
-          const item = catalogo.find((it) => arquivoDoLink(it.link) === arq);
+          item = dados.f[chave];
           if (!item) { mostrarMensagem('Filme não encontrado', 'Não encontramos este filme no catálogo.'); return; }
-          episodios = [{ ...item, _temp: 1, _ep: 1 }];
-          const nome = (item.titulo || '').trim() || 'Filme';
-          const m = nome.match(/^(.*?)\s*\((\d{4})\)\s*$/);
-          serieAtual = { tipo: 'filme', nome, exibicao: nome, capa: (item.thumbnailUrl || '').trim(), link: item.link };
-          temporadaAtiva = 1;
+          const nome = (item.t || '').trim() || 'Filme';
+          episodios = [normalizarEpisodio({ titulo: nome, serie: nome, temporada: 1, episodio: 1,
+            link: item.l, thumbnailUrl: item.c || '', videoUrl: item.v || '' })];
+          serieAtual = { tipo: 'filme', nome, exibicao: nome, capa: (item.c || '').trim(), link: item.l, generos: item.g || [] };
           document.title = `🎄 ${nome} - Clau Flix`;
         } else {
-          const alvo = nomeSerieParam.trim().toLowerCase();
-          episodios = catalogo
-            .filter((item) => nomeDaSerie(item).toLowerCase() === alvo)
-            .map(normalizarEpisodio)
-            .sort((a, b) => a._temp - b._temp || a._ep - b._ep);
-
+          item = dados.s[chave];
+          if (!item) { mostrarMensagem('Nenhum episódio encontrado', 'Não encontramos episódios para esta série.'); return; }
+          episodios = episodiosDaSerie(item);
           if (!episodios.length) { mostrarMensagem('Nenhum episódio encontrado', 'Não encontramos episódios para esta série.'); return; }
-
-          const nome = nomeDaSerie(episodios[0]);
-          const capa = (episodios[0].thumbnailUrl || '').trim();
-          serieAtual = { tipo: 'serie', nome, exibicao: nome, capa, link: `serie.html?nome=${encodeURIComponent(nome)}` };
-          temporadaAtiva = episodios[0]._temp;
+          const nome = item.t;
+          serieAtual = { tipo: 'serie', nome, exibicao: nome, capa: (item.c || '').trim(), caps: item.caps || {},
+            link: `serie.html?nome=${encodeURIComponent(nome)}`, generos: item.g || [] };
           document.title = `🎄 ${nome} - Clau Flix`;
         }
+        temporadaAtiva = episodios[0]._temp;
 
+        // Nota e ano já vêm do índice; a ficha (sinopse, trailer, duração) chega em paralelo.
+        const padrao = { nota: item.n || 0, ano: item.a || 0 };
         const promDet = carregarDetalhes();
-
-        const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
-        if (cedo !== SEM_RESPOSTA && cedo) serieAtual.generos = generosDaClassificacao(cedo, episodios);
-
-        const detCedo = await Promise.race([promDet, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
-        if (detCedo && detCedo !== SEM_RESPOSTA) detalhes = detCedo;
+        const detCedo = await Promise.race([promDet, atraso(CONFIG.DETALHES_GRACA_MS)]);
+        detalhes = detCedo && detCedo !== SEM_RESPOSTA ? Object.assign(padrao, detCedo) : padrao;
 
         renderizarHero();
         renderizarPainel();
         abrirEpisodioDoLink();
 
         if (detCedo === SEM_RESPOSTA) {
-          promDet.then((d) => { if (!d) return; detalhes = d; renderizarHero(); renderizarPainel(); });
-        }
-
-        if (cedo === SEM_RESPOSTA) {
-          promessaCls.then((cls) => {
-            if (!cls) return;
-            serieAtual.generos = generosDaClassificacao(cls, episodios);
-            pintarGeneros();
-          });
+          promDet.then((d) => { if (!d) return; detalhes = Object.assign(padrao, d); renderizarHero(); renderizarPainel(); });
         }
       } catch (erro) {
         console.error('Falha ao carregar episódios:', erro);
