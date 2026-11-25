@@ -1025,6 +1025,14 @@
       if (e.target.id === 'capaSerie' && !e.target.src.startsWith('data:')) e.target.src = semCapa((e.target.alt || '').replace(/^Capa de /, ''));
     }, true);
 
+    // Voltando pelo botão voltar a página vem do cache de navegação: relê progresso e favorito do storage.
+    window.addEventListener('pageshow', (e) => {
+      if (!e.persisted || !serieAtual) return;
+      atualizarBotaoFavorito();
+      renderizarHero();
+      if ($('listaEps')) renderizarLista();
+    });
+
     window.addEventListener('scroll', () => $('topo').classList.toggle('rolou', window.scrollY > 20), { passive: true });
     $('btnFechar').addEventListener('click', fecharModal);
     videoModal.addEventListener('click', (e) => { if (e.target === videoModal) fecharModal(); });

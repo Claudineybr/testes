@@ -751,11 +751,22 @@
       gravarHistorico(lista);
     }
 
+    // Assinatura do que a fila mostra: evita re-renderizar à toa quando o storage não mudou.
+    let assinaturaContinuar = '';
+    function assinaturaDoContinuar() {
+      const progresso = lerProgressoPlayer();
+      return lerHistorico().map((h) => {
+        const p = progresso[chaveProgressoHistorico(h)];
+        return [h.k, h.t, h.temp || '', h.ep || '', p ? Math.round(p.time / 30) : 0].join('~');
+      }).join('|');
+    }
+
     function renderizarContinuar() {
       const visivel = estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras();
       const itens = visivel
         ? lerHistorico().map((h) => ({ h, item: estado.porChave.get(h.k) })).filter((x) => x.item)
         : [];
+      assinaturaContinuar = assinaturaDoContinuar();
       if (!itens.length) { continuarEl.hidden = true; continuarEl.innerHTML = ''; return; }
 
       const progresso = lerProgressoPlayer();
@@ -1231,6 +1242,37 @@
     $('btnSurpresa').addEventListener('click', surpreenda);
     selOrdem.addEventListener('change', () => { estado.ordem = selOrdem.value; recalcular({ resetPagina: true }); });
     selDecada.addEventListener('change', () => { estado.decada = selDecada.value; recalcular({ resetPagina: true }); });
+
+    // A home pode voltar do cache de navegação (botão voltar) sem rodar o script de novo:
+    // relê histórico e favoritos do storage para "Continuar assistindo" e as estrelas não ficarem velhos.
+    let assinaturaFavoritos = '';
+    function recarregarDoStorage() {
+      if (!estado.todos.length) return;
+
+      favoritos = storage.lerArray(localStorage, LS.FAVORITOS);
+      favKeys = new Set(favoritos.map((f) => f.k));
+      const sigFav = favoritos.map((f) => f.k).join('|');
+      if (sigFav !== assinaturaFavoritos) {
+        assinaturaFavoritos = sigFav;
+        if (estado.view === 'favoritos') recalcular();
+      }
+
+      document.querySelectorAll('.fav-btn').forEach((b) => {
+        const ativo = favKeys.has(b.dataset.key);
+        if (b.classList.contains('ativo') === ativo) return;
+        b.classList.toggle('ativo', ativo);
+        b.setAttribute('aria-pressed', String(ativo));
+        b.textContent = ativo ? '★' : '☆';
+        b.setAttribute('aria-label', rotuloFavorito(b.dataset.titulo, ativo));
+      });
+
+      if (assinaturaDoContinuar() !== assinaturaContinuar) renderizarContinuar();
+    }
+    window.addEventListener('pageshow', (e) => { if (e.persisted) recarregarDoStorage(); });
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) recarregarDoStorage(); });
+    window.addEventListener('storage', (e) => {
+      if (!e.key || e.key === LS.HISTORICO || e.key === LS.PROGRESSO || e.key === LS.FAVORITOS) recarregarDoStorage();
+    });
 
     // ===================================================================
     // 10. INICIALIZAÇÃO
