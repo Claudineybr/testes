@@ -143,7 +143,7 @@ jobs:
           TAMANHO = os.environ.get("TAMANHO") or "w500"
           TAMANHO_EP = os.environ.get("TAMANHO_EP") or "w300"
           CHAVE = (os.environ.get("TMDB_API_KEY") or "").strip()
-          DET_V = 1      # sobe quando mudam os campos de detalhes (reenfileira só os detalhes, sem rebuscar a capa)
+          DET_V = 2      # sobe quando mudam os campos de detalhes (reenfileira só os detalhes, sem rebuscar a capa)
           EP_V = 1       # sobe quando muda o formato das imagens por episódio (reenfileira só as séries, sem rebuscar a capa)
           DIR_DET = "detalhes"   # 1 arquivo pequeno por título: detalhes/<chave>.json (a página carrega só o que precisa)
           CRITERIO = 2   # sobe quando o critério de busca melhora (reenfileira os "não achados")
@@ -282,10 +282,16 @@ jobs:
               if not d:
                   return {}
               sinopse = (d.get("overview") or "").strip()
-              if not sinopse:                                    # sem sinopse em português: tenta em inglês
+              sinopse_en = False
+              if not sinopse:                                    # sem pt-BR: tenta pt-PT antes de desistir para o inglês
+                  sinopse = (tmdb(f"{tipo}/{tid}", language="pt-PT").get("overview") or "").strip()
+              if not sinopse:
                   sinopse = (tmdb(f"{tipo}/{tid}", language="en-US").get("overview") or "").strip()
+                  sinopse_en = bool(sinopse)
               out = {}
-              if sinopse: out["sinopse"] = sinopse
+              if sinopse:
+                  out["sinopse"] = sinopse
+                  if sinopse_en: out["sinopseEn"] = True         # o site avisa que esta sinopse está em inglês
               if d.get("backdrop_path"): out["fundo"] = IMG_FUNDO + d["backdrop_path"]
               if d.get("vote_average"): out["nota"] = round(float(d["vote_average"]), 1)
               ano = (d.get("release_date") or d.get("first_air_date") or "")[:4]

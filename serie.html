@@ -109,6 +109,7 @@
     .frase { margin: 0 0 8px; font-style: italic; color: var(--mudo); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); }
     .sinopse { max-width: 62ch; margin: 0 0 6px; font-size: 0.97rem; line-height: 1.55; color: var(--suave); text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
     .sinopse.aberta { display: block; -webkit-line-clamp: unset; }
+    .selo-idioma { display: inline-block; margin: 0 0 6px; padding: 2px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.02em; color: #1a1205; background: var(--ouro); }
     .ler-mais { background: none; border: 0; padding: 0; margin: 0 0 16px; font: inherit; font-weight: 700; color: var(--ouro); cursor: pointer; }
     .progresso { max-width: 340px; margin: 4px 0 18px; font-size: 0.85rem; }
     .progresso .linha { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 6px; font-weight: 600; }
@@ -586,6 +587,16 @@
       gravarHistorico(lista);
     }
 
+    // Fichas antigas ainda não têm a marca: detecta pelo texto (sem acentos/português e com palavras só do inglês).
+    function sinopseEmIngles(texto, marcada) {
+      if (!texto) return false;
+      if (marcada) return true;
+      const t = ' ' + normalizar(texto).replace(/[^a-z]+/g, ' ') + ' ';
+      const ingles = (t.match(/\b(the|and|of|with|his|her|their|from|into|after|when|while|who|this|that|was|has)\b/g) || []).length;
+      const portugues = /[áâãàéêíóôõúç]/i.test(texto) || /\b(que|com|para|uma|dos|das|não|seu|sua|ele|ela|quando|depois|sobre|entre)\b/.test(t);
+      return !portugues && ingles >= 2;
+    }
+
     function renderizarHero() {
       const { nome, capa } = serieAtual;
       const d = detalhes || {};
@@ -612,7 +623,10 @@
       if (g1) partes.push(`<span class="tag-g" id="tagGenero">${esc(g1)}</span>`);
       if (d.nota) partes.push(`<span class="nota" title="Nota no TMDB">★ ${String(d.nota).replace('.', ',')}</span>`);
 
-      const sinopse = d.sinopse ? `<p class="sinopse" id="sinopse">${esc(d.sinopse)}</p>${d.sinopse.length > 190 ? '<button type="button" class="ler-mais" id="lerMais" aria-expanded="false">Ler mais</button>' : ''}` : '';
+      const sinopse = d.sinopse
+        ? `${sinopseEmIngles(d.sinopse, d.sinopseEn) ? '<span class="selo-idioma" title="O TMDB ainda não tem esta sinopse em português">Sinopse em inglês</span>' : ''}` +
+          `<p class="sinopse" id="sinopse">${esc(d.sinopse)}</p>${d.sinopse.length > 190 ? '<button type="button" class="ler-mais" id="lerMais" aria-expanded="false">Ler mais</button>' : ''}`
+        : '';
       const barra = prog && prog.dur
         ? `<div class="progresso"><div class="linha"><span>Continuar de onde parou</span><span>Parou em ${fmtTempo(prog.time)}</span></div><div class="trilho"><div class="enche" style="width:${Math.min(100, Math.round((prog.time / prog.dur) * 100))}%"></div></div></div>` : '';
 

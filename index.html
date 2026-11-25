@@ -357,6 +357,8 @@
       NOTAS_TIMEOUT_MS: 15000,
       HOME_URL: 'catalogo/home.json',
       HOME_TIMEOUT_MS: 8000,
+      CARTOES_URL: 'catalogo/cartoes.json',
+      VIDEOS_URL: 'catalogo/videos.json',
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS_CARD: 2,
       MAX_GENEROS_HERO: 3,
@@ -504,6 +506,7 @@
       natal: [],
       decadas: [],
       totalTitulos: 0,
+      videos: null,
     };
 
     let favoritos = storage.lerArray(localStorage, LS.FAVORITOS);
@@ -706,6 +709,63 @@
         .catch((erro) => { console.warn('[Clau Flix] home.json indisponível; carregando o catálogo completo.', erro); return null; });
     }
 
+    // Índice de cartões (catalogo/cartoes.json): tudo que as abas, a busca e Minha Lista precisam.
+    function prepararCartoes(dados) {
+      if (!Array.isArray(dados)) throw new Error('cartoes.json inválido');
+      const cartoes = dados.map((c) => {
+        const agrupado = !!c.s;
+        const titulo = String(c.t || '').trim();
+        return {
+          titulo,
+          serie: agrupado ? titulo : '',
+          link: c.l || '',
+          thumbnailUrl: c.u || '',
+          videoUrl: '',
+          isAgrupado: agrupado,
+          _ehSerie: agrupado,
+          _generos: limparGeneros(c.g),
+          _ano: Number(c.a) || 0,
+          _nota: Number(c.n) || 0,
+          _busca: normalizar(titulo),
+          _eps: [],
+        };
+      }).filter((c) => c.titulo && c.link);
+      if (!cartoes.length) throw new Error('cartoes.json vazio');
+
+      estado.catalogo = cartoes;
+      estado.filmes = ordenarLista(cartoes.filter((c) => !c.isAgrupado));
+      estado.series = ordenarLista(cartoes.filter((c) => c.isAgrupado));
+      estado.todos = ordenarLista(cartoes);
+      estado.temClassificacao = true;
+      estado.porChave.clear();
+      estado.todos.forEach((c) => estado.porChave.set(chave(c), c));
+      estado.completo = true;
+    }
+
+    // URLs dos vídeos ficam fora do índice (1,6 MB): só carregam quando algo vai tocar.
+    let promessaVideos = null;
+    function carregarVideos() {
+      if (estado.videos) return Promise.resolve(estado.videos);
+      if (!promessaVideos) {
+        promessaVideos = buscarJson(CONFIG.VIDEOS_URL, CONFIG.FETCH_TIMEOUT_MS)
+          .then((v) => (estado.videos = v && typeof v === 'object' && !Array.isArray(v) ? v : {}))
+          .catch((erro) => {
+            console.warn('[Clau Flix] videos.json indisponível; abrindo a ficha do título.', erro);
+            estado.videos = {};
+            return estado.videos;
+          })
+          .finally(() => { promessaVideos = null; });
+      }
+      return promessaVideos;
+    }
+
+    async function abrirPlayerDoIndice(link, titulo, inicio) {
+      const videos = await carregarVideos();
+      const url = videos[link];
+      if (!url) { window.location.href = urlDetalheFilme(link); return; }
+      abrirPlayer(url, titulo, link, inicio);
+    }
+
     function gerenciarDestaques() {
       const agora = Date.now();
       const salvos = storage.lerArray(localStorage, LS.DESTAQUES);
@@ -901,7 +961,7 @@
     }
 
     async function surpreenda() {
-      if (!(await garantirCatalogoCompleto())) return;
+      if (!(await garantirLista())) return;
       let base = universoDaView();
       const genero = generoAtivo();
       if (genero) base = base.filter((i) => (i._generos || []).includes(genero));
@@ -1216,7 +1276,7 @@
 
     async function alternarGenero(genero) {
       estado.genero = estado.genero === genero ? '' : genero;
-      if (estado.genero && !(await garantirCatalogoCompleto())) return;
+      if (estado.genero && !(await garantirLista())) return;
       recalcular({ resetPagina: true });
     }
 
@@ -1226,7 +1286,7 @@
       estado.busca = '';
       searchInput.value = '';
       marcarNavAtiva(novaView);
-      if (novaView !== 'home' && !(await garantirCatalogoCompleto())) return;
+      if (novaView !== 'home' && !(await garantirLista())) return;
       recalcular({ resetPagina: true });
     }
 
@@ -1234,13 +1294,13 @@
       const texto = searchInput.value.trim();
       if (!normalizar(texto)) { mudarView(estado.view); return; }
       estado.busca = texto;
-      if (!(await garantirCatalogoCompleto())) return;
+      if (!(await garantirLista())) return;
       recalcular({ resetPagina: true });
     }
     const buscar = debounce(executarBusca, CONFIG.DEBOUNCE_MS);
 
     // Sessão com filtro, busca ou aba que não seja a home só funciona com o catálogo completo.
-    const precisaCatalogoCompleto = () => estado.view !== 'home' || !!estado.busca || !!estado.genero || !!estado.ordem || !!estado.decada;
+    const precisaLista = () => estado.view !== 'home' || !!estado.busca || !!estado.genero || !!estado.ordem || !!estado.decada;
 
     function restaurarSessao() {
       const viewSalva = storage.ler(sessionStorage, SS.VIEW, 'home');
@@ -1318,6 +1378,7 @@
     // Um único listener cobre hero e grid (retry, favoritos e filmes no modal)
     document.addEventListener('click', (e) => {
       if (e.target.closest('[data-acao="tentar"]')) { iniciar(); return; }
+      if (e.target.closest('[data-acao="ir-home"]')) { window.location.href = '/'; return; }
 
       const rem = e.target.closest('[data-remover]');
       if (rem) { gravarHistorico(lerHistorico().filter((h) => h.k !== rem.dataset.remover)); renderizarContinuar(); return; }
@@ -1330,9 +1391,11 @@
       if (filme && !teclaModificadora) {
         e.preventDefault();
 
-        const direto = (filme.classList.contains('btn') || filme.closest('#continuar')) && filme.dataset.url;
-        if (direto) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link, Number(filme.dataset.inicio) || 0);
-        else window.location.href = urlDetalheFilme(filme.dataset.link);
+        const direto = (filme.classList.contains('btn') || filme.closest('#continuar')) && (filme.dataset.url || filme.dataset.link);
+        const inicio = Number(filme.dataset.inicio) || 0;
+        if (!direto) window.location.href = urlDetalheFilme(filme.dataset.link);
+        else if (filme.dataset.url) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link, inicio);
+        else abrirPlayerDoIndice(filme.dataset.link, filme.dataset.titulo, inicio);   // vídeo vem do videos.json
       }
     });
 
@@ -1372,12 +1435,12 @@
     $('btnSurpresa').addEventListener('click', surpreenda);
     selOrdem.addEventListener('change', async () => {
       estado.ordem = selOrdem.value;
-      if (estado.ordem && !(await garantirCatalogoCompleto())) return;
+      if (estado.ordem && !(await garantirLista())) return;
       recalcular({ resetPagina: true });
     });
     selDecada.addEventListener('change', async () => {
       estado.decada = selDecada.value;
-      if (estado.decada && !(await garantirCatalogoCompleto())) return;
+      if (estado.decada && !(await garantirLista())) return;
       recalcular({ resetPagina: true });
     });
 
@@ -1430,74 +1493,108 @@
         .catch((erro) => { console.warn('[Clau Flix] classificacao.json indisponível; seguindo sem gêneros.', erro); return null; });
     }
 
-    // Catálogo completo (37 MB em partes + 19 MB de classificação): só quando a home leve não basta.
-    let carregandoCompleto = null;
-    function garantirCatalogoCompleto() {
-      if (estado.completo) return Promise.resolve(true);
-      if (carregandoCompleto) return carregandoCompleto;
+    // Catálogo completo (37 MB em partes + 19 MB de classificação): só como plano B.
+    async function carregarCatalogoCompleto() {
+      const promessaCls = carregarClassificacao();
+      const promessaNotas = carregarNotas();
+      const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
+      if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
 
-      carregandoCompleto = (async () => {
+      const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
+      const chegouCedo = cedo !== SEM_RESPOSTA;
+      prepararCatalogo(catalogo, chegouCedo ? cedo : null);
+      estado.completo = true;
+      if (!estado.homeOk) gerenciarDestaques();
+
+      if (!chegouCedo) {
+        promessaCls.then((cls) => {
+          if (!cls) return;
+          prepararCatalogo(catalogo, cls);
+          recalcular();
+        });
+      }
+      promessaNotas.then((notas) => {
+        if (!notas) return;
+        estado.notas = notas;
+        aplicarNotas();
+        recalcular();
+      });
+    }
+
+    // O que as abas, a busca, os filtros e Minha Lista precisam: um cartão por título, não o catálogo inteiro.
+    let carregandoLista = null;
+    function garantirLista() {
+      if (estado.completo) return Promise.resolve(true);
+      if (carregandoLista) return carregandoLista;
+
+      carregandoLista = (async () => {
         mostrarSkeleton();
-        const [cls, notas, catalogo] = await Promise.all([
-          carregarClassificacao(),
-          carregarNotas(),
-          buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS),
-        ]);
-        if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
-        if (notas) estado.notas = notas;
-        prepararCatalogo(catalogo, cls);
-        estado.completo = true;
-        return true;
+        try {
+          const cartoes = await buscarJson(CONFIG.CARTOES_URL, CONFIG.FETCH_TIMEOUT_MS);
+          prepararCartoes(cartoes);
+          return true;
+        } catch (erro) {
+          console.warn('[Clau Flix] cartoes.json indisponível; carregando o catálogo completo.', erro);
+          await carregarCatalogoCompleto();
+          return true;
+        }
       })()
         .catch((erro) => {
-          console.error('[Clau Flix] falha ao carregar o catálogo completo:', erro);
+          console.error('[Clau Flix] falha ao carregar a lista de títulos:', erro);
           mostrarErro(erro);
           return false;
         })
-        .finally(() => { carregandoCompleto = null; });
+        .finally(() => { carregandoLista = null; });
 
-      return carregandoCompleto;
+      return carregandoLista;
     }
 
     // Plano B: sem home.json (deploy antigo ou arquivo corrompido), carrega tudo como antes.
     async function iniciarCatalogoCompleto() {
       mostrarSkeleton();
       try {
-        const promessaCls = carregarClassificacao();
-        const promessaNotas = carregarNotas();
-        const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
-        if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
-
-        const cedo = await Promise.race([promessaCls, atraso(CONFIG.CLASSIFICACAO_GRACA_MS)]);
-        const chegouCedo = cedo !== SEM_RESPOSTA;
-        prepararCatalogo(catalogo, chegouCedo ? cedo : null);
-        estado.completo = true;
-        gerenciarDestaques();
+        await carregarCatalogoCompleto();
         restaurarSessao();
         recalcular();
-
-        if (!chegouCedo) {
-          promessaCls.then((cls) => {
-            if (!cls) return;
-            prepararCatalogo(catalogo, cls);
-            recalcular();
-          });
-        }
-
-        promessaNotas.then((notas) => {
-          if (!notas) return;
-          estado.notas = notas;
-          aplicarNotas();
-          recalcular();
-        });
       } catch (erro) {
         console.error('Falha ao carregar o catálogo:', erro);
         mostrarErro(erro);
       }
     }
 
+    // O Pages devolve a home (200) para qualquer caminho desconhecido: avisa em vez de fingir que a página existe.
+    const ROTAS_CONHECIDAS = new Set(['/', '/index.html', '/serie', '/serie.html']);
+    function rotaDesconhecida() {
+      let caminho = location.pathname.toLowerCase();
+      try { caminho = decodeURIComponent(caminho); } catch { /* mantém como veio */ }
+      if (ROTAS_CONHECIDAS.has(caminho)) return false;
+      return !(caminho.endsWith('/') && ROTAS_CONHECIDAS.has(caminho.slice(0, -1)));
+    }
+
+    function paginaNaoEncontrada() {
+      document.title = 'Página não encontrada - Clau Flix';
+      tituloSecao.textContent = 'Página não encontrada';
+      contagem.textContent = '';
+      hero.hidden = true;
+      continuarEl.hidden = true;
+      natalEl.hidden = true;
+      filtroGeneros.hidden = true;
+      ordemBox.hidden = true;
+      paginacao.innerHTML = '';
+      grid.setAttribute('aria-busy', 'false');
+      const endereco = esc(location.pathname);
+      grid.innerHTML = `
+        <div class="estado-grid" role="alert">
+          <div class="estado-icone" aria-hidden="true">🔍</div>
+          <h3>Essa página não existe</h3>
+          <p>O endereço <code>${endereco}</code> não leva a nenhum título. Use a busca acima ou volte para os destaques.</p>
+          <button type="button" class="btn btn-primary" data-acao="ir-home">Ver os destaques</button>
+        </div>`;
+    }
+
     async function iniciar() {
       mostrarSkeleton();
+      if (rotaDesconhecida()) { paginaNaoEncontrada(); return; }
       const home = await carregarHome();
       if (!home) { await iniciarCatalogoCompleto(); return; }
 
@@ -1510,7 +1607,7 @@
       }
 
       restaurarSessao();
-      if (precisaCatalogoCompleto() && !(await garantirCatalogoCompleto())) return;
+      if (precisaLista() && !(await garantirLista())) return;
       recalcular();
     }
 

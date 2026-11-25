@@ -4,7 +4,7 @@
    Demais arquivos do mesmo domínio: cache primeiro com revalidação em segundo plano.
    Respostas redirecionadas (308 do Pages em /index.html) são recriadas, senão a navegação falha. Mude VERSAO ao alterar os arquivos. */
 
-const VERSAO = 'clauflix-v23';
+const VERSAO = 'clauflix-v24';
 
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 const CACHE_DADOS = `${VERSAO}-dados`;

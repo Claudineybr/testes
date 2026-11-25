@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-"""Gera catalogo/home.json com o que a home mostra (destaques e especial de Natal).
+"""Gera os arquivos leves que o site baixa (tudo dentro de catalogo/):
 
-A home lê este arquivo pequeno em vez de baixar catalogo/parte-*.json (37 MB) +
-classificacao (19 MB) para exibir ~40 cards. O catálogo completo só é baixado
-quando a pessoa abre Filmes, Séries, busca ou Minha Lista.
+  home.json    ~12 KB  destaques + especial de Natal + contagem de gêneros/décadas
+  cartoes.json ~3 MB   um cartão por título (nota e gêneros embutidos), para
+                       Filmes, Séries, busca e Minha Lista
+  videos.json  ~1,6 MB link do filme -> URL do vídeo, só quando for tocar
+
+Antes, exibir as abas custava catalogo/parte-*.json (37 MB) + classificacao
+(19 MB); agora custa só o cartoes.json.
 
 As regras abaixo são as mesmas do index.html (isSerie, nomeDaSerie, extrairAno,
 generosDaSerie, chaveDetalhe, contarGeneros), para que o card não mude quando o
@@ -21,6 +25,8 @@ import urllib.parse
 
 PASTA = "catalogo"
 SAIDA = os.path.join(PASTA, "home.json")
+SAIDA_CARTOES = os.path.join(PASTA, "cartoes.json")
+SAIDA_VIDEOS = os.path.join(PASTA, "videos.json")
 NOTAS = os.path.join(PASTA, "notas.json")
 CLASSIFICACAO = "classificacao_1.json"
 
@@ -207,9 +213,34 @@ def main():
     with open(SAIDA, "w", encoding="utf-8") as f:
         json.dump(dados, f, ensure_ascii=False, separators=(",", ":"))
 
-    print(f"{SAIDA}: {os.path.getsize(SAIDA) / 1024:.1f} KB — {len(titulos)} títulos "
+    # Índice leve usado pelas abas, busca e Minha Lista (um cartão por título, séries agrupadas).
+    cartoes = [{
+        "t": t["titulo"],
+        "l": t["link"],
+        "u": t["thumbnailUrl"],
+        "a": t["ano"],
+        "n": t["nota"],
+        "g": t["generos"],
+        "s": 1 if t["isAgrupado"] else 0,
+    } for t in titulos]
+    with open(SAIDA_CARTOES, "w", encoding="utf-8") as f:
+        json.dump(cartoes, f, ensure_ascii=False, separators=(",", ":"))
+
+    # Vídeo do filme só é preciso na hora de tocar: arquivo separado para não pesar ao navegar.
+    videos = {}
+    for filme in filmes:
+        url = (filme.get("videoUrl") or "").strip()
+        if url and filme.get("link"):
+            videos[filme["link"]] = url
+    with open(SAIDA_VIDEOS, "w", encoding="utf-8") as f:
+        json.dump(videos, f, ensure_ascii=False, separators=(",", ":"))
+
+    kb = lambda p: os.path.getsize(p) / 1024
+    print(f"{SAIDA}: {kb(SAIDA):.1f} KB — {len(titulos)} títulos "
           f"({len(filmes)} filmes, {len(series)} séries), {len(destaques)} destaques, "
           f"{len(natal)} no especial de Natal, {len(generos)} gêneros, {len(decadas)} décadas")
+    print(f"{SAIDA_CARTOES}: {kb(SAIDA_CARTOES):.1f} KB — {len(cartoes)} cartões")
+    print(f"{SAIDA_VIDEOS}: {kb(SAIDA_VIDEOS):.1f} KB — {len(videos)} filmes com vídeo")
 
 
 if __name__ == "__main__":
