@@ -458,6 +458,9 @@
     ov.classList.add('so-topo');
     ov.classList.remove('oculto');
     clearTimeout(timerOculta);
+    // sem vídeo não há o que controlar: some a linha do tempo e a barra de ferramentas
+    el.tempo.parentElement.style.display = 'none';
+    raiz.querySelector('.cp-bar').style.display = 'none';
   }
 
   function fechar(chamarCallback = true) {
