@@ -140,7 +140,7 @@
   // ---------- estado ----------
   let raiz, video, iframe, ov, el = {};
   let opts = null, focoAnterior = null, timerOculta = null, timerContinuar = null, timerToast = null, timerHud = null;
-  let retomarEm = 0, ultimoSalvo = 0, arrastando = false, montado = false;
+  let retomarEm = 0, inicioEm = 0, ultimoSalvo = 0, arrastando = false, montado = false;
   let segmentos = [], segAtivo = null, tokenSeg = 0;   // botão "Pular"
 
   // ---------- segmentos (TheIntroDB) ----------
@@ -522,6 +522,13 @@
       if (video.buffered.length && video.duration > 0) el.buf.style.width = `${(video.buffered.end(video.buffered.length - 1) / video.duration) * 100}%`;
     });
     video.addEventListener('loadedmetadata', () => {
+      // o.inicio vem de quem já sabe onde parou (card "Continuar assistindo", botão Retomar do hero)
+      if (inicioEm > 0) {
+        const alvo = Math.max(0, Math.min(inicioEm, (video.duration || 0) - 10));
+        inicioEm = 0;
+        if (alvo > 1) { video.currentTime = alvo; toast('Retomando de onde você parou'); }
+        return;
+      }
       const salvo = lerProg()[opts && (opts.chave || opts.videoUrl)];
       if (salvo && salvo.time > 10 && salvo.time < video.duration - 30) mostrarContinuar(salvo.time);
     });
@@ -624,6 +631,7 @@
     if (raiz.classList.contains('on')) salvarProgresso(true); // troca de episódio
     else focoAnterior = focoAnterior || document.activeElement;
     opts = o;
+    inicioEm = Number(o.inicio) || 0;
     if (o.aoIniciar) o.aoIniciar();
     el.titulo.textContent = o.titulo || '';
     el.sub.textContent = o.subtitulo || '';

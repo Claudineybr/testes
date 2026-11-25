@@ -400,6 +400,10 @@
     const params = new URLSearchParams(window.location.search);
     const nomeSerieParam = params.get('nome') || '';
     const modoFilme = params.get('filme') || '';
+    // ?t=2&e=5 vem do card "Continuar assistindo": abre no episódio salvo, e &ver=1 já abre o player.
+    const tempParam = parseInt(params.get('t'), 10) || 0;
+    const epParam = parseInt(params.get('e'), 10) || 0;
+    const verParam = params.get('ver') === '1';
     const ehFilme = !!modoFilme;
     const conteudo = $('conteudoEpisodios');
     const heroEl = $('serieHero');
@@ -854,6 +858,7 @@
 
         renderizarHero();
         renderizarPainel();
+        abrirEpisodioDoLink();
 
         if (detCedo === SEM_RESPOSTA) {
           promDet.then((d) => { if (!d) return; detalhes = d; renderizarHero(); renderizarPainel(); });
@@ -915,7 +920,19 @@
       }
     }
 
-    function tocarEpisodio(i, direto) {
+    // Link ?t=&e= (do card "Continuar assistindo"): vai ao episódio e, com ver=1, já abre o player no segundo salvo.
+    function abrirEpisodioDoLink() {
+      if (ehFilme || (!tempParam && !epParam)) return;
+      const i = episodios.findIndex((ep) => (!tempParam || ep._temp === tempParam) && (!epParam || ep._ep === epParam));
+      if (i < 0) return;
+      const ep = episodios[i];
+      if (ep._temp !== temporadaAtiva) trocarTemporada(ep._temp);
+      const item = document.querySelector(`#listaEps .ep-item[data-i="${i}"]`);
+      if (item) item.scrollIntoView({ block: 'center', behavior: reduzirMovimento ? 'auto' : 'smooth' });
+      if (verParam) tocarEpisodio(i, true, (progressoDe(ep) || {}).time || 0);
+    }
+
+    function tocarEpisodio(i, direto, inicio) {
       const ep = episodios[i];
       if (!ep) return;
       epAtual = i;
@@ -924,6 +941,7 @@
       if (window.ClauPlayer) {
         const opcoes = {
           chave: chaveProgresso(ep),
+          inicio: Number(inicio) || 0,
           segmentos: () => ClauPlayer.segmentosDoArquivo(ep.link, ehFilme ? null : ep._temp, ehFilme ? null : ep._ep),
           videoUrl: ep.videoUrl, titulo: serieAtual.nome, subtitulo: ehFilme ? 'Filme' : `T${ep._temp} · E${pad2(ep._ep)}`,
           link: ep.link, workerUrl: CONFIG.WORKER_URL,

@@ -843,6 +843,13 @@
       return item;
     }
 
+    // Link da página da série já no episódio salvo (ver=1 abre o player direto nele).
+    const linkDoEpisodio = (h) => {
+      const base = h.link || (h.tipo === 'serie' ? `serie.html?nome=${encodeURIComponent(h.titulo)}` : h.k);
+      const extra = `t=${h.temp || 1}&e=${h.ep || 1}&ver=1`;
+      return base + (base.includes('?') ? '&' : '?') + extra;
+    };
+
     function renderizarContinuar() {
       const visivel = estado.view === 'home' && !estado.busca && !generoAtivo() && !filtrosExtras();
       const itens = visivel
@@ -856,7 +863,11 @@
         const pct = percentualVisto(h, progresso);
         const base = h.tipo === 'serie' ? `T${h.temp} · E${String(h.ep).padStart(2, '0')}` : 'Retomar';
         const rotulo = pct ? `${base} · ${pct}%` : base;
-        return `<div class="fila-item">${cardHtml(item)}<span class="fila-rotulo"${pct ? ` title="Você já assistiu ${pct}%"` : ''}>${esc(rotulo)}</span>` +
+        // Série: o card já leva ao episódio. Filme: abre o player no segundo em que parou.
+        const alvo = h.tipo === 'serie'
+          ? { ...item, link: linkDoEpisodio(h) }
+          : { ...item, _inicio: (progresso[chaveProgressoHistorico(h)] || {}).time || 0 };
+        return `<div class="fila-item">${cardHtml(alvo)}<span class="fila-rotulo"${pct ? ` title="Você já assistiu ${pct}%"` : ''}>${esc(rotulo)}</span>` +
           `<button type="button" class="fila-x" data-remover="${esc(h.k)}" aria-label="Remover ${esc(h.titulo)} de Continuar assistindo" title="Remover">✕</button></div>`;
       }).join('')}</div>`;
       continuarEl.hidden = false;
@@ -977,7 +988,7 @@
       return `
         <article class="card">
           <a href="${esc(item.link)}" class="card-link${item.isAgrupado ? '' : ' filme-card'}"
-             data-url="${esc(item.videoUrl || '')}" data-titulo="${titulo}" data-link="${esc(item.link)}"
+             data-url="${esc(item.videoUrl || '')}" data-inicio="${Number(item._inicio) || 0}" data-titulo="${titulo}" data-link="${esc(item.link)}"
              aria-label="${item.isAgrupado ? 'Ver episódios de' : 'Assistir'} ${titulo}">
             <div class="card-media">
               ${capa}
@@ -995,13 +1006,27 @@
         </article>`;
     }
 
+    // "Retomar" no hero: só quando o destaque tem episódio no histórico (série) ou progresso salvo (filme).
+    function retomarDoItem(item) {
+      const k = chave(item);
+      if (item.isAgrupado) {
+        const h = lerHistorico().find((x) => x.k === k && x.tipo === 'serie' && x.temp && x.ep);
+        if (!h) return null;
+        return { href: linkDoEpisodio(h), filme: false, rotulo: `Retomar T${h.temp} · E${String(h.ep).padStart(2, '0')}` };
+      }
+      const p = lerProgressoPlayer()[k];
+      if (!p || !(p.time > 10) || !item.videoUrl) return null;
+      return { href: item.link, filme: true, url: item.videoUrl, inicio: Math.round(p.time), rotulo: 'Retomar' };
+    }
+
     function renderizarHero() {
       if (estado.view !== 'home' || estado.busca || generoAtivo() || filtrosExtras() || !estado.destaques.length) { hero.hidden = true; return; }
 
       const item = estado.destaques.find(temCapa) || estado.destaques[0];
       const k = chave(item);
       const generos = (item._generos || []).slice(0, CONFIG.MAX_GENEROS_HERO);
-      const versao = `${k}|${generos.join(',')}|${diasParaNatal()}`;
+      const retomar = retomarDoItem(item);
+      const versao = `${k}|${generos.join(',')}|${diasParaNatal()}|${retomar ? retomar.rotulo + (retomar.inicio || '') : ''}`;
       hero.hidden = false;
       if (hero.dataset.k === versao) { atualizarBotoesFavorito(k); return; }
       hero.dataset.k = versao;
@@ -1025,6 +1050,9 @@
               <a href="${esc(item.link)}" class="btn btn-primary${item.isAgrupado ? '' : ' filme-card'}"
                  data-url="${esc(item.videoUrl || '')}" data-titulo="${titulo}" data-link="${esc(item.link)}"
                  aria-label="${item.isAgrupado ? 'Ver episódios de' : 'Assistir'} ${titulo}">${item.isAgrupado ? '▶ Ver episódios' : '▶ Assistir agora'}</a>
+              ${retomar ? (retomar.filme
+                ? `<a href="${esc(retomar.href)}" class="btn btn-vidro filme-card" data-url="${esc(retomar.url)}" data-inicio="${retomar.inicio}" data-titulo="${titulo}" data-link="${esc(item.link)}" aria-label="Retomar ${titulo} de onde você parou">▶ ${esc(retomar.rotulo)}</a>`
+                : `<a href="${esc(retomar.href)}" class="btn btn-vidro" aria-label="${esc(retomar.rotulo)} de ${titulo}">▶ ${esc(retomar.rotulo)}</a>`) : ''}
               <button type="button" class="fav-btn hero-fav${fav ? ' ativo' : ''}" data-key="${esc(k)}" data-titulo="${titulo}"
                       aria-pressed="${fav}" aria-label="${esc(rotuloFavorito(item.titulo, fav))}">${fav ? '★' : '☆'}</button>
             </div>
@@ -1232,10 +1260,10 @@
     // ===================================================================
     let focoAnterior = null;
 
-    function abrirPlayer(videoUrl, titulo, linkHtml) {
+    function abrirPlayer(videoUrl, titulo, linkHtml, inicio = 0) {
       if (window.ClauPlayer) {
         ClauPlayer.escolher({
-          chave: linkHtml, videoUrl, titulo, subtitulo: 'Filme', link: linkHtml, workerUrl: CONFIG.WORKER_URL,
+          chave: linkHtml, videoUrl, titulo, subtitulo: 'Filme', link: linkHtml, workerUrl: CONFIG.WORKER_URL, inicio,
           aoIniciar: () => registrarFilme(linkHtml, titulo),
           aoFechar: () => renderizarContinuar(),
           segmentos: () => ClauPlayer.segmentosDoArquivo(linkHtml),
@@ -1303,7 +1331,7 @@
         e.preventDefault();
 
         const direto = (filme.classList.contains('btn') || filme.closest('#continuar')) && filme.dataset.url;
-        if (direto) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link);
+        if (direto) abrirPlayer(filme.dataset.url, filme.dataset.titulo, filme.dataset.link, Number(filme.dataset.inicio) || 0);
         else window.location.href = urlDetalheFilme(filme.dataset.link);
       }
     });
