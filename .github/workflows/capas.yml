@@ -630,13 +630,33 @@ jobs:
           print(f"Capas do TMDB aplicadas em {trocados} arquivos.")
           PYEOF
 
+      - name: Gerar notas.json (nota do TMDB por título)
+        if: always()
+        run: |
+          python - <<'PYEOF'
+          import json
+          from pathlib import Path
+
+          notas = {}
+          for f in Path("detalhes").glob("*.json"):
+              try:
+                  d = json.loads(f.read_text(encoding="utf-8"))
+              except Exception:
+                  continue
+              n = d.get("nota")
+              if isinstance(n, (int, float)) and n > 0:
+                  notas[f.stem] = round(float(n), 1)
+          Path("notas.json").write_text(json.dumps(notas, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+          print(f"notas.json: {len(notas)} títulos com nota")
+          PYEOF
+
       - name: Commitar capas.json e HTML
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           mkdir -p detalhes
-          git add capas.json detalhes '*.html'
+          git add capas.json notas.json detalhes '*.html'
           if git diff --cached --quiet; then
             echo "Sem mudanças — nada a commitar."
             exit 0

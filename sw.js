@@ -4,13 +4,13 @@
    Demais arquivos do mesmo domínio: cache primeiro com revalidação em segundo plano.
    Respostas redirecionadas (308 do Pages em /index.html) são recriadas, senão a navegação falha. Mude VERSAO ao alterar os arquivos. */
 
-const VERSAO = 'clauflix-v15';
+const VERSAO = 'clauflix-v16';
 
 const CACHE_ESTATICOS = `${VERSAO}-estaticos`;
 const CACHE_DADOS = `${VERSAO}-dados`;
 
 const BASE = ['/', '/index.html', '/serie.html', '/player.js', '/manifest.webmanifest'];
-const DADOS = ['/classificacao.json'];
+const DADOS = ['/classificacao.json', '/notas.json'];
 
 const ehDados = (caminho) => DADOS.includes(caminho) || caminho.startsWith('/catalogo/') || /^\/classificacao_\d+\.json$/.test(caminho);
 

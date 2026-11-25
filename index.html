@@ -152,6 +152,7 @@
     .card-fallback::after { content: ''; width: 44px; height: 4px; border-radius: 2px; background: var(--ouro, #ffc83d); }
     .tag { position: absolute; left: 10px; top: 10px; z-index: 3; padding: 4px 10px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; letter-spacing: 1px; color: #1a1200; background: var(--ouro); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4); }
     .tag.serie { color: #fff; background: var(--verde); }
+    .nota-selo { position: absolute; left: 10px; bottom: 10px; z-index: 3; display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 999px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.02em; color: var(--ouro); background: rgba(7, 13, 11, 0.78); border: 1px solid rgba(255, 194, 51, 0.45); backdrop-filter: blur(6px); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45); pointer-events: none; }
 
     .card-info { padding: 14px 15px 16px; }
     .card-info h3 { font-size: 1rem; font-weight: 700; margin-bottom: 8px; line-height: 1.3; height: 2.6em; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; }
@@ -349,6 +350,8 @@
       CLASSIFICACAO_URL: 'classificacao.json',
       CLASSIFICACAO_TIMEOUT_MS: 25000,
       CLASSIFICACAO_GRACA_MS: 1500,
+      NOTAS_URL: 'notas.json',
+      NOTAS_TIMEOUT_MS: 15000,
       GENERO_INDEFINIDO: 'indefinido',
       MAX_GENEROS_CARD: 2,
       MAX_GENEROS_HERO: 3,
@@ -484,6 +487,7 @@
       porChave: new Map(),
       todos: [],
       temClassificacao: false,
+      notas: null,
       generos: new Map(),
       view: 'home',
       busca: '',
@@ -582,6 +586,35 @@
       return m ? parseInt(m[1], 10) : 0;
     }
 
+    const RX_EP = /^(.+?)_(?:t(\d+)e(?:p)?(\d+)|(\d+)x(\d+))(?:_\d+)?$/i;
+    const RX_ID_EP = /^(\d+|tt\d+)s\d+e\d+$/i;
+
+    // Chave do arquivo em detalhes/ — mesma regra usada pela página da série/filme.
+    function chaveDetalhe(item) {
+      const base = arquivoDoLink(item.link).replace(/\.html?$/, '');
+      const mId = base.match(RX_ID_EP);
+      if (mId) return 'serie--' + mId[1];
+      const mEp = base.match(RX_EP);
+      if (!mEp) return base;
+      return 'serie--' + mEp[1].replace(/:/g, '--').replace(/[^a-z0-9_.-]/g, '_');
+    }
+
+    function carregarNotas() {
+      return buscarJson(CONFIG.NOTAS_URL, CONFIG.NOTAS_TIMEOUT_MS)
+        .then((n) => (n && typeof n === 'object' && !Array.isArray(n) ? n : null))
+        .catch((erro) => { console.warn('[Clau Flix] notas.json indisponível; cards seguem sem nota.', erro); return null; });
+    }
+
+    function aplicarNotas() {
+      const notas = estado.notas;
+      const notaDe = (item) => (notas && notas[chaveDetalhe(item)]) || 0;
+      estado.filmes.forEach((filme) => { filme._nota = notaDe(filme); });
+      estado.series.forEach((serie) => {
+        serie._eps.forEach((ep) => { ep._nota = notaDe(ep); });
+        serie._nota = serie._eps.reduce((maior, ep) => maior || ep._nota, 0);
+      });
+    }
+
     function prepararCatalogo(dados, cls = null) {
       estado.catalogo = dados;
       const indice = cls ? indexarClassificacao(cls) : null;
@@ -606,6 +639,7 @@
         if (s._ano === 9999) s._ano = 0;
         s._adicionado = s._eps.reduce((m, e) => (e._adicionado > m ? e._adicionado : m), '');
       });
+      aplicarNotas();
       estado.todos = ordenarLista([...estado.filmes, ...estado.series]);
 
       estado.porChave.clear();
@@ -856,6 +890,8 @@
       const titulo = esc(item.titulo);
       const rotulo = item.isAgrupado ? 'SÉRIE' : 'FILME';
       const capa = temCapa(item) ? `<img src="${esc(item.thumbnailUrl)}" alt="Capa de ${titulo}" loading="lazy" decoding="async">` : '';
+      const nota = Number(item._nota) || 0;
+      const seloNota = nota ? `<span class="nota-selo" title="Nota no TMDB">★ ${nota.toFixed(1)}</span>` : '';
 
       return `
         <article class="card">
@@ -866,6 +902,7 @@
               ${capa}
               <div class="card-fallback"${temCapa(item) ? ' hidden' : ''}><i class="fb-play" aria-hidden="true">▶</i><strong class="fb-titulo">${titulo}</strong></div>
               <span class="tag${item.isAgrupado ? ' serie' : ''}">${rotulo}</span>
+              ${seloNota}
             </div>
             <div class="card-info">
               <h3>${titulo}</h3>
@@ -1233,6 +1270,7 @@
       mostrarSkeleton();
       try {
         const promessaCls = carregarClassificacao();
+        const promessaNotas = carregarNotas();
         const catalogo = await buscarCatalogo(CONFIG.FETCH_TIMEOUT_MS);
         if (!Array.isArray(catalogo)) throw new Error('Formato inválido do catálogo');
 
@@ -1250,6 +1288,13 @@
             recalcular();
           });
         }
+
+        promessaNotas.then((notas) => {
+          if (!notas) return;
+          estado.notas = notas;
+          aplicarNotas();
+          recalcular();
+        });
       } catch (erro) {
         console.error('Falha ao carregar o catálogo:', erro);
         mostrarErro(erro);
