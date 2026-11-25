@@ -1286,6 +1286,8 @@
       estado.busca = '';
       searchInput.value = '';
       marcarNavAtiva(novaView);
+      // "Início" volta ao começo: sem gênero, ordenação ou década pendurados da aba anterior.
+      if (novaView === 'home') { estado.genero = ''; estado.ordem = ''; estado.decada = ''; }
       if (novaView !== 'home' && !(await garantirLista())) return;
       recalcular({ resetPagina: true });
     }
