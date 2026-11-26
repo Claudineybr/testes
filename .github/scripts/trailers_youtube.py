@@ -85,6 +85,7 @@ VEICULOS = ("telefilms", "portal trailers", "cinepop", "omelete", "adorocinema",
             "trailer oficial", "trailers oficiais")
 # português de Portugal ("dobrado") não serve: o site é Brasil
 PT_PORTUGAL = re.compile(r'\bdobrad[oa]\b|\bdobragem\b|\bportugal\b|\(pt\)', re.I)
+CANAL_PORTUGAL = re.compile(r'portugal|cinemas nos|films4you|nos cinemas', re.I)
 MARCA_BR = re.compile(r'\bdublad[oa]\b|\bbrasil\b|pt[-\s]?br|\(br\)', re.I)
 
 # Sinais de que o trailer atual já está em português (para nunca rebaixá-lo).
@@ -237,12 +238,35 @@ def nivel_canal(canal):
     return "B"
 
 
+# palavras aceitáveis antes do título do filme no nome do vídeo. Qualquer
+# outra palavra ali indica outro filme: "Extermínio 4 - O Templo dos Ossos"
+# não é trailer de "O Templo", mesmo contendo o título inteiro.
+NEUTRAS = {"trailer", "trailers", "teaser", "oficial", "oficiais", "novo", "nova",
+           "primeiro", "primeira", "assista", "confira", "filme", "completo", "hd",
+           "4k", "em", "de", "do", "da", "dos", "das", "o", "a", "os", "as", "e",
+           "exclusivo", "brasil", "dublado", "legendado", "portugues", "pt", "br"}
+
+
+def sobra_ok(t, titulo_norm):
+    """Tirando o título do filme, só pode sobrar palavra neutra (ou o ano)."""
+    if not titulo_norm:
+        return True
+    resto = t.replace(titulo_norm, " ", 1)
+    for p in re.findall(r'[a-z0-9]+', resto):
+        if len(p) == 1 or p in NEUTRAS or RX_ANO.fullmatch(p):
+            continue
+        return False
+    return True
+
+
 def pontuar(v, titulo, ano, tokens):
     t = norm(v["titulo"])
     c = norm(v["canal"])
     if "trailer" not in t and "trailer" not in c:
         return None
     if RUIM.search(v["titulo"].lower()):
+        return None
+    if CANAL_PORTUGAL.search(v["canal"] or ""):
         return None
     if PT_PORTUGAL.search(v["titulo"]) and not MARCA_BR.search(v["titulo"]):
         return None
@@ -252,6 +276,8 @@ def pontuar(v, titulo, ano, tokens):
     # (evita "Os Fora da Lei" casar com "Paixão Fora da Lei")
     titulo_norm = norm(titulo)
     if titulo_norm and titulo_norm not in t:
+        return None
+    if titulo_norm and not sobra_ok(t, titulo_norm):
         return None
     cobertura = 1.0 if titulo_norm else 0
     # ano: se o vídeo cita um ano, tem que bater
