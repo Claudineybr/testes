@@ -1,0 +1,65 @@
+# Procura no YouTube trailer em português (dublado/legendado) para as fichas que
+# continuaram em inglês e troca só as que vieram de canal oficial/distribuidora
+# (nível A). Canal qualquer fica anotado como "revisar" em
+# .github/trailers_pt_estado.json e a ficha não é tocada.
+#
+# Nunca mexe em ficha que já está em pt-BR: as 3.746 protegidas de
+# .github/trailers_pt_protegidos.txt são puladas, e o trailer atual ainda é
+# conferido por oEmbed antes de gravar.
+#
+# Não precisa de secret nenhum (a busca é feita lendo a página do YouTube).
+# Rode em Actions > "Trailers no YouTube (pt-BR)" > Run workflow.
+# Use "limite" pequeno (ex.: 20) para conferir o commit antes do run completo;
+# deixe vazio para rodar todas as fichas.
+
+name: Trailers no YouTube (pt-BR)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limite:
+        description: 'Processar só as N primeiras fichas (vazio = todas)'
+        required: false
+        default: '20'
+      workers:
+        description: 'Paralelismo (padrão 6)'
+        required: false
+        default: '6'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trailers-youtube
+  cancel-in-progress: false
+
+jobs:
+  trailers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Aplicar trailers em pt-BR (só canal oficial)
+        env:
+          LIMITE: ${{ inputs.limite }}
+          WORKERS: ${{ inputs.workers }}
+        run: python3 .github/scripts/trailers_youtube.py
+
+      - name: Commitar se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Nenhum trailer para trocar."
+            exit 0
+          fi
+          git add detalhes .github/trailers_pt_estado.json .github/trailers_pt_protegidos.txt
+          git commit -m "chore: trailers pt-BR via YouTube (canal oficial) [skip ci]"
+          git push

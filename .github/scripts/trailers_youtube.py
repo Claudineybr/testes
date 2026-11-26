@@ -524,14 +524,20 @@ def main():
             estado = {}
     trocados = 0
     ja_pt = 0
+    revisar = 0
+    sem = 0
     for r in relatorio:
         a = r.get("achou")
         if not a:
             estado[r["id"]] = {"fonte": "youtube", "resultado": "nao_encontrado"}
+            sem += 1
             continue
+        # só canal oficial/distribuidora (nível A) é aplicado sozinho;
+        # o resto fica anotado para revisão e a ficha não é tocada
         if a.get("nivel") != "A":
             estado[r["id"]] = {"fonte": "youtube", "resultado": "revisar",
                                "video": a["id"], "canal": a["canal"], "titulo": a["titulo"]}
+            revisar += 1
             continue
         # última barreira: o trailer atual é mesmo inglês? pt-BR não se toca
         tit_atual, can_atual = oembed(r["trailer"])
@@ -553,7 +559,22 @@ def main():
             log(f"  ! gravar {r['arquivo']}: {e}")
     os.makedirs(os.path.dirname(ESTADO), exist_ok=True)
     json.dump(estado, open(ESTADO, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
-    log(f"trocados: {trocados} | já em pt (puladas): {ja_pt} | analisadas: {len(relatorio)}")
+    resumo = (f"trocados (canal oficial): {trocados} | revisar (canal não oficial): {revisar} | "
+              f"sem resultado: {sem} | já em pt (puladas): {ja_pt} | analisadas: {len(relatorio)}")
+    log(resumo)
+    arquivo_resumo = os.environ.get("GITHUB_STEP_SUMMARY")
+    if arquivo_resumo:
+        try:
+            with open(arquivo_resumo, "a", encoding="utf-8") as f:
+                f.write("## Trailers no YouTube (só canal oficial, nível A)\n\n"
+                        "| resultado | fichas |\n| --- | ---: |\n"
+                        f"| trocados | {trocados} |\n"
+                        f"| revisar (canal não oficial) | {revisar} |\n"
+                        f"| sem resultado | {sem} |\n"
+                        f"| já em pt (puladas) | {ja_pt} |\n"
+                        f"| analisadas | {len(relatorio)} |\n")
+        except Exception as e:
+            log(f"  ! resumo: {e}")
     return 0
 
 
