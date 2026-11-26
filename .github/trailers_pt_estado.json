@@ -25,9 +25,9 @@
 "762968": {
 "fonte": "youtube",
 "resultado": "revisar",
-"video": "Df-TKtNI5C0",
-"canal": "MxPlay",
-"titulo": "JUSTICEIRAS - FILME 2022 - TRAILER DUBLADO E LEGENDADO NETFLIX"
+"video": "WsNDWUNT65w",
+"canal": "Trailers em Português",
+"titulo": "Justiceiras | Trailer | Dublado (Brasil) [4K]"
 },
 "tt0049261": {
 "fonte": "youtube",
@@ -63,10 +63,9 @@
 },
 "422715": {
 "fonte": "youtube",
-"resultado": "trocado",
-"video": "F4GGC_2oBbs",
-"canal": "Warner Bros. Pictures Brasil",
-"titulo": "A NOIVA! l Trailer Oficial Dublado"
+"resultado": "ja_pt",
+"canal_atual": "Warner Bros. Pictures Brasil",
+"titulo_atual": "A NOIVA! l Trailer Oficial Dublado"
 },
 "360605": {
 "fonte": "youtube",
@@ -82,10 +81,9 @@
 },
 "315664": {
 "fonte": "youtube",
-"resultado": "trocado",
-"video": "413JDhE9eXo",
-"canal": "Imagem Filmes",
-"titulo": "Florence: Quem é Essa Mulher? - Trailer Oficial Legendado"
+"resultado": "ja_pt",
+"canal_atual": "Imagem Filmes",
+"titulo_atual": "Florence: Quem é Essa Mulher? - Trailer Oficial Legendado"
 },
 "552": {
 "fonte": "youtube",
@@ -172,6 +170,17 @@
 "titulo": "Trovão Tropical 2008 Trailer Oficial Legendado"
 },
 "26015": {
+"fonte": "youtube",
+"resultado": "nao_encontrado"
+},
+"tt1535109": {
+"fonte": "youtube",
+"resultado": "revisar",
+"video": "clACxllyICs",
+"canal": "CSYS Plus Cinema Além do Filme",
+"titulo": "Capitão Phillips - Trailer Oficial Legendado"
+},
+"467239": {
 "fonte": "youtube",
 "resultado": "nao_encontrado"
 }
