@@ -147,6 +147,18 @@
   const SEG_CACHE = new Map();
   const SEG_TIPOS = ['intro', 'recap', 'credits', 'preview'];
   const SEG_ROTULO = { intro: 'Pular Abertura', recap: 'Pular Resumo', credits: 'Pular Créditos', preview: 'Pular Prévia' };
+  const LS_SEGMENTOS = 'clauFlix_segmentos_v1';
+  const SEG_TTL_MS = 7 * 24 * 60 * 60 * 1000;      // lista encontrada: vale 7 dias
+  const SEG_TTL_VAZIO_MS = 6 * 60 * 60 * 1000;      // sem dados: reconsulta em 6 h (a base cresce)
+  const MAX_SEGMENTOS = 400;
+  const lerSegmentosSalvos = () => { try { const v = JSON.parse(localStorage.getItem(LS_SEGMENTOS)); return v && typeof v === 'object' ? v : {}; } catch { return {}; } };
+  function gravarSegmentosSalvos(o) {
+    try {
+      const k = Object.keys(o);
+      if (k.length > MAX_SEGMENTOS) k.sort((a, b) => o[a].t - o[b].t).slice(0, k.length - MAX_SEGMENTOS).forEach((x) => delete o[x]);
+      localStorage.setItem(LS_SEGMENTOS, JSON.stringify(o));
+    } catch { /* sem storage: ignora */ }
+  }
 
   /** Converte a resposta da TheIntroDB em [{tipo, ini, fim}] (segundos). start_ms null = 0; end_ms null = até o fim (fim: null). */
   function lerSegmentos(json) {
@@ -174,15 +186,29 @@
     const serie = temporada != null && episodio != null && Number.isInteger(Number(temporada)) && Number.isInteger(Number(episodio));
     const url = `https://api.theintrodb.org/v2/media?${imdb ? 'imdb_id' : 'tmdb_id'}=${id}` + (serie ? `&season=${Number(temporada)}&episode=${Number(episodio)}` : '');
     if (SEG_CACHE.has(url)) return SEG_CACHE.get(url);
+    const salvos = lerSegmentosSalvos();
+    const guardado = salvos[url];
+    if (guardado && Array.isArray(guardado.s)) {
+      const ttl = guardado.s.length ? SEG_TTL_MS : SEG_TTL_VAZIO_MS;
+      if (Date.now() - (Number(guardado.t) || 0) < ttl) { SEG_CACHE.set(url, guardado.s); return guardado.s; }
+    }
+    const guardar = (lista) => {
+      SEG_CACHE.set(url, lista);
+      salvos[url] = { t: Date.now(), s: lista };
+      gravarSegmentosSalvos(salvos);
+      return lista;
+    };
     const ctl = typeof AbortController === 'function' ? new AbortController() : null;
     const timer = ctl ? setTimeout(() => ctl.abort(), 6000) : null;
     try {
-      const r = await fetch(url, ctl ? { signal: ctl.signal } : undefined);
-      if (r.status === 404) { SEG_CACHE.set(url, []); return []; }
+      const pegar = () => fetch(url, ctl ? { signal: ctl.signal } : undefined);
+      let r = await pegar();
+      // 30 req/10 s por IP: uma espera curta e uma nova tentativa evitam perder o botão.
+      if (r.status === 429) { await new Promise((ok) => setTimeout(ok, 1200)); r = await pegar(); }
+      if (r.status === 404) return guardar([]);
       if (!r.ok) return [];
       const lista = lerSegmentos(await r.json());
-      SEG_CACHE.set(url, lista);
-      return lista;
+      return guardar(lista);
     } catch { return []; }
     finally { if (timer) clearTimeout(timer); }
   }
@@ -221,7 +247,7 @@
         .map((x) => ({ tipo: String(x && x.tipo), ini: Number(x && x.ini) || 0, fim: x && x.fim != null && Number.isFinite(Number(x.fim)) ? Number(x.fim) : null }))
         .filter((x) => x.fim === null || x.fim > x.ini)
         .sort((a, b) => a.ini - b.ini);
-      if (video && !video.paused) atualizarPular(video.currentTime);
+      if (video) atualizarPular(video.currentTime);
     }).catch(() => {});
   }
 
@@ -522,6 +548,7 @@
       if (video.buffered.length && video.duration > 0) el.buf.style.width = `${(video.buffered.end(video.buffered.length - 1) / video.duration) * 100}%`;
     });
     video.addEventListener('loadedmetadata', () => {
+      atualizarPular(video.currentTime);   // abertura que começa em 0 s já mostra o botão antes do play
       // o.inicio vem de quem já sabe onde parou (card "Continuar assistindo", botão Retomar do hero)
       if (inicioEm > 0) {
         const alvo = Math.max(0, Math.min(inicioEm, (video.duration || 0) - 10));

@@ -1,0 +1,53 @@
+# Sobe para https:// os links de vídeo dos hosts com TLS comprovado.
+#
+# Contexto: página em https com vídeo em http:// vai para o proxy do Worker, que
+# ignora Range (não dá para pular abertura nem buscar posição), e o Rave precisa
+# de https no contentUrl para abrir direto, sem o 301 do http.
+#
+# Só mexe nos hosts listados em .github/scripts/corrigir_https.py (HOSTS_COM_TLS).
+# Host novo continua como veio, para não quebrar vídeo de servidor sem TLS.
+#
+# Rode manualmente em Actions > "Corrigir links http para https" > Run workflow.
+
+name: Corrigir links http para https
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/scripts/corrigir_https.py'
+      - '.github/workflows/corrigir_https.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: corrigir-https
+  cancel-in-progress: false
+
+jobs:
+  corrigir:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Reescrever links (idempotente)
+        run: python3 .github/scripts/corrigir_https.py
+
+      - name: Commitar se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Nada a corrigir."
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore: links de vídeo em https para os hosts com TLS"
+          git push
