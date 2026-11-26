@@ -684,7 +684,7 @@
       if (secaoAtiva === 'eps') { renderizarEpisodiosSecao(corpo); return; }
       if (secaoAtiva === 'det') { corpo.innerHTML = htmlDetalhes(); return; }
       if (secaoAtiva === 'tr') {
-        corpo.innerHTML = `<div class="trailer-box"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(detalhes.trailer)}?rel=0&autoplay=1" title="Trailer de ${esc(serieAtual.exibicao || serieAtual.nome)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
+        corpo.innerHTML = `<div class="trailer-box"><iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(detalhes.trailer)}?rel=0&autoplay=1&hl=pt-BR" title="Trailer de ${esc(serieAtual.exibicao || serieAtual.nome)}" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`;
         return;
       }
       corpo.innerHTML = '<p class="vazio-sec">Procurando títulos parecidos...</p>';

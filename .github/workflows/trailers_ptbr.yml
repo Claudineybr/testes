@@ -1,0 +1,57 @@
+# Troca os trailers das fichas em detalhes/*.json pela versão em português (pt-BR).
+#
+# Só altera o campo "trailer" (o id do YouTube). Ficha cujo título não tem
+# trailer em português no TMDB continua com o que já tinha — melhor o trailer
+# em inglês do que nenhum.
+#
+# Precisa do secret TMDB_API_KEY (o mesmo usado pelo capas.yml).
+# Rode em Actions > "Trailers em português (pt-BR)" > Run workflow.
+# O campo "limite" serve para testar com poucas fichas antes de rodar tudo.
+
+name: Trailers em português (pt-BR)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limite:
+        description: 'Processar só as N primeiras fichas (vazio = todas)'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trailers-ptbr
+  cancel-in-progress: false
+
+jobs:
+  trailers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Trocar trailers para pt-BR
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          LIMITE: ${{ inputs.limite }}
+        run: python3 .github/scripts/trailers_ptbr.py
+
+      - name: Commitar se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Nenhum trailer para trocar."
+            exit 0
+          fi
+          git add detalhes
+          git commit -m "chore: trailers em português (pt-BR) [skip ci]"
+          git push
