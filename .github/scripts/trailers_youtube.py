@@ -14,6 +14,13 @@ Modos (variáveis de ambiente):
   IGNORAR=arq  arquivo com ids de ficha a pular (uma por linha)
   WORKERS=3    paralelismo (padrão 3)
   SAIDA=arq    onde salvar o relatório JSON da amostra
+  PROTEGER=1   reescreve .github/trailers_pt_protegidos.txt com as fichas
+               cujo trailer atual já está em português do Brasil (não grava fichas)
+
+Regra dura: ficha listada em trailers_pt_protegidos.txt nunca é tocada, e no
+modo aplicação o trailer atual ainda é conferido antes de gravar — se ele já
+está em português (dublado/legendado/nacional/canal BR), a ficha é pulada.
+Assim um reupload do YouTube nunca rebaixa um trailer pt-BR bom.
 """
 
 import json
@@ -32,8 +39,11 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 DETALHES = os.path.join(RAIZ, "detalhes")
 CATALOGO = os.path.join(RAIZ, "catalogo")
 ESTADO = os.path.join(RAIZ, ".github", "trailers_pt_estado.json")
+PROTEGIDOS = os.path.join(RAIZ, ".github", "trailers_pt_protegidos.txt")
+CACHE = os.environ.get("CACHE") or "/tmp/trailers_pt_cache.json"
 
 AMOSTRA = int(os.environ.get("AMOSTRA") or 0)
+PROTEGER = os.environ.get("PROTEGER") == "1"
 LIMITE = int(os.environ.get("LIMITE") or 0)
 WORKERS = int(os.environ.get("WORKERS") or 3)
 IDS = [i for i in (os.environ.get("IDS") or "").replace(" ", "").split(",") if i]
@@ -76,6 +86,21 @@ VEICULOS = ("telefilms", "portal trailers", "cinepop", "omelete", "adorocinema",
 # português de Portugal ("dobrado") não serve: o site é Brasil
 PT_PORTUGAL = re.compile(r'\bdobrad[oa]\b|\bdobragem\b|\bportugal\b|\(pt\)', re.I)
 MARCA_BR = re.compile(r'\bdublad[oa]\b|\bbrasil\b|pt[-\s]?br|\(br\)', re.I)
+
+# Sinais de que o trailer atual já está em português (para nunca rebaixá-lo).
+PT_ATUAL = re.compile(
+    r'\bdublad[oa]s?\b|\bdublagem\b|\blegendad[oa]s?\b|\bportugu[eê]s\b|'
+    r'\bpt[-\s]?br\b|\bbrasil\b|\bnacional\b|\bdobrad[oa]s?\b|\bportugal\b|'
+    r'\boficial\b', re.I)
+CANAL_BR = re.compile(r'\bbrasil\b|brasileir|portugu|\bbr\b', re.I)
+DISTRIBUIDORAS_BR = (
+    "telefilms", "a2 filmes", "bonfilm", "imagem filmes", "diamond",
+    "paris filmes", "galeria distribuidora", "o2 play", "playarte",
+    "california filmes", "europa filmes", "imovision", "pandora filmes",
+    "artefilmes", "espa[çc]o filmes", "elite filmes", "sunset filmes",
+    "vitrine filmes", "msm studios", "cinesystem", "versatil",
+    "cine colorado", "pixel vintage",
+)
 
 SUSPEITO = re.compile(r'leil[ãa]o|leilao|clipes?|karaok|m[úu]sica|gameplay|'
                       r'filmes?\s+completos?|novelas?\b|receitas?\b', re.I)
@@ -172,6 +197,32 @@ def oembed(vid):
         return dados.get("title") or "", dados.get("author_name") or ""
     except Exception:
         return None, None
+
+
+def idioma_trailer(titulo, canal):
+    """'br' = trailer atual já em português do Brasil; 'pt' = Portugal; None = outro.
+
+    Critério generoso para 'br': na dúvida, protege. Deixar um trailer em inglês
+    é menos ruim do que rebaixar um trailer pt-BR por um reupload do YouTube.
+    Portugal não é protegido: o site é Brasil, e "dobrado"/"(PT)" é justamente
+    o que vale a pena trocar por uma versão brasileira.
+    """
+    if not titulo and not canal:
+        return None
+    if PT_PORTUGAL.search(titulo or "") or re.search(r'portugal|cinemas nos', norm(canal or "")):
+        return "pt"
+    if PT_ATUAL.search(titulo or ""):
+        return "br"
+    if CANAL_BR.search(canal or ""):
+        return "br"
+    c = norm(canal or "")
+    if any(re.search(d, c) for d in DISTRIBUIDORAS_BR):
+        return "br"
+    return None
+
+
+def parece_pt(titulo, canal):
+    return idioma_trailer(titulo, canal) == "br"
 
 
 def nivel_canal(canal):
@@ -322,14 +373,77 @@ def elegiveis(mapa, ignorar):
     return saida
 
 
+def ler_protegidos():
+    if not os.path.exists(PROTEGIDOS):
+        return set()
+    return {l.strip().replace(".json", "") for l in open(PROTEGIDOS, encoding="utf-8")
+            if l.strip() and not l.startswith("#")}
+
+
+def gerar_protegidos(lista):
+    """Varre os trailers atuais e grava a lista das fichas que já estão em pt."""
+    cache = {}
+    if os.path.exists(CACHE):
+        try:
+            cache = json.load(open(CACHE, encoding="utf-8"))
+        except Exception:
+            cache = {}
+    existentes = ler_protegidos()
+    vistos = {x["trailer"] for x in lista}
+    pendentes = sorted(vistos - set(cache))
+    if LIMITE:
+        pendentes = pendentes[:LIMITE]
+    log(f"protegidos: {len(existentes)} fichas já listadas | "
+        f"{len(pendentes)} trailers a conferir de {len(vistos)}")
+
+    def confere(vid):
+        tit, can = oembed(vid)
+        return vid, [tit, can]
+
+    inicio = time.time()
+    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+        for i, (vid, par) in enumerate(pool.map(confere, pendentes), 1):
+            if par[0] is None:  # falhou: não guardar, para tentar de novo depois
+                continue
+            cache[vid] = par
+            if i % 500 == 0:
+                json.dump(cache, open(CACHE, "w", encoding="utf-8"), ensure_ascii=False)
+                log(f"  {i}/{len(pendentes)} conferidos | {time.time() - inicio:.0f}s")
+
+    novos = 0
+    portugal = 0
+    for x in lista:
+        tit, can = cache.get(x["trailer"], [None, None])
+        idioma = idioma_trailer(tit, can)
+        if idioma == "pt":
+            portugal += 1
+            continue
+        if idioma == "br" and x["id"] not in existentes:
+            existentes.add(x["id"])
+            novos += 1
+    json.dump(cache, open(CACHE, "w", encoding="utf-8"), ensure_ascii=False)
+    os.makedirs(os.path.dirname(PROTEGIDOS), exist_ok=True)
+    with open(PROTEGIDOS, "w", encoding="utf-8") as f:
+        f.write("\n".join(sorted(existentes)) + "\n")
+    log(f"protegidos: {len(existentes)} fichas ({novos} novas) -> {PROTEGIDOS}")
+    log(f"trailers em português de Portugal (não protegidos, podem ser trocados): {portugal}")
+    return 0
+
+
 def main():
     mapa = carregar_titulos()
-    ignorar = set()
+    protegidos = ler_protegidos()
+    ignorar = set(protegidos)
     arq_ignorar = os.environ.get("IGNORAR")
     if arq_ignorar and os.path.exists(arq_ignorar):
-        ignorar = {l.strip().replace(".json", "") for l in open(arq_ignorar, encoding="utf-8") if l.strip()}
+        ignorar |= {l.strip().replace(".json", "") for l in open(arq_ignorar, encoding="utf-8") if l.strip()}
+    if PROTEGER:
+        todos = elegiveis(mapa, set())
+        log(f"fichas com trailer e título conhecido: {len(todos)}")
+        return gerar_protegidos(todos)
     lista = elegiveis(mapa, ignorar)
-    log(f"fichas com trailer e título conhecido: {len(lista)} (ignoradas: {len(ignorar)})")
+    log(f"fichas com trailer e título conhecido: {len(lista)} "
+        f"(protegidas/já em pt: {len(protegidos)} | ignoradas no total: {len(ignorar)})")
 
     if IDS:
         alvo = [x for x in lista if x["id"] in IDS]
@@ -409,6 +523,7 @@ def main():
         except Exception:
             estado = {}
     trocados = 0
+    ja_pt = 0
     for r in relatorio:
         a = r.get("achou")
         if not a:
@@ -417,6 +532,13 @@ def main():
         if a.get("nivel") != "A":
             estado[r["id"]] = {"fonte": "youtube", "resultado": "revisar",
                                "video": a["id"], "canal": a["canal"], "titulo": a["titulo"]}
+            continue
+        # última barreira: o trailer atual é mesmo inglês? pt-BR não se toca
+        tit_atual, can_atual = oembed(r["trailer"])
+        if idioma_trailer(tit_atual, can_atual) == "br":
+            estado[r["id"]] = {"fonte": "youtube", "resultado": "ja_pt",
+                               "canal_atual": can_atual, "titulo_atual": tit_atual}
+            ja_pt += 1
             continue
         caminho = os.path.join(DETALHES, r["arquivo"])
         try:
@@ -431,7 +553,7 @@ def main():
             log(f"  ! gravar {r['arquivo']}: {e}")
     os.makedirs(os.path.dirname(ESTADO), exist_ok=True)
     json.dump(estado, open(ESTADO, "w", encoding="utf-8"), ensure_ascii=False, indent=0)
-    log(f"trocados: {trocados} | analisadas: {len(relatorio)}")
+    log(f"trocados: {trocados} | já em pt (puladas): {ja_pt} | analisadas: {len(relatorio)}")
     return 0
 
 
