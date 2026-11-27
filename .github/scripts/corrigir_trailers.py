@@ -55,6 +55,15 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
       "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 RX_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
+# trailer já em português do Brasil: nunca trocar por um do TMDB em inglês
+PT_BR = re.compile(r"dublad|legendad|portugu[êe]s|\bbrasil\b|nacional|\bpt[-\s]?br\b", re.I)
+CANAL_BR = re.compile(r"brasil|telefilms|a2 filmes|diamond|playarte|imovision|paris filmes|"
+                      r"o2 play|galeria distribuidora|california filmes|europa filmes|"
+                      r"pandora filmes|artefilmes|espa[çc]o filmes|elite filmes|sunset filmes|"
+                      r"vitrine filmes|imagem filmes|bonfilm|vers[áa]til|cinepop|omelete|adorocinema", re.I)
+# trailer de Portugal: não serve para o site brasileiro
+PT_PT = re.compile(r"\bdobrad|portugal|\(pt\)", re.I)
+CANAL_PT = re.compile(r"portugal|cinemas nos|nos audiovisuais", re.I)
 STOP = {"the", "of", "and", "a", "an", "o", "os", "as", "de", "da", "do", "das",
         "dos", "e", "em", "um", "uma", "para", "por", "com", "que", "no", "na",
         "nos", "nas", "ao", "aos", "à", "às", "el", "la", "los", "las", "le",
@@ -248,6 +257,17 @@ def processar(caminho):
         return {"ficha": caminho.stem, "titulo": titulo, "status": "confirmado_tmdb", "atual": atual}
 
     novo = melhor_video(videos)
+    info, motivo = oembed(atual)
+
+    # Trailer atual em português do Brasil e que é mesmo deste título: mantém,
+    # mesmo que o TMDB não liste (trailer dublado de distribuidora brasileira
+    # costuma existir só no YouTube e é melhor que um trailer em inglês).
+    if info and not PT_PT.search(info["titulo"]) and not CANAL_PT.search(info["canal"]):
+        marca_pt = bool(PT_BR.search(info["titulo"]) or CANAL_BR.search(info["canal"]))
+        if marca_pt and titulo_bate(titulo, info["titulo"]) is True:
+            return {"ficha": caminho.stem, "titulo": titulo, "status": "confirmado_pt",
+                    "atual": atual, "video": info["titulo"]}
+
     if novo and novo != atual:
         return {"ficha": caminho.stem, "titulo": titulo, "status": "trocar", "atual": atual, "novo": novo}
 
@@ -257,7 +277,6 @@ def processar(caminho):
         return {"ficha": caminho.stem, "titulo": titulo, "status": "remover", "atual": atual,
                 "motivo": "video_de_outro_titulo", "tambem_em": sorted(compartilhado)[:5]}
 
-    info, motivo = oembed(atual)
     if info is None and motivo == "nao_existe":
         return {"ficha": caminho.stem, "titulo": titulo, "status": "remover", "atual": atual,
                 "motivo": "video_indisponivel"}
