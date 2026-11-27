@@ -186,6 +186,32 @@ def gerar_episodios(series, filmes):
     return baldes
 
 
+def escrever_notas():
+    """Regera catalogo/notas.json a partir de detalhes/*.json (a nota verdadeira).
+
+    O catalogo.yml apaga e recria a pasta catalogo/ inteira; se as notas não
+    fossem geradas aqui, o arquivo gravado pelo capas.yml desaparecia e todos
+    os cartões ficavam sem nota.
+    """
+    notas = {}
+    for nome in sorted(os.listdir("detalhes")):
+        if not nome.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join("detalhes", nome), encoding="utf-8") as f:
+                d = json.load(f)
+        except (OSError, ValueError):
+            continue
+        n = d.get("nota")
+        if isinstance(n, (int, float)) and not isinstance(n, bool) and n > 0:
+            notas[nome[:-5]] = round(float(n), 1)
+    os.makedirs(PASTA, exist_ok=True)
+    with open(NOTAS, "w", encoding="utf-8") as f:
+        json.dump(notas, f, ensure_ascii=False, separators=(",", ":"))
+    print(f"{NOTAS}: {len(notas)} títulos com nota")
+    return notas
+
+
 def carregar(caminho, padrao):
     if not os.path.exists(caminho):
         print(f"⚠️  {caminho} não encontrado — seguindo sem ele.")
@@ -201,7 +227,7 @@ def main():
             with open(os.path.join(PASTA, nome), encoding="utf-8") as f:
                 brutos.extend(json.load(f))
 
-    notas = carregar(NOTAS, {})
+    notas = escrever_notas()
     classificacao = carregar(CLASSIFICACAO, {})
 
     por_arquivo = {str(k).lower(): v for k, v in classificacao.items() if isinstance(v, dict)}

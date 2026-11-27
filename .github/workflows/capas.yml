@@ -49,7 +49,9 @@ permissions:
   actions: write
 
 concurrency:
-  group: capas
+  # mesma fila do catalogo.yml: os dois escrevem em catalogo/ e não podem
+  # rodar ao mesmo tempo (o catálogo recria a pasta inteira)
+  group: catalogo
   cancel-in-progress: false
 
 jobs:
@@ -638,24 +640,9 @@ jobs:
 
       - name: Gerar notas.json (nota do TMDB por título)
         if: always()
-        run: |
-          python - <<'PYEOF'
-          import json
-          from pathlib import Path
-
-          notas = {}
-          for f in Path("detalhes").glob("*.json"):
-              try:
-                  d = json.loads(f.read_text(encoding="utf-8"))
-              except Exception:
-                  continue
-              n = d.get("nota")
-              if isinstance(n, (int, float)) and n > 0:
-                  notas[f.stem] = round(float(n), 1)
-          Path("catalogo").mkdir(exist_ok=True)
-          Path("catalogo/notas.json").write_text(json.dumps(notas, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-          print(f"catalogo/notas.json: {len(notas)} títulos com nota")
-          PYEOF
+        # mesma função que o gerar_home.py usa: uma implementação só, então
+        # capas.yml e catalogo.yml nunca divergem no conteúdo do arquivo
+        run: python3 -c "import gerar_home; gerar_home.escrever_notas()"
 
       - name: Traduzir sinopses que ficaram em inglês
         if: always()
