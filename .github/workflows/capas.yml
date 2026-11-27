@@ -92,8 +92,12 @@ jobs:
 
 
           def norm(s):
-              s = unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode().lower()
-              return re.sub(r"[^a-z0-9]+", " ", s).strip()
+              # mantém qualquer alfabeto: com [^a-z0-9] um título em devanágari,
+              # coreano ou cirílico virava "" e as comparações de título passavam
+              # sem conferir nada
+              s = unicodedata.normalize("NFD", s)
+              s = "".join(c for c in s if not unicodedata.combining(c))
+              return re.sub(r"[^\w]+", " ", s.lower(), flags=re.UNICODE).strip()
 
 
           def do_arquivo(slug):
