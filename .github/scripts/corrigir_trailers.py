@@ -144,8 +144,14 @@ def melhor_video(videos):
         if tipo not in ("trailer", "teaser"):
             return None
         idioma = str(v.get("iso_639_1") or "").lower()
+        pais = str(v.get("iso_3166_1") or "").upper()
+        nome = (v.get("name") or "").lower()
+        # o site é Brasil: trailer de Portugal só em último caso
+        pt_br = (pais == "BR" or idioma == "pt-br" or "br" in nome or "brasil" in nome) and pais != "PT"
+        pt_pt = pais == "PT" or "portugal" in nome
         return ((tipo == "trailer") * 8
-                + (idioma in ("pt-br", "pt") or (idioma == "pt" and "br" in (v.get("name") or "").lower())) * 4
+                + (4 if pt_br else 0)
+                - (6 if pt_pt else 0)
                 + bool(v.get("official")) * 2)
     pontuados = [(nota(v), v.get("key")) for v in videos or []]
     pontuados = [(n, k) for n, k in pontuados if n is not None and k]
