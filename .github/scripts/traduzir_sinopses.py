@@ -76,6 +76,24 @@ GLOSSARIO = [
     (r"\bconnosco\b", "conosco"),
     (r"\bportagem\b", "pedágio"), (r"\bportagens\b", "pedágios"),
     (r"\beletricista\b", "eletricista"),
+    (r"\bactuando\b", "atuando"), (r"\bactuar\b", "atuar"),
+    (r"\bcontactados\b", "contatados"), (r"\bcontactado\b", "contatado"),
+    (r"\bcontactada\b", "contatada"), (r"\bcontactar\b", "contatar"),
+    (r"\bcontacto\b", "contato"), (r"\bcontactos\b", "contatos"),
+    (r"\bperspetivas\b", "perspectivas"), (r"\bperspetiva\b", "perspectiva"),
+    (r"\brealizadores\b", "diretores"), (r"\brealizador\b", "diretor"),
+    (r"\brealizadora\b", "diretora"),
+    (r"\bargumentistas\b", "roteiristas"), (r"\bargumentista\b", "roteirista"),
+    (r"\bguionista\b", "roteirista"), (r"\bguionistas\b", "roteiristas"),
+    (r"\bbilheteiras\b", "bilheterias"), (r"\bbilheteira\b", "bilheteria"),
+    (r"\bcomboios\b", "trens"), (r"\bcomboio\b", "trem"),
+    (r"\bbebés\b", "bebês"), (r"\bbebé\b", "bebê"),
+    (r"\bténis\b", "tênis"),
+    (r"\breceção\b", "recepção"), (r"\breceções\b", "recepções"),
+    (r"\bgolos\b", "gols"), (r"\bgolo\b", "gol"),
+    (r"\bsandes\b", "sanduíches"),
+    (r"\besquentador\b", "aquecedor"),
+    (r"\bcarta de condução\b", "carteira de motorista"),
     (r"\bcoima\b", "multa"), (r"\bcoimas\b", "multas"),
     (r"\bautarquia\b", "prefeitura"),
     (r"\bpercurso\b", "trajeto"),
@@ -133,6 +151,14 @@ def parece_ingles(texto):
     return en >= 3 and en > pt * 2
 
 
+# palavras em que a repetição é proposital ("mais e mais", "dia após dia")
+PALAVRAS_REPETIVEIS = {
+    "mais", "menos", "muito", "muita", "pouco", "tão", "nunca", "sempre", "bem",
+    "mal", "já", "não", "sim", "nada", "tudo", "cada", "todo", "toda", "vez",
+    "dia", "noite", "ano", "mundo", "vida",
+}
+
+
 def limpar(texto, glossario=True):
     """Limpeza de artefatos de tradução (espaços, pontuação, repetição, PT-PT)."""
     s = (texto or "").replace("\u00a0", " ")
@@ -142,6 +168,13 @@ def limpar(texto, glossario=True):
     s = re.sub(r"\.{3,}", "...", s)
     s = re.sub(r"!{2,}", "!", s)
     s = re.sub(r"\?{2,}", "?", s)
+    # palavra repetida ("idiotas idiotas", "mesquinho e mesquinho")
+    # (só em minúsculas: "Sing Sing" e "Pago Pago" são nomes próprios)
+    s = re.sub(r"\b(\w{3,})(?:\s+e)?\s+\1\b",
+               lambda m: m.group(1)
+               if m.group(0) == m.group(0).lower() and m.group(1).lower() not in PALAVRAS_REPETIVEIS
+               else m.group(0),
+               s, flags=re.I)
     # frases adjacentes idênticas
     partes = re.split(r"(?<=[.!?])\s+", s)
     saida = []
@@ -157,6 +190,9 @@ def limpar(texto, glossario=True):
     s = re.sub(r"\s+", " ", s).strip()
     if s and s[0].islower():
         s = s[0].upper() + s[1:]
+    # sinopse longa que termina sem ponto final
+    if len(s) > 120 and re.search(r"[a-záéíóúãõç0-9]$", s, re.I):
+        s += "."
     return s
 
 

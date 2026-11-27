@@ -20,6 +20,10 @@ on:
         description: 'Paralelismo (padrão 6)'
         required: false
         default: '6'
+      ids:
+        description: 'Ids específicos (separados por vírgula; vazio = todas)'
+        required: false
+        default: ''
       modo:
         description: 'corrigir = só o que está em inglês; retraduzir = refaz tudo do original; limpar = só glossário/limpeza'
         type: choice
@@ -54,6 +58,7 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           LIMITE: ${{ inputs.limite }}
           WORKERS: ${{ inputs.workers }}
+          IDS: ${{ inputs.ids }}
           RETRADUZIR: ${{ inputs.modo == 'retraduzir' && '1' || '' }}
           LIMPAR: ${{ inputs.modo == 'limpar' && '1' || '' }}
         run: python3 .github/scripts/traduzir_sinopses.py
