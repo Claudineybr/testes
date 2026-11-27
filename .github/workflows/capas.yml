@@ -270,11 +270,18 @@ jobs:
 
 
           def escolher_trailer(videos):
-              yt = [v for v in videos if v.get("site") == "YouTube" and v.get("key")]
+              """Só trailer/teaser do YouTube: clip, cena, featurette e bastidores
+              não são trailer, e antes podiam ser escolhidos quando o título não
+              tinha trailer cadastrado no TMDB."""
+              yt = [v for v in videos if (v.get("site") or "").lower() == "youtube"
+                    and v.get("key") and (v.get("type") or "").lower() in ("trailer", "teaser")]
+              if not yt:
+                  return None
               def nota(v):
-                  return ((v.get("type") == "Trailer") * 4 + (v.get("iso_639_1") == "pt") * 2 + bool(v.get("official")) * 1)
+                  idioma = str(v.get("iso_639_1") or "").lower()
+                  return ((v.get("type") or "").lower() == "trailer") * 8 + (idioma in ("pt", "pt-br")) * 4 + bool(v.get("official")) * 2
               yt.sort(key=nota, reverse=True)
-              return yt[0]["key"] if yt else None
+              return yt[0]["key"]
 
 
           def detalhes(tid, serie):

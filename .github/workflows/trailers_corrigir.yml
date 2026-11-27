@@ -1,0 +1,76 @@
+# Confere o trailer de cada ficha contra o TMDB e corrige o que estiver errado.
+#
+# O campo "trailer" (id do YouTube) foi escrito por dois robôs: o capas.yml, com
+# os vídeos do TMDB, e o trailers_youtube.py, que procura pelo título. Um bug no
+# trailers_youtube.py (título em devanágari/coreano virava string vazia e a
+# conferência do título era pulada) gravou o MESMO trailer em vários filmes
+# diferentes.
+#
+# Este workflow roda .github/scripts/corrigir_trailers.py, que para cada ficha:
+#   1. se o id está na lista de vídeos do TMDB daquele título, mantém;
+#   2. se o TMDB tem trailer/teaser, troca pelo do TMDB (pt antes de inglês);
+#   3. se o TMDB não tem vídeo e o mesmo id aparece em outro título, remove;
+#   4. se o vídeo saiu do ar (oEmbed 404), remove.
+# O relatório fica em .github/trailers_relatorio.json, commitado junto.
+#
+# Precisa do secret TMDB_API_KEY (o mesmo do capas.yml).
+# Use "limite" pequeno (ex.: 200) para conferir o commit antes do run completo.
+
+name: Corrigir trailers (TMDB)
+
+on:
+  workflow_dispatch:
+    inputs:
+      limite:
+        description: 'Processar só as N primeiras fichas (vazio = todas)'
+        required: false
+        default: ''
+      ids:
+        description: 'Ids específicos, separados por vírgula (vazio = todas)'
+        required: false
+        default: ''
+      workers:
+        description: 'Paralelismo (padrão 6; o YouTube bloqueia muitos acessos ao mesmo tempo)'
+        required: false
+        default: '6'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: trailers
+  cancel-in-progress: false
+
+jobs:
+  corrigir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Corrigir trailers
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          MODO: corrigir
+          LIMITE: ${{ inputs.limite }}
+          IDS: ${{ inputs.ids }}
+          WORKERS: ${{ inputs.workers }}
+        run: python3 .github/scripts/corrigir_trailers.py
+
+      - name: Commitar se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add detalhes .github/trailers_relatorio.json
+          if git diff --cached --quiet; then
+            echo "Nenhum trailer para corrigir."
+            exit 0
+          fi
+          git commit -m "chore: trailers conferidos pelo TMDB [skip ci]"
+          git push

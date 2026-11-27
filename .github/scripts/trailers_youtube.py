@@ -115,9 +115,16 @@ def log(msg):
 
 
 def norm(txt):
+    """Minúsculas sem acento, mantendo QUALQUER alfabeto.
+
+    Antes o filtro era [^a-z0-9], então título em devanágari, coreano, cirílico
+    ou chinês virava string vazia e a conferência "o título do filme tem que
+    aparecer no vídeo" era pulada — qualquer trailer oficial virava candidato
+    e o mesmo vídeo ia parar em vários títulos.
+    """
     txt = unicodedata.normalize("NFKD", txt or "")
     txt = "".join(c for c in txt if not unicodedata.combining(c))
-    return re.sub(r"[^a-z0-9]+", " ", txt.lower()).strip()
+    return re.sub(r"[^\w]+", " ", txt.lower(), flags=re.UNICODE).strip()
 
 
 def pegar_html(url, tentativas=3):
@@ -275,7 +282,9 @@ def pontuar(v, titulo, ano, tokens):
     # o título do filme tem que aparecer inteiro no título do vídeo
     # (evita "Os Fora da Lei" casar com "Paixão Fora da Lei")
     titulo_norm = norm(titulo)
-    if titulo_norm and titulo_norm not in t:
+    if not titulo_norm:                 # título sem palavra comparável: não dá para conferir
+        return None
+    if titulo_norm not in t:
         return None
     if titulo_norm and not sobra_ok(t, titulo_norm):
         return None
