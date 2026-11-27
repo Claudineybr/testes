@@ -190,6 +190,8 @@ def limpar(texto, glossario=True):
     s = re.sub(r"\s+", " ", s).strip()
     if s and s[0].islower():
         s = s[0].upper() + s[1:]
+    # "S.C.." -> "S.C." (ponto duplicado no fim, sem ser reticências)
+    s = re.sub(r"(?<!\.)\.\.$", ".", s)
     # sinopse longa que termina sem ponto final
     if len(s) > 120 and re.search(r"[a-záéíóúãõç0-9]$", s, re.I):
         s += "."
