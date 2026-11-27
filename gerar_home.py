@@ -95,10 +95,13 @@ def chave_detalhe(item):
     return "serie--" + re.sub(r"[^a-z0-9_.\-]", "_", nome)
 
 
+GENERO_PT = {"Reality": "Reality Show"}
+
+
 def limpar_generos(lista):
     if not isinstance(lista, list):
         return []
-    return [g for g in lista if g and g != GENERO_INDEFINIDO]
+    return [GENERO_PT.get(g, g) for g in lista if g and g != GENERO_INDEFINIDO]
 
 
 def generos_da_serie(eps):

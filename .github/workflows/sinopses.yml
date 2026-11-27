@@ -20,6 +20,14 @@ on:
         description: 'Paralelismo (padrão 6)'
         required: false
         default: '6'
+      modo:
+        description: 'corrigir = só o que está em inglês; retraduzir = refaz tudo do original; limpar = só glossário/limpeza'
+        type: choice
+        options:
+          - corrigir
+          - retraduzir
+          - limpar
+        default: corrigir
 
 permissions:
   contents: write
@@ -46,6 +54,8 @@ jobs:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
           LIMITE: ${{ inputs.limite }}
           WORKERS: ${{ inputs.workers }}
+          RETRADUZIR: ${{ inputs.modo == 'retraduzir' && '1' || '' }}
+          LIMPAR: ${{ inputs.modo == 'limpar' && '1' || '' }}
         run: python3 .github/scripts/traduzir_sinopses.py
 
       - name: Commitar se algo mudou
