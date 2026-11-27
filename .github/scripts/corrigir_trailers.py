@@ -264,7 +264,11 @@ def processar(caminho):
     # costuma existir só no YouTube e é melhor que um trailer em inglês).
     if info and not PT_PT.search(info["titulo"]) and not CANAL_PT.search(info["canal"]):
         marca_pt = bool(PT_BR.search(info["titulo"]) or CANAL_BR.search(info["canal"]))
-        if marca_pt and titulo_bate(titulo, info["titulo"]) is True:
+        # se o mesmo vídeo está em outra ficha com OUTRO título (continuação,
+        # remake...), não dá para saber de quem ele é: deixa o TMDB decidir
+        conflito = any(norm(TITULOS.get(outro, outro)) != norm(titulo)
+                       for outro in COMPARTILHADOS.get(atual, set()) - {caminho.stem})
+        if marca_pt and not conflito and titulo_bate(titulo, info["titulo"]) is True:
             return {"ficha": caminho.stem, "titulo": titulo, "status": "confirmado_pt",
                     "atual": atual, "video": info["titulo"]}
 
