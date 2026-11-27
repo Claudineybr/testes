@@ -1,10 +1,600 @@
 {
  "resumo": {
-  "confirmado_tmdb": 19306,
+  "confirmado_tmdb": 18723,
   "sem_trailer": 2371,
-  "sem_veredito": 1,
-  "confirmado_youtube": 2
+  "confirmado_pt": 501,
+  "trocar": 84,
+  "sem_veredito": 1
  },
- "problemas": [],
- "quando": "2026-11-27T06:43:32Z"
+ "problemas": [
+  {
+   "ficha": "1034590",
+   "titulo": "విరూపాక్ష",
+   "status": "trocar",
+   "atual": "JjIVd97hoFE",
+   "novo": "UcOpgGt06FE"
+  },
+  {
+   "ficha": "108368",
+   "titulo": "जुदाई",
+   "status": "trocar",
+   "atual": "cuAQK4KZZO0",
+   "novo": "_8vMeuXeWDI"
+  },
+  {
+   "ficha": "108972",
+   "titulo": "화차",
+   "status": "trocar",
+   "atual": "FVqggQ_Vh_M",
+   "novo": "HeMYsTS4JKU"
+  },
+  {
+   "ficha": "110398",
+   "titulo": "No",
+   "status": "trocar",
+   "atual": "jLeE9OmyBg4",
+   "novo": "eMPNQzJF49E"
+  },
+  {
+   "ficha": "1121612",
+   "titulo": "孤注一掷",
+   "status": "trocar",
+   "atual": "UmXARrHrW30",
+   "novo": "-4x7bVqclYY"
+  },
+  {
+   "ficha": "1125454",
+   "titulo": "ڤوي! ڤوي! ڤوي!",
+   "status": "trocar",
+   "atual": "TVF_4MjJ4ds",
+   "novo": "Ue5gQ8_i1As"
+  },
+  {
+   "ficha": "11554",
+   "titulo": "最好的時光",
+   "status": "trocar",
+   "atual": "tRuG0f3bPEQ",
+   "novo": "d7_ExLi8X9A"
+  },
+  {
+   "ficha": "1216385",
+   "titulo": "তুফান",
+   "status": "trocar",
+   "atual": "ZV6sRMxt2JU",
+   "novo": "T_3SjswyUcs"
+  },
+  {
+   "ficha": "122088",
+   "titulo": "למלא את החלל",
+   "status": "trocar",
+   "atual": "3LGlaFpvWvQ",
+   "novo": "7hoxulGKQ7g"
+  },
+  {
+   "ficha": "1260951",
+   "titulo": "好东西",
+   "status": "trocar",
+   "atual": "meaq8aY0B5k",
+   "novo": "OKXNGLR6SPM"
+  },
+  {
+   "ficha": "127236",
+   "titulo": "Я тоже хочу",
+   "status": "trocar",
+   "atual": "uUV4IAkem-k",
+   "novo": "-YE9a83vEWk"
+  },
+  {
+   "ficha": "1393",
+   "titulo": "Шар нохойн там",
+   "status": "trocar",
+   "atual": "LUBixPLbdmQ",
+   "novo": "Q_jvyLoa4Bg"
+  },
+  {
+   "ficha": "14016",
+   "titulo": "神探",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "rotL2JpoBcI"
+  },
+  {
+   "ficha": "140718",
+   "titulo": "تيتو",
+   "status": "trocar",
+   "atual": "OIs7j5Y52Qg",
+   "novo": "JZ2rJkUMf2U"
+  },
+  {
+   "ficha": "153779",
+   "titulo": "ملک سلیمان",
+   "status": "trocar",
+   "atual": "Lsrfk3k2b6c",
+   "novo": "pOBwmC5XaGA"
+  },
+  {
+   "ficha": "176068",
+   "titulo": "+1",
+   "status": "trocar",
+   "atual": "ZiDphkXCZsQ",
+   "novo": "Qe9j0Qqf1es"
+  },
+  {
+   "ficha": "17935",
+   "titulo": "Тарас Бульб",
+   "status": "trocar",
+   "atual": "LUBixPLbdmQ",
+   "novo": "fkOHSmDFDFQ"
+  },
+  {
+   "ficha": "18122",
+   "titulo": "Обитаемый остров: Схватка",
+   "status": "trocar",
+   "atual": "fQuYMovD3ds",
+   "novo": "I7ozIcDqRxQ"
+  },
+  {
+   "ficha": "18384",
+   "titulo": "과속스캔들",
+   "status": "trocar",
+   "atual": "6hTZIB4nd4c",
+   "novo": "G1L2Jk7PkmQ"
+  },
+  {
+   "ficha": "18422",
+   "titulo": "새드무비",
+   "status": "trocar",
+   "atual": "JjIVd97hoFE",
+   "novo": "FuB8YjJq5vw"
+  },
+  {
+   "ficha": "18704",
+   "titulo": "파이란",
+   "status": "trocar",
+   "atual": "FVqggQ_Vh_M",
+   "novo": "CdqjO3gcHmw"
+  },
+  {
+   "ficha": "20342",
+   "titulo": "不能說的秘密",
+   "status": "trocar",
+   "atual": "yO0VxK6R4iw",
+   "novo": "DTDuOkNSJA4"
+  },
+  {
+   "ficha": "214209",
+   "titulo": "숨바꼭질",
+   "status": "trocar",
+   "atual": "VbSvjXemoOM",
+   "novo": "88sL5w_R61o"
+  },
+  {
+   "ficha": "217316",
+   "titulo": "1",
+   "status": "trocar",
+   "atual": "ZiDphkXCZsQ",
+   "novo": "k59zcs00k0A"
+  },
+  {
+   "ficha": "220176",
+   "titulo": "관상",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "YfxMlxvvxA0"
+  },
+  {
+   "ficha": "228339",
+   "titulo": "Μικρά Αγγλία",
+   "status": "trocar",
+   "atual": "EgQvERGg9tU",
+   "novo": "CHTUqX7vXyg"
+  },
+  {
+   "ficha": "27428",
+   "titulo": "스승의 은혜",
+   "status": "trocar",
+   "atual": "jLeE9OmyBg4",
+   "novo": "2b7G_Gtu9lQ"
+  },
+  {
+   "ficha": "280913",
+   "titulo": "คิดถึงวิทยา",
+   "status": "trocar",
+   "atual": "PTV943jBbPc",
+   "novo": "ZC4aq1Jht3Q"
+  },
+  {
+   "ficha": "32272",
+   "titulo": "고사: 피의 중간고사",
+   "status": "trocar",
+   "atual": "eAWt5hqJHmA",
+   "novo": "ycKjbRXMIQ4"
+  },
+  {
+   "ficha": "33251",
+   "titulo": "집으로...",
+   "status": "trocar",
+   "atual": "DbxsK6w8j8k",
+   "novo": "x36wqfOh7tE"
+  },
+  {
+   "ficha": "339367",
+   "titulo": "हमारी अधूरी कहानी",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "2fiT_TJlySk"
+  },
+  {
+   "ficha": "35907",
+   "titulo": "कांटे",
+   "status": "trocar",
+   "atual": "JjIVd97hoFE",
+   "novo": "5Gt47cJDcr8"
+  },
+  {
+   "ficha": "37288",
+   "titulo": "고양이를 부탁해",
+   "status": "trocar",
+   "atual": "GbCTf2kA3U0",
+   "novo": "Jm-UU6vAEQ8"
+  },
+  {
+   "ficha": "38015",
+   "titulo": "타짜",
+   "status": "trocar",
+   "atual": "cQP630joSO0",
+   "novo": "Syg9jGbgXSo"
+  },
+  {
+   "ficha": "381069",
+   "titulo": "Irmã",
+   "status": "trocar",
+   "atual": "52ceMb9Gypo",
+   "novo": "NB5nOYvqqCY"
+  },
+  {
+   "ficha": "391039",
+   "titulo": "ابد و یک روز",
+   "status": "trocar",
+   "atual": "hFEY_zdcL2I",
+   "novo": "VBIJhlPwrZI"
+  },
+  {
+   "ficha": "39260",
+   "titulo": "ロボゲイシャ",
+   "status": "trocar",
+   "atual": "eTW3b8w_yo8",
+   "novo": "ZrbYRfDu3is"
+  },
+  {
+   "ficha": "40171",
+   "titulo": "전우치",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "_XXtOvsuyuw"
+  },
+  {
+   "ficha": "40700",
+   "titulo": "僕の初恋をキミに捧ぐ",
+   "status": "trocar",
+   "atual": "kLp9sjjoPqo",
+   "novo": "w_7fP3T8Xbc"
+  },
+  {
+   "ficha": "41972",
+   "titulo": "復活の日",
+   "status": "trocar",
+   "atual": "cuAQK4KZZO0",
+   "novo": "XI-iiLpS8i8"
+  },
+  {
+   "ficha": "43738",
+   "titulo": "Източни пиеси",
+   "status": "trocar",
+   "atual": "OIs7j5Y52Qg",
+   "novo": "6-wfSmiwk-Y"
+  },
+  {
+   "ficha": "45379",
+   "titulo": "天下無雙",
+   "status": "trocar",
+   "atual": "eAWt5hqJHmA",
+   "novo": "eFsVTbeF1fI"
+  },
+  {
+   "ficha": "45438",
+   "titulo": "東京攻略",
+   "status": "trocar",
+   "atual": "dp3ya02TYLo",
+   "novo": "wvrodm7zIZQ"
+  },
+  {
+   "ficha": "457251",
+   "titulo": "芳华",
+   "status": "trocar",
+   "atual": "yGouqVQ-wUw",
+   "novo": "ZVCJnixGZqU"
+  },
+  {
+   "ficha": "458027",
+   "titulo": "Скиф",
+   "status": "trocar",
+   "atual": "Z_TC1T8MS9g",
+   "novo": "RwDvvWRWmjU"
+  },
+  {
+   "ficha": "475517",
+   "titulo": "מכתוב",
+   "status": "trocar",
+   "atual": "Txuvq-K8kQo",
+   "novo": "DjkzIcBaIow"
+  },
+  {
+   "ficha": "504199",
+   "titulo": "بمب؛ یک عاشقانه",
+   "status": "trocar",
+   "atual": "XoARdoG5038",
+   "novo": "0qnct88JkeE"
+  },
+  {
+   "ficha": "50535",
+   "titulo": "Στρέλλα",
+   "status": "trocar",
+   "atual": "3LGlaFpvWvQ",
+   "novo": "bNP6IeO8cDw"
+  },
+  {
+   "ficha": "51885",
+   "titulo": "太阳照常升起",
+   "status": "trocar",
+   "atual": "LUBixPLbdmQ",
+   "novo": "RaeZ1D5o9CI"
+  },
+  {
+   "ficha": "54117",
+   "titulo": "쓰리",
+   "status": "trocar",
+   "atual": "Hl8inT6qHfE",
+   "novo": "LXv8GkLRxxQ"
+  },
+  {
+   "ficha": "54959",
+   "titulo": "फोजी",
+   "status": "trocar",
+   "atual": "-MRQLOVTQZU",
+   "novo": "jaZy6tOkG88"
+  },
+  {
+   "ficha": "581561",
+   "titulo": "Текст",
+   "status": "trocar",
+   "atual": "JjoKfyy2tI0",
+   "novo": "C1ALicLkCvE"
+  },
+  {
+   "ficha": "614017",
+   "titulo": "返校",
+   "status": "trocar",
+   "atual": "4tPhYecCxfw",
+   "novo": "BDM693sTP4A"
+  },
+  {
+   "ficha": "629078",
+   "titulo": "شیشہ گر",
+   "status": "trocar",
+   "atual": "3a_33OBqWG0",
+   "novo": "mTuPHCyV6mw"
+  },
+  {
+   "ficha": "668340",
+   "titulo": "मैदान",
+   "status": "trocar",
+   "atual": "lxGujG1uewY",
+   "novo": "kDzAKXNnAVA"
+  },
+  {
+   "ficha": "72443",
+   "titulo": "ジョゼと虎と魚たち",
+   "status": "trocar",
+   "atual": "lxGujG1uewY",
+   "novo": "gd9Vp1Nedes"
+  },
+  {
+   "ficha": "7346",
+   "titulo": "文雀",
+   "status": "trocar",
+   "atual": "tRuG0f3bPEQ",
+   "novo": "CelOAYji8NM"
+  },
+  {
+   "ficha": "73576",
+   "titulo": "Русалка",
+   "status": "trocar",
+   "atual": "vY6nYS0W7WE",
+   "novo": "Wb0TF1fTx3c"
+  },
+  {
+   "ficha": "74336",
+   "titulo": "조용한 가족",
+   "status": "trocar",
+   "atual": "ZV6sRMxt2JU",
+   "novo": "nSyJAuvzGcU"
+  },
+  {
+   "ficha": "758891",
+   "titulo": "你好，李焕英",
+   "status": "trocar",
+   "atual": "4tPhYecCxfw",
+   "novo": "S_qZTk9109Q"
+  },
+  {
+   "ficha": "785861",
+   "titulo": "وقفة رجالة",
+   "status": "trocar",
+   "atual": "NtVXvlgaIUQ",
+   "novo": "D7WJDm64T3Y"
+  },
+  {
+   "ficha": "807888",
+   "titulo": "Носоріг",
+   "status": "trocar",
+   "atual": "eRWFvEJRlaU",
+   "novo": "r_HE4HTNw5Y"
+  },
+  {
+   "ficha": "815029",
+   "titulo": "Довбуш",
+   "status": "trocar",
+   "atual": "i2GfQx6Tszc",
+   "novo": "Rvh36mLq_kY"
+  },
+  {
+   "ficha": "83539",
+   "titulo": "Неотправленное письмо",
+   "status": "trocar",
+   "atual": "JjoKfyy2tI0",
+   "novo": "Pks6wk-e_CY"
+  },
+  {
+   "ficha": "839",
+   "titulo": "Encurralado",
+   "status": "trocar",
+   "atual": "LwjwV8aJbf4",
+   "novo": "Gdk1Igqu05Y"
+  },
+  {
+   "ficha": "850297",
+   "titulo": "Памфір",
+   "status": "trocar",
+   "atual": "hFEY_zdcL2I",
+   "novo": "bLy2z6fZaWk"
+  },
+  {
+   "ficha": "855483",
+   "titulo": "无名",
+   "status": "trocar",
+   "atual": "jLeE9OmyBg4",
+   "novo": "yzZ_oHR5wRE"
+  },
+  {
+   "ficha": "86664",
+   "titulo": "狂った果実",
+   "status": "trocar",
+   "atual": "NZDvUFyENrc",
+   "novo": "aDLre9jun6k"
+  },
+  {
+   "ficha": "869760",
+   "titulo": "హను-మాన్",
+   "status": "trocar",
+   "atual": "S3SMDqnN6fY",
+   "novo": "2IXNyRSXQuw"
+  },
+  {
+   "ficha": "91410",
+   "titulo": "Κινέττα",
+   "status": "trocar",
+   "atual": "OIs7j5Y52Qg",
+   "novo": "iwMPS0NHT9s"
+  },
+  {
+   "ficha": "945664",
+   "titulo": "人生大事",
+   "status": "trocar",
+   "atual": "4_Va8zXg1Ig",
+   "novo": "Oo1aTWn-EqE"
+  },
+  {
+   "ficha": "957328",
+   "titulo": "स्वतंत्र वीर सावरकर",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "LQpxMRwS_bU"
+  },
+  {
+   "ficha": "962074",
+   "titulo": "கேப்டன் மில்லர்",
+   "status": "trocar",
+   "atual": "U7JG6FMoEdM",
+   "novo": "4MqsUwyXrdw"
+  },
+  {
+   "ficha": "serie--128113",
+   "titulo": "",
+   "status": "trocar",
+   "atual": "pGVxbYtsxMQ",
+   "novo": "bjgldTKkpII"
+  },
+  {
+   "ficha": "tt0097195",
+   "titulo": "달마가 동쪽으로 간 까닭은?",
+   "status": "trocar",
+   "atual": "eTW3b8w_yo8",
+   "novo": "IBKeCVjFPdY"
+  },
+  {
+   "ficha": "tt0117998",
+   "titulo": "Twister",
+   "status": "trocar",
+   "atual": "4Yn8hiiwSu8",
+   "novo": "beHzfQPaTaw"
+  },
+  {
+   "ficha": "tt0255798",
+   "titulo": "Animal",
+   "status": "trocar",
+   "atual": "z-4fohFtK4o",
+   "novo": "pBwcksgKcFs"
+  },
+  {
+   "ficha": "tt0479775",
+   "titulo": "Жесть",
+   "status": "trocar",
+   "atual": "OIs7j5Y52Qg",
+   "novo": "jCYmC4IDYyo"
+  },
+  {
+   "ficha": "tt1306980",
+   "titulo": "50%",
+   "status": "trocar",
+   "atual": "vyEmMbhbIT0",
+   "novo": "pVObFYOU9rE"
+  },
+  {
+   "ficha": "tt2006295",
+   "titulo": "Os 33",
+   "status": "trocar",
+   "atual": "PQLyth7_9js",
+   "novo": "hOoIBOYqHyw"
+  },
+  {
+   "ficha": "tt2996684",
+   "titulo": "Animal",
+   "status": "trocar",
+   "atual": "z-4fohFtK4o",
+   "novo": "YjjzFM1W6qA"
+  },
+  {
+   "ficha": "tt3036740",
+   "titulo": "हमशकल्स",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "z8FL_K0XhAE"
+  },
+  {
+   "ficha": "tt7867670",
+   "titulo": "١٢٢",
+   "status": "trocar",
+   "atual": "3a_33OBqWG0",
+   "novo": "GfFrVE8RFKY"
+  },
+  {
+   "ficha": "tt9531772",
+   "titulo": "सूर्यवंशी",
+   "status": "trocar",
+   "atual": "NTiqVJ8vVQM",
+   "novo": "u5r77-OQwa8"
+  }
+ ],
+ "quando": "2026-11-27T07:05:51Z"
 }
