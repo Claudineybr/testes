@@ -146,8 +146,8 @@ def tmdb_videos(kind, ident):
             if isinstance(v, dict) and (v.get("site") or "").lower() == "youtube" and v.get("key")]
 
 
-def melhor_video(videos):
-    """Trailer oficial em pt-BR > trailer pt > trailer > teaser; nunca 'clip'."""
+def candidatos(videos):
+    """Ids de trailer/teaser do TMDB, do melhor para o pior."""
     def nota(v):
         tipo = (v.get("type") or "").lower()
         if tipo not in ("trailer", "teaser"):
@@ -164,10 +164,21 @@ def melhor_video(videos):
                 + bool(v.get("official")) * 2)
     pontuados = [(nota(v), v.get("key")) for v in videos or []]
     pontuados = [(n, k) for n, k in pontuados if n is not None and k]
-    if not pontuados:
-        return None
     pontuados.sort(key=lambda x: -x[0])
-    return pontuados[0][1]
+    return [k for _, k in pontuados]
+
+
+def melhor_video(videos, evitar=None):
+    """Primeiro trailer do TMDB que ainda existe no YouTube (até 3 tentativas)."""
+    for chave in candidatos(videos)[:3]:
+        if chave == evitar:
+            continue
+        info, motivo = oembed(chave)
+        if info is not None:
+            return chave
+        if motivo == "bloqueado":            # não dá para conferir: não usa
+            return None
+    return None
 
 
 def oembed(chave_video):
@@ -258,6 +269,9 @@ def processar(caminho):
 
     novo = melhor_video(videos)
     info, motivo = oembed(atual)
+    if motivo == "bloqueado":
+        return {"ficha": caminho.stem, "titulo": titulo, "status": "sem_veredito",
+                "atual": atual, "motivo": "youtube_bloqueou"}
 
     # Trailer atual em português do Brasil e que é mesmo deste título: mantém,
     # mesmo que o TMDB não liste (trailer dublado de distribuidora brasileira
