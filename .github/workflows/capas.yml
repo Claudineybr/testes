@@ -657,6 +657,13 @@ jobs:
           print(f"catalogo/notas.json: {len(notas)} títulos com nota")
           PYEOF
 
+      - name: Traduzir sinopses que ficaram em inglês
+        if: always()
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          WORKERS: '6'
+        run: python3 .github/scripts/traduzir_sinopses.py
+
       - name: Commitar capas.json e HTML
         if: always()
         run: |

@@ -1,0 +1,68 @@
+# Troca sinopses que ficaram em inglês por português.
+#
+# Ordem: TMDB em pt-BR, depois pt-PT (com o secret TMDB_API_KEY) e, se o TMDB
+# não tiver nenhuma das duas, tradução automática do texto em inglês (marcada
+# com "sinopseTraduzida": true para poder ser substituída depois).
+#
+# Rode em Actions > "Sinopses em português" > Run workflow.
+# "limite" vazio processa todas as fichas em inglês.
+
+name: Sinopses em português
+
+on:
+  workflow_dispatch:
+    inputs:
+      limite:
+        description: 'Processar só as N primeiras fichas (vazio = todas)'
+        required: false
+        default: ''
+      workers:
+        description: 'Paralelismo (padrão 6)'
+        required: false
+        default: '6'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sinopses-pt
+  cancel-in-progress: false
+
+jobs:
+  sinopses:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Traduzir sinopses em inglês
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+          LIMITE: ${{ inputs.limite }}
+          WORKERS: ${{ inputs.workers }}
+        run: python3 .github/scripts/traduzir_sinopses.py
+
+      - name: Commitar se algo mudou
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- detalhes; then
+            echo "Nenhuma sinopse para corrigir."
+            exit 0
+          fi
+          git add detalhes
+          git commit -m "chore: sinopses em português [skip ci]"
+          for i in 1 2 3; do
+            if git pull origin "$GITHUB_REF_NAME" -X ours --no-rebase && git push; then
+              exit 0
+            fi
+            echo "Push falhou (tentativa $i). Tentando de novo..."
+            sleep 5
+          done
+          exit 1
