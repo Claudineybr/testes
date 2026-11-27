@@ -1,0 +1,45 @@
+{
+ "resumo": {
+  "confirmado_tmdb": 274,
+  "sem_trailer": 21,
+  "trocar": 5
+ },
+ "problemas": [
+  {
+   "ficha": "1019404",
+   "titulo": "A Vespa",
+   "status": "trocar",
+   "atual": "sHSbjUMdhyM",
+   "novo": "zrw65D3H1r8"
+  },
+  {
+   "ficha": "1024621",
+   "titulo": "Meu Nome é Chihiro",
+   "status": "trocar",
+   "atual": "IL5dHxXXjXI",
+   "novo": "_X7xl1_C3c8"
+  },
+  {
+   "ficha": "1034590",
+   "titulo": "విరూపాక్ష",
+   "status": "trocar",
+   "atual": "JjIVd97hoFE",
+   "novo": "UcOpgGt06FE"
+  },
+  {
+   "ficha": "1043905",
+   "titulo": "Anjos do Deserto",
+   "status": "trocar",
+   "atual": "KJVR46JuxU4",
+   "novo": "YBwoSa3n8Yc"
+  },
+  {
+   "ficha": "10503",
+   "titulo": "Simplesmente Feliz",
+   "status": "trocar",
+   "atual": "87fXcLwAsis",
+   "novo": "y230r-imiHM"
+  }
+ ],
+ "quando": "2026-11-27T06:16:37Z"
+}
