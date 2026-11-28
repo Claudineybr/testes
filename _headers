@@ -1,0 +1,29 @@
+# Cabeçalhos do Cloudflare Pages (o GitHub Pages ignora este arquivo).
+# Sem CSP de propósito: index.html e serie.html usam <style> e <script> inline.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: geolocation=(), microphone=(), camera=()
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+  Cache-Control: public, max-age=0, must-revalidate
+
+/icones/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/player.js
+  Cache-Control: public, max-age=86400
+
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json
+  Cache-Control: public, max-age=86400
+
+/catalogo/*
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
+
+/classificacao.json
+  Cache-Control: public, max-age=300, stale-while-revalidate=86400
