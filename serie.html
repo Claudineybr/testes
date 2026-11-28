@@ -417,15 +417,6 @@
     const modalTitulo = $('modalTitulo');
     const linkOriginal = $('linkOriginal');
 
-    // A página estática do título (/473768) é a versão indexável: esta ficha no navegador
-    // aponta para ela em vez de competir com o mesmo conteúdo.
-    function definirCanonica(link) {
-      const arquivo = String(link || '').split(/[?#]/)[0].split('/').pop().replace(/\.html?$/i, '');
-      if (!arquivo) return;
-      let tag = document.querySelector('link[rel="canonical"]');
-      if (!tag) { tag = document.createElement('link'); tag.rel = 'canonical'; document.head.appendChild(tag); }
-      tag.href = `${location.origin}/${arquivo}`;
-    }
 
     let serieAtual = null;
     let episodios = [];
@@ -856,7 +847,6 @@
             link: item.l, thumbnailUrl: item.c || '', videoUrl: item.v || '' })];
           serieAtual = { tipo: 'filme', nome, exibicao: nome, capa: (item.c || '').trim(), link: item.l, generos: item.g || [] };
           document.title = `🎄 ${nome} - Clau Flix`;
-          definirCanonica(item.l);
         } else {
           item = dados.s[chave];
           if (!item) { mostrarMensagem('Nenhum episódio encontrado', 'Não encontramos episódios para esta série.'); return; }

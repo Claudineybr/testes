@@ -4,5 +4,3 @@ Allow: /
 # Páginas de detalhe montadas no navegador (serie.html) e a página de erro.
 Disallow: /serie
 Disallow: /404.html
-
-Sitemap: https://testes-f1t.pages.dev/sitemap.xml
