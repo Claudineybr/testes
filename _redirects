@@ -1,0 +1,2 @@
+# Cloudflare Pages: evita o 308 próprio do Pages em /index.html e mantém uma URL só.
+/index.html  /  301

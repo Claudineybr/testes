@@ -1252,7 +1252,9 @@
         `<button type="button" class="chip" data-genero="${esc(valor)}" aria-pressed="${atual === valor}">${esc(texto)}${qtd ? `<small>${qtd}</small>` : ''}</button>`;
 
       const ordenados = [...estado.generos].sort((a, b) => b[1] - a[1] || collator.compare(a[0], b[0]));
-      filtroGeneros.innerHTML = chip('', 'Todos', 0) + ordenados.map(([g, n]) => chip(g, g, n)).join('');
+      // No modo leve (home.json) a contagem é do catálogo inteiro, não dos 20 destaques na tela.
+      const comContagem = estado.completo;
+      filtroGeneros.innerHTML = chip('', 'Todos', 0) + ordenados.map(([g, n]) => chip(g, g, comContagem ? n : 0)).join('');
       filtroGeneros.hidden = false;
       filtroGeneros.scrollLeft = rolagem;
       if (focado !== null) {
